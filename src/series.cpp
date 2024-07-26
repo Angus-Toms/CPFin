@@ -46,9 +46,9 @@ void PriceSeries::fetchCSV() {
     urlBuilder << "https://query1.finance.yahoo.com/v7/finance/download/" << ticker
                 << "?period1=" << start
                 << "&period2=" << end
-                << "&interval=" << interval
-                << "&includeAdjustedClose=true";
+                << "&interval=" << interval;
     std::string url = urlBuilder.str();
+    std::cout << "Fetching from " << url << std::endl;
 
     CURL* curl = curl_easy_init();
     std::string readBuffer;
@@ -143,4 +143,12 @@ std::string PriceSeries::toString() {
         result << "| " << epochToDateString(date) << " | " << ohcl.toString() << "\n";
     }
     return result.str();
+}
+
+std::map<std::time_t, OHCLRecord> PriceSeries::getData() const {
+    return data;
+}
+
+OHCLRecord PriceSeries::getRecord(const std::time_t date) const {
+    return data.at(date);
 }

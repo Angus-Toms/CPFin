@@ -51,6 +51,10 @@ public:
     static PriceSeries getPriceSeries(const std::string& ticker, const std::string &start, const std::string &interval, const std::size_t count);
 
     std::string toString();
+
+    // Getters
+    std::map<std::time_t, OHCLRecord> getData() const;
+    OHCLRecord getRecord(const std::time_t date) const;
 };
 
 #endif // PRICESERIES_HPP

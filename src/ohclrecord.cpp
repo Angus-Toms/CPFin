@@ -31,3 +31,7 @@ std::string OHCLRecord::toString() const {
 
     return oss.str();
 };
+
+double OHCLRecord::getClose() const {
+    return close;
+}
