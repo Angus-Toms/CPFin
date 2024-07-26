@@ -10,8 +10,6 @@ void PriceSeries::fetchCSV() {
                 << "&interval=" << interval;
     std::string url = urlBuilder.str();
 
-    std::cout << "Fetching data from: " << url << "\n";
-
     CURL* curl = curl_easy_init();
     std::string readBuffer;
 
@@ -26,22 +24,42 @@ void PriceSeries::fetchCSV() {
         }
         curl_easy_cleanup(curl);
     }
-    // Parse CSV
-    parseCSVData(readBuffer, data);
+    parseCSV(readBuffer, data);
 }
 
-void PriceSeries::parseCSVData(const std::string& readBuffer, std::vector<OHCLRecord>& data) {
-    
+void PriceSeries::parseCSV(const std::string& readBuffer, std::vector<OHCLRecord>& data) {
+    std::istringstream ss(readBuffer);
+    std::string line;
+
+    bool isFirstLine = true;
+    while (std::getline(ss, line)) {
+        // Skip header line
+        if (isFirstLine) {
+            isFirstLine = false;
+            continue;
+        }
+
+        std::istringstream lineStream(line);
+        std::string dateStr, openStr, highStr, lowStr, closeStr;
+        std::getline(lineStream, dateStr, ',');
+        std::getline(lineStream, openStr, ',');
+        std::getline(lineStream, highStr, ',');
+        std::getline(lineStream, lowStr, ',');
+        std::getline(lineStream, closeStr, ',');
+        OHCLRecord ohcl(dateStringToEpoch(dateStr), std::stod(openStr), std::stod(highStr), std::stod(lowStr), std::stod(closeStr));
+        
+        data.emplace_back(ohcl);
+    }
 }
     
 PriceSeries::PriceSeries(const std::string& ticker, std::time_t start, std::time_t end)
     : ticker(ticker), start(start), end(end), interval("1d") {
-    fetchData();        
+    fetchCSV();        
 }
 
 std::string PriceSeries::toString() {
     std::ostringstream result;
-    result << "|| " << ticker << " ||\n----------\n";
+    result << "| " << ticker << " |\n----------\n";
     for (const OHCLRecord& record : data) {
         result << record.toString() << "\n";
     }
