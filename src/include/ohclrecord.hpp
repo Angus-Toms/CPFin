@@ -11,14 +11,14 @@
 
 class OHCLRecord {
     private:
-        std::time_t date;
         double open;
         double high;
         double close;
         double low;
 
     public:
-        OHCLRecord(std::time_t date, double open, double high, double close, double low);
+        OHCLRecord();
+        OHCLRecord(double open, double high, double close, double low);
         std::string toString() const;
 };
 

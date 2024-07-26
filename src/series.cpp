@@ -27,7 +27,7 @@ void PriceSeries::fetchCSV() {
     parseCSV(readBuffer, data);
 }
 
-void PriceSeries::parseCSV(const std::string& readBuffer, std::vector<OHCLRecord>& data) {
+void PriceSeries::parseCSV(const std::string& readBuffer, std::map<std::time_t, OHCLRecord>& data) {
     std::istringstream ss(readBuffer);
     std::string line;
 
@@ -46,9 +46,10 @@ void PriceSeries::parseCSV(const std::string& readBuffer, std::vector<OHCLRecord
         std::getline(lineStream, highStr, ',');
         std::getline(lineStream, lowStr, ',');
         std::getline(lineStream, closeStr, ',');
-        OHCLRecord ohcl(dateStringToEpoch(dateStr), std::stod(openStr), std::stod(highStr), std::stod(lowStr), std::stod(closeStr));
+        OHCLRecord ohcl(std::stod(openStr), std::stod(highStr), std::stod(lowStr), std::stod(closeStr));
         
-        data.emplace_back(ohcl);
+        std::time_t date = dateStringToEpoch(dateStr);
+        data[date] = ohcl;
     }
 }
     
@@ -60,8 +61,8 @@ PriceSeries::PriceSeries(const std::string& ticker, std::time_t start, std::time
 std::string PriceSeries::toString() {
     std::ostringstream result;
     result << "| " << ticker << " |\n----------\n";
-    for (const OHCLRecord& record : data) {
-        result << record.toString() << "\n";
+    for (auto& [date, ohcl] : data) {
+        result << "| " << epochToDateString(date) << " | " << ohcl.toString() << "\n";
     }
     return result.str();
 }
