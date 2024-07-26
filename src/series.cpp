@@ -1,7 +1,46 @@
 #include "series.hpp"
 #include "time_utils.hpp"
 
+void PriceSeries::checkArguments() {
+    // TODO: Validate ticker
+
+    // Validate start time 
+    if (start < 0) {
+        throw std::invalid_argument("Could not get PriceSeries. Invalid start time");
+    }
+
+    if (start > std::time(nullptr)) {
+        throw std::invalid_argument("Could not get PriceSeries. Start time is in the future");
+    }
+
+    if (start > end) {
+        throw std::invalid_argument("Could not get PriceSeries. Start time is after end time");
+    }
+
+    // Validate end time
+    if (end < 0) {
+        throw std::invalid_argument("Could not get PriceSeries. Invalid end time");
+    }
+
+    if (end > std::time(nullptr)) {
+        std::cout << "WARNING! End time is in future, cropping to current time\n";
+        end = std::time_t(nullptr);
+    }
+
+    // Valid interval check
+    if (isInvalidInterval(interval)) {
+        std::ostringstream supportedIntervals;
+        for (const auto& interval : VALID_INTERVALS) {
+            supportedIntervals << interval << " ";
+        }
+        throw std::invalid_argument("Could not get PriceSeries. Interval " + interval + " is not supported\n Supported intervals: " + supportedIntervals.str());
+    }
+
+    return;
+}
+
 void PriceSeries::fetchCSV() {
+
     // Call construction
     std::ostringstream urlBuilder;
     urlBuilder << "https://query1.finance.yahoo.com/v7/finance/download/" << ticker
@@ -56,22 +95,45 @@ void PriceSeries::parseCSV(const std::string& readBuffer, std::map<std::time_t, 
     }
 }
 
-// All-argument constructor 
-PriceSeries::PriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval)
-    : ticker(ticker), start(start), end(end), interval(interval) {
-    fetchCSV();
+// Factory methods =============================================================
+
+// All-argument constructor (date objects)
+PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval) {
+    return PriceSeries(ticker, start, end, interval);
 }
 
-// No-interval constructor 
-PriceSeries::PriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end)
-    : ticker(ticker), start(start), end(end), interval("1d") {
-    fetchCSV();        
+// All-argument constructor (date strings)
+PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::string& start, const std::string& end, const std::string& interval) {
+    std::time_t startEpoch = dateStringToEpoch(start);
+    std::time_t endEpoch = dateStringToEpoch(end);
+    return PriceSeries(ticker, startEpoch, endEpoch, interval);
 }
 
-// No time-argument constructor 
-PriceSeries::PriceSeries(const std::string& ticker)
-    : ticker(ticker), start(std::time(nullptr) - YEAR_DURATION), end(std::time(nullptr)), interval("1d") {
-    fetchCSV();
+// No interval constructor (date objects) - defaults to interval of "1d"
+PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end) {
+    return PriceSeries(ticker, start, end, "1d");
+}
+
+// No interval constructor (date strings) - defaults to interval of "1d"
+PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::string& start, const std::string& end) {
+    std::time_t startEpoch = dateStringToEpoch(start);
+    std::time_t endEpoch = dateStringToEpoch(end);
+    return PriceSeries(ticker, startEpoch, endEpoch, "1d");
+}
+
+// Number of datapoints constructor (date object)
+// TODO: Update to account for weekends
+PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::time_t start, const std::string& interval, const std::size_t count) {
+    std::time_t end = start + count * intervalToSeconds(interval);
+    return PriceSeries(ticker, start, end, interval);
+}
+
+// Number of datapoints constructor (date string)
+// TODO: Update to account for weekends
+PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::string& start, const std::string& interval, const std::size_t count) {
+    std::time_t startEpoch = dateStringToEpoch(start);
+    std::time_t end = startEpoch + count * intervalToSeconds(interval);
+    return PriceSeries(ticker, startEpoch, end, interval);
 }
 
 std::string PriceSeries::toString() {
