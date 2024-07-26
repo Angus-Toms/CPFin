@@ -26,7 +26,7 @@ private:
         return size * nmemb;
     }
     void fetchCSV();
-    void PriceSeries::parseCSVData(const std::string& readBuffer, std::vector<OHCLRecord>& data)
+    void parseCSV(const std::string& readBuffer, std::vector<OHCLRecord>& data);
 
 public:
     PriceSeries(const std::string& ticker, std::time_t start, std::time_t end);
