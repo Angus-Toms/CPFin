@@ -15,10 +15,12 @@ class OHCLRecord {
         double high;
         double close;
         double low;
+        double adjClose;
+        double volume;
 
     public:
         OHCLRecord();
-        OHCLRecord(double open, double high, double close, double low);
+        OHCLRecord(double open, double high, double close, double low, double adjClose, double volume);
         std::string toString() const;
 };
 

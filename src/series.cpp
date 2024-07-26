@@ -7,7 +7,8 @@ void PriceSeries::fetchCSV() {
     urlBuilder << "https://query1.finance.yahoo.com/v7/finance/download/" << ticker
                 << "?period1=" << start
                 << "&period2=" << end
-                << "&interval=" << interval;
+                << "&interval=" << interval
+                << "&includeAdjustedClose=true";
     std::string url = urlBuilder.str();
 
     CURL* curl = curl_easy_init();
@@ -40,22 +41,37 @@ void PriceSeries::parseCSV(const std::string& readBuffer, std::map<std::time_t, 
         }
 
         std::istringstream lineStream(line);
-        std::string dateStr, openStr, highStr, lowStr, closeStr;
+        std::string dateStr, openStr, highStr, lowStr, closeStr, adjCloseStr, volumeStr;
         std::getline(lineStream, dateStr, ',');
         std::getline(lineStream, openStr, ',');
         std::getline(lineStream, highStr, ',');
         std::getline(lineStream, lowStr, ',');
         std::getline(lineStream, closeStr, ',');
-        OHCLRecord ohcl(std::stod(openStr), std::stod(highStr), std::stod(lowStr), std::stod(closeStr));
+        std::getline(lineStream, adjCloseStr, ',');
+        std::getline(lineStream, volumeStr, ',');
+        OHCLRecord ohcl(std::stod(openStr), std::stod(highStr), std::stod(lowStr), std::stod(closeStr), std::stod(adjCloseStr), std::stod(volumeStr));
         
         std::time_t date = dateStringToEpoch(dateStr);
         data[date] = ohcl;
     }
 }
-    
-PriceSeries::PriceSeries(const std::string& ticker, std::time_t start, std::time_t end)
+
+// All-argument constructor 
+PriceSeries::PriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval)
+    : ticker(ticker), start(start), end(end), interval(interval) {
+    fetchCSV();
+}
+
+// No-interval constructor 
+PriceSeries::PriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end)
     : ticker(ticker), start(start), end(end), interval("1d") {
     fetchCSV();        
+}
+
+// No time-argument constructor 
+PriceSeries::PriceSeries(const std::string& ticker)
+    : ticker(ticker), start(std::time(nullptr) - YEAR_DURATION), end(std::time(nullptr)), interval("1d") {
+    fetchCSV();
 }
 
 std::string PriceSeries::toString() {
