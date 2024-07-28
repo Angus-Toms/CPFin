@@ -6,7 +6,8 @@
 #include <iostream>
 #include <ctime>
 
-#include "series.hpp"
+#include "priceseries.hpp"
+#include "averages.hpp"
 
 int main();
 

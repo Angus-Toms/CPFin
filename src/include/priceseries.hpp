@@ -9,16 +9,31 @@
 #include <map>
 #include <curl/curl.h>
 #include "json.hpp"
-#include "ohclrecord.hpp"
 #include "time_utils.hpp"
+#include "timeseries.hpp"
 
-class PriceSeries {
+struct OHCLRecord {
+    double open;
+    double high;
+    double low;
+    double close;
+    double adjClose;
+    double volume;
+
+    // Constructor definitions
+    // Default constructor
+    OHCLRecord() = default;
+    OHCLRecord(double open, double high, double low, double close, double adjClose, double volume);
+    std::string toString() const;
+    double getClose() const;
+};
+
+class PriceSeries : public TimeSeries<OHCLRecord> {
 private:
     std::string ticker;
     std::time_t start;
     std::time_t end;
     std::string interval;
-    std::map<std::time_t, OHCLRecord> data;
 
     // Private constructor 
     PriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval)
@@ -36,6 +51,11 @@ private:
     void parseCSV(const std::string& readBuffer, std::map<std::time_t, OHCLRecord>& data);
 
 public:
+    // Virtual methods 
+    ~PriceSeries() = default;
+    void plot() const override;
+    std::string toString() const override;
+
     // Factory methods 
     // All-argument constructor (date objects)
     static PriceSeries getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval);
@@ -50,11 +70,10 @@ public:
     // Number of datapoints constructor (date string)
     static PriceSeries getPriceSeries(const std::string& ticker, const std::string &start, const std::string &interval, const std::size_t count);
 
-    std::string toString();
-
     // Getters
     std::map<std::time_t, OHCLRecord> getData() const;
     OHCLRecord getRecord(const std::time_t date) const;
+    
 };
 
 #endif // PRICESERIES_HPP

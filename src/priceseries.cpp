@@ -1,6 +1,26 @@
-#include "series.hpp"
+#include "priceseries.hpp"
 #include "time_utils.hpp"
 
+// OHCLRecord struct ===========================================================
+OHCLRecord::OHCLRecord(double open, double high, double low, double close, double adjClose, double volume)
+    : open(open), high(high), low(low), close(close), adjClose(adjClose), volume(volume) {};
+
+std::string OHCLRecord::toString() const {
+    std::ostringstream result;
+    result << "| " << open 
+        << " | " << high 
+        << " | " << low
+        << " | " << close
+        << " | " << adjClose
+        << " | " << volume << " |";
+    return result.str();
+};
+
+double OHCLRecord::getClose() const {
+    return close;
+};
+
+// PriceSeries class ===========================================================
 void PriceSeries::checkArguments() {
     // TODO: Validate ticker
 
@@ -95,8 +115,13 @@ void PriceSeries::parseCSV(const std::string& readBuffer, std::map<std::time_t, 
     }
 }
 
-// Factory methods =============================================================
+// Virtual methods -------------------------------------------------------------
+void PriceSeries::plot() const {
+    std::cout << "TODO: Plot PriceSeries\n";
+    return;
+}
 
+// Factory methods -------------------------------------------------------------
 // All-argument constructor (date objects)
 PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval) {
     return PriceSeries(ticker, start, end, interval);
@@ -136,7 +161,7 @@ PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::st
     return PriceSeries(ticker, startEpoch, end, interval);
 }
 
-std::string PriceSeries::toString() {
+std::string PriceSeries::toString() const {
     std::ostringstream result;
     result << "| " << ticker << " |\n----------\n";
     for (auto& [date, ohcl] : data) {
@@ -145,6 +170,7 @@ std::string PriceSeries::toString() {
     return result.str();
 }
 
+// Getters ---------------------------------------------------------------------
 std::map<std::time_t, OHCLRecord> PriceSeries::getData() const {
     return data;
 }

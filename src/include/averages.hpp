@@ -3,12 +3,32 @@
 #ifndef AVERAGES_HPP 
 #define AVERAGES_HPP
 
-#include <map>
-#include <ctime>
+#include "timeseries.hpp"
+#include "priceseries.hpp"
 
-#include "series.hpp"
+class SimpleMovingAverage : public TimeSeries<double> {
+private:
+    int window;
 
-std::map<std::time_t, double> simpleMovingAverage(const PriceSeries& ps, const double window);
-std::map<std::time_t, double> exponentialMovingAverage(const PriceSeries& ps, const double window);
+    // Private constructor 
+    SimpleMovingAverage(const PriceSeries& priceSeries, int window)
+        : window(window) {
+        getSMA(priceSeries);
+        }
 
+    void getSMA(const PriceSeries& priceSeries);
+
+public:
+    // Virtual methods 
+    ~SimpleMovingAverage() = default;
+    void plot() const override;
+    std::string toString() const override;
+
+    // Factory methods 
+    // Specified window size constructor 
+    static SimpleMovingAverage getSimpleMovingAverage(const PriceSeries& priceSeries, int window);
+    // Default window size constructor - defaults to 20d window
+    static SimpleMovingAverage getSimpleMovingAverage(const PriceSeries& priceSeries);
+
+};
 #endif // AVERAGES_HPP

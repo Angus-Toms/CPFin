@@ -2,15 +2,15 @@
 #include "averages.hpp"
 
 // TODO: Pretty printing series (check out fmt library)
+// TODO: Each series needs a toString method
+// TODO: Sort out exception catching (mainly param checking)
 
 int main() {
-    PriceSeries ps = PriceSeries::getPriceSeries("AAPL", "2021-01-01", "2021-12-31", "1d");
+    // Test out SMA
+    PriceSeries ps = PriceSeries::getPriceSeries("AAPL", "2021-01-01", "1d", 10);
     std::cout << ps.toString() << std::endl;
-
-    auto sma = simpleMovingAverage(ps, 10000);
-    for (auto& [date, av] : sma) {
-        std::cout << epochToDateString(date) << " : " << av << "\n";
-    }
-
+    
+    SimpleMovingAverage sma = SimpleMovingAverage::getSimpleMovingAverage(ps, 2);
+    std::cout << sma.toString() << std::endl;
     return 0;
 }
