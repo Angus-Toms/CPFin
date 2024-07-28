@@ -168,6 +168,7 @@ std::string PriceSeries::toString() const {
         result << "| " << epochToDateString(date) << " | " << ohcl.toString() << "\n";
     }
     return result.str();
+
 }
 
 // Getters ---------------------------------------------------------------------

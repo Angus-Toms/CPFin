@@ -8,7 +8,6 @@
 #include <thread>
 #include <map>
 #include <curl/curl.h>
-#include "json.hpp"
 #include "time_utils.hpp"
 #include "timeseries.hpp"
 
