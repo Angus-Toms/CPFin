@@ -34,3 +34,6 @@
 
 # Visual Studio files
 .vscode/
+
+# CMake files
+build/

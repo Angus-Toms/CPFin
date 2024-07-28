@@ -1,25 +1,22 @@
-# Define the compiler
-CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -Isrc/include  # Added -Iinclude to specify the include directory
-
-LDFLAGS = -lcurl  # Link against the libcurl library
-
-# Define the source directory and files
-SRC_DIR = src
-SRC = $(shell find $(SRC_DIR) -name '*.cpp')
-TARGET = example
+# Define the build directory
+BUILD_DIR = build
+TARGET = cpp_finance
 
 # Default target to build the executable
-all: $(TARGET)
+all: $(BUILD_DIR)/$(TARGET)
 
-# Rule to compile the source files and link them into an executable
-$(TARGET): $(SRC)
-	$(CXX) $(CXXFLAGS) $(SRC) $(LDFLAGS) -o $(TARGET)
+# Rule to create the build directory
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+# Rule to run CMake and build the project
+$(BUILD_DIR)/$(TARGET): | $(BUILD_DIR)
+	cd $(BUILD_DIR) && cmake .. && $(MAKE)
 
 # Rule to clean up the build files
 clean:
-	rm -f $(TARGET)
+	rm -rf $(BUILD_DIR)
 
 # Rule to run the executable
-run: $(TARGET)
-	./$(TARGET)
+run: $(BUILD_DIR)/$(TARGET)
+	./$(BUILD_DIR)/$(TARGET)

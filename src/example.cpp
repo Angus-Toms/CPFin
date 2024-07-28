@@ -2,7 +2,6 @@
 #include "averages.hpp"
 
 // TODO: Pretty printing series (check out fmt library)
-// TODO: Each series needs a toString method
 // TODO: Sort out exception catching (mainly param checking)
 
 int main() {
@@ -12,5 +11,6 @@ int main() {
     
     SimpleMovingAverage sma = SimpleMovingAverage::getSimpleMovingAverage(ps, 2);
     std::cout << sma.toString() << std::endl;
+
     return 0;
 }
