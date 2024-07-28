@@ -8,6 +8,8 @@
 #include <thread>
 #include <map>
 #include <curl/curl.h>
+#include <fmt/core.h>
+
 #include "time_utils.hpp"
 #include "timeseries.hpp"
 

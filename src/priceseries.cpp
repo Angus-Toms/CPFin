@@ -6,15 +6,9 @@ OHCLRecord::OHCLRecord(double open, double high, double low, double close, doubl
     : open(open), high(high), low(low), close(close), adjClose(adjClose), volume(volume) {};
 
 std::string OHCLRecord::toString() const {
-    std::ostringstream result;
-    result << "| " << open 
-        << " | " << high 
-        << " | " << low
-        << " | " << close
-        << " | " << adjClose
-        << " | " << volume << " |";
-    return result.str();
-};
+    return fmt::format("{}{:>10.3f}{}{:>10.3f}{}{:>10.3f}{}{:>10.3f}{}{:>10.3f}{}{:>11.0f}{}",
+                       V_LINE, open, V_LINE, high, V_LINE, close, V_LINE, low, V_LINE, adjClose, V_LINE, volume, V_LINE);
+}
 
 double OHCLRecord::getClose() const {
     return close;
@@ -60,7 +54,6 @@ void PriceSeries::checkArguments() {
 }
 
 void PriceSeries::fetchCSV() {
-
     // Call construction
     std::ostringstream urlBuilder;
     urlBuilder << "https://query1.finance.yahoo.com/v7/finance/download/" << ticker
@@ -162,13 +155,22 @@ PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::st
 }
 
 std::string PriceSeries::toString() const {
-    std::ostringstream result;
-    result << "| " << ticker << " |\n----------\n";
-    for (auto& [date, ohcl] : data) {
-        result << "| " << epochToDateString(date) << " | " << ohcl.toString() << "\n";
-    }
-    return result.str();
+    std::string result = fmt::format("{}{}{}\n", TL_CORNER, std::string(90, *H_LINE), TR_CORNER);
+    result += fmt::format("{}{:^90}{}\n", V_LINE, ticker, V_LINE);
+    result += fmt::format("{}{}{}\n", LV_JUNCTION, std::string(90, *H_LINE), RV_JUNCTION);
+    result += fmt::format("{}{:<23}{}{:>10}{}{:>10}{}{:>10}{}{:>10}{}{:>10}{}{:>11}{}\n", 
+                          V_LINE, "Date", V_LINE, "Open", V_LINE, "High", V_LINE, "Low", V_LINE, "Close", V_LINE, "AdjClose", V_LINE, "Volume", V_LINE);
+    result += fmt::format("{}{}{}\n", LV_JUNCTION, std::string(90, *H_LINE), RV_JUNCTION);
 
+    for (const auto& [date, record] : getData()) {
+        std::stringstream dateStream;
+        dateStream << std::put_time(std::localtime(&date), "%Y-%m-%d %H:%M:%S");
+        std::string formattedDate = dateStream.str();
+        result += fmt::format("{}{:<23}{}\n", V_LINE, formattedDate, record.toString());
+    }
+
+    result += fmt::format("{}{:─^80}{}\n", BL_CORNER, "", BR_CORNER);
+    return result;
 }
 
 // Getters ---------------------------------------------------------------------

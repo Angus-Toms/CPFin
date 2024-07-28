@@ -6,11 +6,11 @@
 
 int main() {
     // Test out SMA
-    PriceSeries ps = PriceSeries::getPriceSeries("AAPL", "2021-01-01", "1d", 10);
+    PriceSeries ps = PriceSeries::getPriceSeries("AAPL", "2021-01-01", "2021-01-31", "1d");
     std::cout << ps.toString() << std::endl;
     
-    SimpleMovingAverage sma = SimpleMovingAverage::getSimpleMovingAverage(ps, 2);
-    std::cout << sma.toString() << std::endl;
+    // SimpleMovingAverage sma = SimpleMovingAverage::getSimpleMovingAverage(ps, 2);
+    // std::cout << sma.toString() << std::endl;
 
     return 0;
 }

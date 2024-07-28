@@ -18,6 +18,19 @@ constexpr std::time_t WEEK_DURATION = DAY_DURATION * 7;
 constexpr std::time_t MONTH_DURATION = DAY_DURATION * 30;
 constexpr std::time_t YEAR_DURATION = DAY_DURATION * 365;
 
+// Box drawing constant characters
+const char* const TL_CORNER = "┌";
+const char* const TR_CORNER = "┐";
+const char* const BL_CORNER = "└";
+const char* const BR_CORNER = "┘";
+const char* const LV_JUNCTION = "├";
+const char* const RV_JUNCTION = "┤";
+const char* const TH_JUNCTION = "┬";
+const char* const BH_JUNCTION = "┴";
+const char* const C_JUNCTION = "┼";
+const char* const V_LINE = "│";
+const char* const H_LINE = "─";
+
 constexpr std::array<std::string_view, 6> VALID_INTERVALS{"1m", "1h", "1d", "1wk", "1mo", "1y"};
 
 std::time_t dateStringToEpoch(const std::string& dateStr);
