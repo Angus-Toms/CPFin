@@ -8,6 +8,7 @@
 #include <thread>
 #include <map>
 #include <curl/curl.h>
+#include <matplot/matplot.h>
 
 #include "time_utils.hpp"
 #include "print_utils.hpp"

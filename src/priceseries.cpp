@@ -108,8 +108,24 @@ void PriceSeries::parseCSV(const std::string& readBuffer, std::map<std::time_t, 
 
 // Virtual methods -------------------------------------------------------------
 void PriceSeries::plot() const {
-    std::cout << "TODO: Plot PriceSeries\n";
-    return;
+    // Construct date strings
+    std::vector<std::time_t> dates;
+    std::vector<double> closes;
+    for (const auto& [date, ohcl] : data) {
+        dates.push_back(date);
+        closes.push_back(ohcl.getClose());
+    }
+
+    // Plot 
+    auto fig = matplot::figure<matplot::backend::gnuplot>();
+    auto ax = fig->current_axes();
+    ax->plot(dates, closes);
+
+    ax->xlabel("Date");
+    ax->ylabel("Price");
+    ax->title(fmt::format("{} price: {} to {}", ticker, epochToDateString(start), epochToDateString(end)));
+
+    matplot::show();
 }
 
 // Factory methods -------------------------------------------------------------

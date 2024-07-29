@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Add the fmt and curl packages
 find_package(fmt REQUIRED)
 find_package(CURL REQUIRED)
+find_package(Matplot++ REQUIRED)
 
 # Include the src/include directory for header files
 include_directories(src/include)
@@ -22,6 +23,8 @@ add_executable(${PROJECT_NAME} ${SRC_FILES})
 
 # Link the fmt and curl libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt CURL::libcurl)
+target_link_libraries(${PROJECT_NAME} PRIVATE Matplot++::matplot)
+
 
 # Optionally add compiler flags (e.g., -Wall, -Wextra, -O2)
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -O2)
