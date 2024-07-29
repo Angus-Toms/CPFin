@@ -6,8 +6,7 @@ OHCLRecord::OHCLRecord(double open, double high, double low, double close, doubl
     : open(open), high(high), low(low), close(close), adjClose(adjClose), volume(volume) {};
 
 std::string OHCLRecord::toString() const {
-    return fmt::format("{}{:>10.3f}{}{:>10.3f}{}{:>10.3f}{}{:>10.3f}{}{:>10.3f}{}{:>11.0f}{}",
-                       V_LINE, open, V_LINE, high, V_LINE, close, V_LINE, low, V_LINE, adjClose, V_LINE, volume, V_LINE);
+    return "";
 }
 
 double OHCLRecord::getClose() const {
@@ -61,7 +60,7 @@ void PriceSeries::fetchCSV() {
                 << "&period2=" << end
                 << "&interval=" << interval;
     std::string url = urlBuilder.str();
-    std::cout << "Fetching from " << url << std::endl;
+    // std::cout << "Fetching from " << url << std::endl;
 
     CURL* curl = curl_easy_init();
     std::string readBuffer;
@@ -155,22 +154,19 @@ PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::st
 }
 
 std::string PriceSeries::toString() const {
-    std::string result = fmt::format("{}{}{}\n", TL_CORNER, std::string(90, *H_LINE), TR_CORNER);
-    result += fmt::format("{}{:^90}{}\n", V_LINE, ticker, V_LINE);
-    result += fmt::format("{}{}{}\n", LV_JUNCTION, std::string(90, *H_LINE), RV_JUNCTION);
-    result += fmt::format("{}{:<23}{}{:>10}{}{:>10}{}{:>10}{}{:>10}{}{:>10}{}{:>11}{}\n", 
-                          V_LINE, "Date", V_LINE, "Open", V_LINE, "High", V_LINE, "Low", V_LINE, "Close", V_LINE, "AdjClose", V_LINE, "Volume", V_LINE);
-    result += fmt::format("{}{}{}\n", LV_JUNCTION, std::string(90, *H_LINE), RV_JUNCTION);
+    std::vector<int> columnWidths = {23, 10, 10, 10, 10, 10, 12};
+    std::vector<bool> justifications = {0, 1, 1, 1, 1, 1, 1};
+    int totalWidth = 90;
 
-    for (const auto& [date, record] : getData()) {
-        std::stringstream dateStream;
-        dateStream << std::put_time(std::localtime(&date), "%Y-%m-%d %H:%M:%S");
-        std::string formattedDate = dateStream.str();
-        result += fmt::format("{}{:<23}{}\n", V_LINE, formattedDate, record.toString());
+    std::string str = getTopLine({totalWidth});
+    str += getRow({ticker}, {totalWidth}, justifications);
+    str += getMidLine({columnWidths}, false, true);
+    for (const auto& [date, ohcl] : data) {
+        std::string dateStr = epochToDateString(date);
+        str += getRow({dateStr, std::to_string(ohcl.open), std::to_string(ohcl.high), std::to_string(ohcl.low), std::to_string(ohcl.close), std::to_string(ohcl.adjClose), std::to_string(ohcl.volume)}, columnWidths, justifications);
     }
-
-    result += fmt::format("{}{:─^80}{}\n", BL_CORNER, "", BR_CORNER);
-    return result;
+    str += getBottomLine({totalWidth});
+    return str;
 }
 
 // Getters ---------------------------------------------------------------------
