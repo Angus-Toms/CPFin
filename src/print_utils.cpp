@@ -1,4 +1,24 @@
 #include "print_utils.hpp"
+#include <iostream>
+
+bool isNumber(const std::string& str) {
+    // Check if the string is empty or consists only of whitespace
+    if (str.empty() || std::all_of(str.begin(), str.end(), isspace)) {
+        return false;
+    }
+
+    // Try to convert the string to a double
+    try {
+        std::size_t pos;
+        std::stod(str, &pos);
+        // Check if the entire string was converted
+        return pos == str.size();
+    } catch (const std::invalid_argument& e) {
+        return false;
+    } catch (const std::out_of_range& e) {
+        return false;
+    }
+}
 
 std::string getTopLine(const std::vector<int>& columnWidths) {
     std::string topLine = TL_CORNER;
@@ -12,21 +32,26 @@ std::string getTopLine(const std::vector<int>& columnWidths) {
     return topLine;
 }
 
-std::string getMidLine(const std::vector<int>& columnWidths, bool upperTicks, bool lowerTicks) {
+std::string getMidLine(const std::vector<int>& columnWidths, Ticks ticks) {
     std::string midLine = LV_JUNCTION;
     for (size_t i = 0; i < columnWidths.size(); i++) {
 
         midLine += fmt::format("{:─>{}}", "", columnWidths[i]);
 
         if (i < columnWidths.size() - 1) {
-            if (upperTicks && lowerTicks) {
-                midLine += C_JUNCTION;
-            } else if (upperTicks) {
-                midLine += BH_JUNCTION;
-            } else if (lowerTicks) {
-                midLine += TH_JUNCTION;
-            } else {
-                midLine += H_LINE;
+            switch (ticks) {
+                case Ticks::BOTH:
+                    midLine += C_JUNCTION;
+                    break;
+                case Ticks::UPPER:
+                    midLine += BH_JUNCTION;
+                    break;
+                case Ticks::LOWER:
+                    midLine += TH_JUNCTION;
+                    break;
+                default:
+                    midLine += H_LINE;
+                    break;
             }
         }
     }
@@ -46,17 +71,32 @@ std::string getBottomLine(const std::vector<int>& columnWidths) {
     return bottomLine;
 }
 
-// Justifications: 0 = left, 1 = right
-// TODO: This is messy, enums?
-std::string getRow(const std::vector<std::string>& row, const std::vector<int>& columnWidths, const std::vector<bool>& justifications) {
+
+std::string getRow(const std::vector<std::string>& row, const std::vector<int>& columnWidths, const std::vector<Justification>& justifications) {
+    auto columnCount = row.size();
+    if (columnCount != columnWidths.size() || columnCount != justifications.size()) {
+        throw std::invalid_argument("Column count must match column widths and justifications");
+    }
+    
     std::string rowStr = V_LINE;
     for (size_t i = 0; i < row.size(); i++) {
 
+        // Convert numbers to 2dp
+        std::string text = isNumber(row[i]) ?
+            fmt::format("{:.2f}", std::stod(row[i])) :
+            row[i];
+ 
         // Correctly align content
-        if (justifications[i]) {
-            rowStr += fmt::format("{:>{}}", row[i], columnWidths[i]);
-        } else {
-            rowStr += fmt::format("{:<{}}", row[i], columnWidths[i]);
+        switch (justifications[i]) {
+            case Justification::LEFT:
+                rowStr += fmt::format("{:<{}}", text, columnWidths[i]);
+                break;
+            case Justification::RIGHT:
+                rowStr += fmt::format("{:>{}}", text, columnWidths[i]);
+                break;
+            case Justification::CENTER:
+                rowStr += fmt::format("{:^{}}", text, columnWidths[i]);
+                break;
         }
 
         if (i < row.size() - 1) {

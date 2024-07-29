@@ -1,5 +1,4 @@
 #include "priceseries.hpp"
-#include "time_utils.hpp"
 
 // OHCLRecord struct ===========================================================
 OHCLRecord::OHCLRecord(double open, double high, double low, double close, double adjClose, double volume)
@@ -154,18 +153,43 @@ PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::st
 }
 
 std::string PriceSeries::toString() const {
-    std::vector<int> columnWidths = {23, 10, 10, 10, 10, 10, 12};
-    std::vector<bool> justifications = {0, 1, 1, 1, 1, 1, 1};
-    int totalWidth = 90;
+    // Table constants
+    std::vector<int> columnWidths = {23, 10, 10, 10, 10, 10, 15};
+    std::vector<Justification> justifications = {
+        Justification::LEFT,
+        Justification::RIGHT,
+        Justification::RIGHT,
+        Justification::RIGHT,
+        Justification::RIGHT,
+        Justification::RIGHT,
+        Justification::RIGHT
+    };
+    int totalWidth = 94;
 
+    // Table title
     std::string str = getTopLine({totalWidth});
-    str += getRow({ticker}, {totalWidth}, justifications);
-    str += getMidLine({columnWidths}, false, true);
+    str += getRow({ticker}, {totalWidth}, {Justification::CENTER});
+
+    // Column headers
+    str += getMidLine({columnWidths}, Ticks::LOWER);
+    std::vector<std::string> headers = {
+        "Date",
+        "Open",
+        "High",
+        "Low",
+        "Close",
+        "Adj Close",
+        "Volume"
+    };
+    str += getRow(headers, columnWidths, justifications);
+    str += getMidLine({columnWidths}, Ticks::BOTH);
+
+
     for (const auto& [date, ohcl] : data) {
         std::string dateStr = epochToDateString(date);
         str += getRow({dateStr, std::to_string(ohcl.open), std::to_string(ohcl.high), std::to_string(ohcl.low), std::to_string(ohcl.close), std::to_string(ohcl.adjClose), std::to_string(ohcl.volume)}, columnWidths, justifications);
     }
-    str += getBottomLine({totalWidth});
+    str += getBottomLine(columnWidths);
     return str;
 }
 

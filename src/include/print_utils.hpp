@@ -8,6 +8,19 @@
 #include <fmt/core.h>
 #include <fmt/format.h>
 
+enum class Justification {
+    LEFT,
+    RIGHT,
+    CENTER
+};
+
+enum class Ticks {
+    NONE,
+    UPPER,
+    LOWER,
+    BOTH
+};
+
 // Box drawing constant characters
 const std::string TL_CORNER = "┌";
 const std::string TR_CORNER = "┐";
@@ -22,9 +35,9 @@ const std::string V_LINE = "│";
 const std::string H_LINE = "─";
 
 std::string getTopLine(const std::vector<int>& columnWidths);
-std::string getMidLine(const std::vector<int>& columnWidths, bool upperTicks, bool lowerTicks);
+std::string getMidLine(const std::vector<int>& columnWidths, Ticks ticks);
 std::string getBottomLine(const std::vector<int>& columnWidths);
 
-std::string getRow(const std::vector<std::string>& row, const std::vector<int>& columnWidths, const std::vector<bool>& justifications);
+std::string getRow(const std::vector<std::string>& row, const std::vector<int>& columnWidths, const std::vector<Justification>& justifications);
 
 #endif // PRINT_UTILS_HPP
