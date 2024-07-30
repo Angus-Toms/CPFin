@@ -28,8 +28,9 @@ void SimpleMovingAverage::getSMA(const PriceSeries& priceSeries) {
     }
 }
 
-void SimpleMovingAverage::plot() const {
+int SimpleMovingAverage::plot() const {
     std::cout << "TODO: Write SMA plot routine\n";
+    return 0;
 }
 
 // Factory methods -------------------------------------------------------------

@@ -21,7 +21,7 @@ private:
 public:
     // Virtual methods 
     ~SimpleMovingAverage() = default;
-    void plot() const override;
+    int plot() const override;
     std::string toString() const override;
 
     // Factory methods 

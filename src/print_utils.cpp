@@ -20,6 +20,17 @@ bool isNumber(const std::string& str) {
     }
 }
 
+std::string colorToAnsi(Color color) {
+    switch (color) {
+        case Color::RED:    return "\033[31m";
+        case Color::GREEN:  return "\033[32m";
+        case Color::YELLOW: return "\033[33m";
+        case Color::BLUE:   return "\033[34m";
+        case Color::RESET:  return "\033[0m";
+        default:            return "\033[37m"; // Default to white
+    }
+}
+
 std::string getTopLine(const std::vector<int>& columnWidths) {
     std::string topLine = TL_CORNER;
     for (size_t i = 0; i < columnWidths.size(); ++i) {
@@ -72,10 +83,10 @@ std::string getBottomLine(const std::vector<int>& columnWidths) {
 }
 
 
-std::string getRow(const std::vector<std::string>& row, const std::vector<int>& columnWidths, const std::vector<Justification>& justifications) {
+std::string getRow(const std::vector<std::string>& row, const std::vector<int>& columnWidths, const std::vector<Justification>& justifications, const std::vector<Color>& colors) {
     auto columnCount = row.size();
     if (columnCount != columnWidths.size() || columnCount != justifications.size()) {
-        throw std::invalid_argument("Column count must match column widths and justifications");
+        throw std::invalid_argument("Column count must match column widths, justifications, and colors");
     }
     
     std::string rowStr = V_LINE;
@@ -85,17 +96,20 @@ std::string getRow(const std::vector<std::string>& row, const std::vector<int>& 
         std::string text = isNumber(row[i]) ?
             fmt::format("{:.2f}", std::stod(row[i])) :
             row[i];
+
+        std::string colorCode = colorToAnsi(colors[i]);
+        std::string resetCode = colorToAnsi(Color::RESET);
  
         // Correctly align content
         switch (justifications[i]) {
             case Justification::LEFT:
-                rowStr += fmt::format("{:<{}}", text, columnWidths[i]);
+                rowStr += fmt::format("{}{:<{}}{}", colorCode, text, columnWidths[i], resetCode);
                 break;
             case Justification::RIGHT:
-                rowStr += fmt::format("{:>{}}", text, columnWidths[i]);
+                rowStr += fmt::format("{}{:>{}}{}", colorCode, text, columnWidths[i], resetCode);
                 break;
             case Justification::CENTER:
-                rowStr += fmt::format("{:^{}}", text, columnWidths[i]);
+                rowStr += fmt::format("{}{:^{}}{}", colorCode, text, columnWidths[i], resetCode);
                 break;
         }
 

@@ -24,7 +24,7 @@ std::string epochToDateString(const std::time_t time) {
         return "Invalid time";
     }
     std::ostringstream oss;
-    oss << std::put_time(tm, "%Y-%m-%d %H:%M:%S");
+    oss << std::put_time(tm, "%Y-%m-%d");
     return oss.str();
 }
 

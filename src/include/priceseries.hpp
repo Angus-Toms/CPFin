@@ -27,7 +27,14 @@ struct OHCLRecord {
     OHCLRecord() = default;
     OHCLRecord(double open, double high, double low, double close, double adjClose, double volume);
     std::string toString() const;
+
+    // Getters
+    double getOpen() const;
+    double getHigh() const;
+    double getLow() const;
     double getClose() const;
+    double getAdjClose() const;
+    double getVolume() const;
 };
 
 class PriceSeries : public TimeSeries<OHCLRecord> {
@@ -55,7 +62,7 @@ private:
 public:
     // Virtual methods 
     ~PriceSeries() = default;
-    void plot() const override;
+    int plot() const override;
     std::string toString() const override;
 
     // Factory methods 

@@ -8,8 +8,29 @@ std::string OHCLRecord::toString() const {
     return "";
 }
 
+// Getters ---------------------------------------------------------------------
+double OHCLRecord::getOpen() const {
+    return open;
+};
+
+double OHCLRecord::getHigh() const {
+    return high;
+};
+
+double OHCLRecord::getLow() const {
+    return low;
+};
+
 double OHCLRecord::getClose() const {
     return close;
+};
+
+double OHCLRecord::getAdjClose() const {
+    return adjClose;
+};
+
+double OHCLRecord::getVolume() const {
+    return volume;
 };
 
 // PriceSeries class ===========================================================
@@ -47,7 +68,6 @@ void PriceSeries::checkArguments() {
         }
         throw std::invalid_argument("Could not get PriceSeries. Interval " + interval + " is not supported\n Supported intervals: " + supportedIntervals.str());
     }
-
     return;
 }
 
@@ -107,25 +127,10 @@ void PriceSeries::parseCSV(const std::string& readBuffer, std::map<std::time_t, 
 }
 
 // Virtual methods -------------------------------------------------------------
-void PriceSeries::plot() const {
+int PriceSeries::plot() const {
     // Construct date strings
-    std::vector<std::time_t> dates;
-    std::vector<double> closes;
-    for (const auto& [date, ohcl] : data) {
-        dates.push_back(date);
-        closes.push_back(ohcl.getClose());
-    }
-
-    // Plot 
-    auto fig = matplot::figure<matplot::backend::gnuplot>();
-    auto ax = fig->current_axes();
-    ax->plot(dates, closes);
-
-    ax->xlabel("Date");
-    ax->ylabel("Price");
-    ax->title(fmt::format("{} price: {} to {}", ticker, epochToDateString(start), epochToDateString(end)));
-
-    matplot::show();
+    // TODO: Implement
+    return 0;
 }
 
 // Factory methods -------------------------------------------------------------
@@ -170,7 +175,7 @@ PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::st
 
 std::string PriceSeries::toString() const {
     // Table constants
-    std::vector<int> columnWidths = {23, 10, 10, 10, 10, 10, 15};
+    std::vector<int> columnWidths = {13, 10, 10, 10, 10, 10, 15};
     std::vector<Justification> justifications = {
         Justification::LEFT,
         Justification::RIGHT,
@@ -180,11 +185,12 @@ std::string PriceSeries::toString() const {
         Justification::RIGHT,
         Justification::RIGHT
     };
-    int totalWidth = 94;
+    std::vector<Color> colors = {Color::WHITE, Color::WHITE, Color::WHITE, Color::WHITE, Color::WHITE, Color::WHITE, Color::WHITE};
+    int totalWidth = 84;
 
     // Table title
     std::string str = getTopLine({totalWidth});
-    str += getRow({ticker}, {totalWidth}, {Justification::CENTER});
+    str += getRow({ticker}, {totalWidth}, {Justification::CENTER}, {Color::WHITE});
 
     // Column headers
     str += getMidLine({columnWidths}, Ticks::LOWER);
@@ -197,13 +203,74 @@ std::string PriceSeries::toString() const {
         "Adj Close",
         "Volume"
     };
-    str += getRow(headers, columnWidths, justifications);
+    str += getRow(headers, columnWidths, justifications, colors);
     str += getMidLine({columnWidths}, Ticks::BOTH);
 
 
+    double lastOpen, lastClose, lastHigh, lastLow, lastAdjClose, lastVolume;
+
     for (const auto& [date, ohcl] : data) {
+        if (lastOpen) {
+            // Later records, set colors
+            if (ohcl.open > lastOpen) {
+                colors[1] = Color::GREEN;
+            } else if (ohcl.open < lastOpen) {
+                colors[1] = Color::RED;
+            } else {
+                colors[1] = Color::WHITE;
+            }
+
+            if (ohcl.high > lastHigh) {
+                colors[2] = Color::GREEN;
+            } else if (ohcl.high < lastHigh) {
+                colors[2] = Color::RED;
+            } else {
+                colors[2] = Color::WHITE;
+            }
+
+            if (ohcl.low > lastLow) {
+                colors[3] = Color::GREEN;
+            } else if (ohcl.low < lastLow) {
+                colors[3] = Color::RED;
+            } else {
+                colors[3] = Color::WHITE;
+            }
+
+            if (ohcl.close > lastClose) {
+                colors[4] = Color::GREEN;
+            } else if (ohcl.close < lastClose) {
+                colors[4] = Color::RED;
+            } else {
+                colors[4] = Color::WHITE;
+            }
+
+            if (ohcl.adjClose > lastAdjClose) {
+                colors[5] = Color::GREEN;
+            } else if (ohcl.adjClose < lastAdjClose) {
+                colors[5] = Color::RED;
+            } else {
+                colors[5] = Color::WHITE;
+            }
+
+            if (ohcl.volume > lastVolume) {
+                colors[6] = Color::GREEN;
+            } else if (ohcl.volume < lastVolume) {
+                colors[6] = Color::RED;
+            } else {
+                colors[6] = Color::WHITE;
+            }
+        }
+
+        // Update last values 
+        lastOpen = ohcl.open;
+        lastClose = ohcl.close;
+        lastHigh = ohcl.high;
+        lastLow = ohcl.low;
+        lastAdjClose = ohcl.adjClose;
+        lastVolume = ohcl.volume;
+
         std::string dateStr = epochToDateString(date);
-        str += getRow({dateStr, std::to_string(ohcl.open), std::to_string(ohcl.high), std::to_string(ohcl.low), std::to_string(ohcl.close), std::to_string(ohcl.adjClose), std::to_string(ohcl.volume)}, columnWidths, justifications);
+        str += getRow({dateStr, std::to_string(ohcl.open), std::to_string(ohcl.high), std::to_string(ohcl.low), std::to_string(ohcl.close), std::to_string(ohcl.adjClose), std::to_string(ohcl.volume)}, columnWidths, justifications, colors);
     }
     str += getBottomLine(columnWidths);
     return str;

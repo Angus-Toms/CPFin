@@ -21,6 +21,22 @@ enum class Ticks {
     BOTH
 };
 
+enum class Colors {
+    RED,
+    GREEN,
+    WHITE
+};
+
+// Define colors using ANSI escape codes
+enum class Color {
+    RED,
+    GREEN,
+    YELLOW,
+    BLUE,
+    WHITE,   // Default color
+    RESET
+};
+
 // Box drawing constant characters
 const std::string TL_CORNER = "┌";
 const std::string TR_CORNER = "┐";
@@ -34,10 +50,11 @@ const std::string C_JUNCTION = "┼";
 const std::string V_LINE = "│";
 const std::string H_LINE = "─";
 
+
 std::string getTopLine(const std::vector<int>& columnWidths);
 std::string getMidLine(const std::vector<int>& columnWidths, Ticks ticks);
 std::string getBottomLine(const std::vector<int>& columnWidths);
 
-std::string getRow(const std::vector<std::string>& row, const std::vector<int>& columnWidths, const std::vector<Justification>& justifications);
+std::string getRow(const std::vector<std::string>& row, const std::vector<int>& columnWidths, const std::vector<Justification>& justifications, const std::vector<Color>& colors);
 
 #endif // PRINT_UTILS_HPP

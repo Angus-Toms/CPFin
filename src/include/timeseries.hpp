@@ -15,7 +15,7 @@ public:
     virtual ~TimeSeries() = default;
 
     // Pure virtual methods
-    virtual void plot() const = 0;
+    virtual int plot() const = 0;
     virtual std::string toString() const = 0;
 };
 
