@@ -9,10 +9,11 @@
 class SimpleMovingAverage : public TimeSeries<double> {
 private:
     int window;
+    std::string ticker;
 
     // Private constructor 
     SimpleMovingAverage(const PriceSeries& priceSeries, int window)
-        : window(window) {
+        : window(window), ticker(priceSeries.getTicker()) {
         getSMA(priceSeries);
         }
 

@@ -44,10 +44,46 @@ SimpleMovingAverage SimpleMovingAverage::getSimpleMovingAverage(const PriceSerie
 }
 
 std::string SimpleMovingAverage::toString() const {
-    std::ostringstream result;
-    result << "| Simple Moving Average |\n-------------------------\n";
-    for (auto& [date, sma] : data) {
-        result << "| " << epochToDateString(date) << " | " << sma << "\n";
+    // Table constants 
+    std::vector<int> columnWidths = {13, 10};
+    std::vector<Justification> justifications = {Justification::LEFT, Justification::RIGHT};
+    std::vector<Color> colors = {Color::WHITE, Color::WHITE};
+    int totalWidth = 24;
+
+    // Table title 
+    std::string str = getTopLine({totalWidth});
+    str += getRow({fmt::format("{} - SMA ({}d)", ticker, window)}, {totalWidth}, {Justification::CENTER}, {Color::WHITE});
+
+    // Table headers
+    str += getMidLine(columnWidths, Ticks::LOWER);
+    str += getRow({"Date", "SMA"}, columnWidths, justifications, colors);
+
+    // Table data
+    str += getMidLine(columnWidths, Ticks::BOTH);
+    double lastSma;
+    for (const auto& [date, sma] : data) {
+        std::vector<std::string> row = {
+            epochToDateString(date),
+            fmt::format("{:.2f}", sma)
+        };
+
+        // Color SMA based on direction
+        if (lastSma) {
+            if (sma > lastSma) {
+                colors[1] = Color::GREEN;
+            } else if (sma < lastSma) {
+                colors[1] = Color::RED;
+            } else {
+                colors[1] = Color::WHITE;
+            }
+        } else {
+            std::cout << epochToDateString(date) << std::endl;
+        }
+        lastSma = sma;
+
+        // Add row 
+        str += getRow(row, columnWidths, justifications, colors);
     }
-    return result.str();
+    str += getBottomLine(columnWidths);
+    return str;
 }

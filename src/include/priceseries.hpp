@@ -82,6 +82,7 @@ public:
     // Getters
     std::map<std::time_t, OHCLRecord> getData() const;
     OHCLRecord getRecord(const std::time_t date) const;
+    std::string getTicker() const;
     
 };
 

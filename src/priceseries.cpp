@@ -284,3 +284,7 @@ std::map<std::time_t, OHCLRecord> PriceSeries::getData() const {
 OHCLRecord PriceSeries::getRecord(const std::time_t date) const {
     return data.at(date);
 }
+
+std::string PriceSeries::getTicker() const {
+    return ticker;
+}

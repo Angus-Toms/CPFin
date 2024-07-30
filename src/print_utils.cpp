@@ -82,7 +82,6 @@ std::string getBottomLine(const std::vector<int>& columnWidths) {
     return bottomLine;
 }
 
-
 std::string getRow(const std::vector<std::string>& row, const std::vector<int>& columnWidths, const std::vector<Justification>& justifications, const std::vector<Color>& colors) {
     auto columnCount = row.size();
     if (columnCount != columnWidths.size() || columnCount != justifications.size()) {
@@ -119,4 +118,71 @@ std::string getRow(const std::vector<std::string>& row, const std::vector<int>& 
     }
     rowStr += V_LINE + "\n";
     return rowStr;
+}
+
+// TODO: START HERE: Work out interface. Pass seperate date and data vectors? A map? TimeSeries object?
+template <typename T>
+std::string getTable(const std::string title, const std::map<std::time_t, T> data, const std::vector<std::string>& headers, const std::vector<int>& columnWidths, const std::vector<Justification>& justifications, bool highlightChange) {
+    int columnCount = data[0].size();
+
+    if (headers.size() < columnCount) {
+        throw std::invalid_argument("Could not build table: Too few headers provided");
+    } else if (headers.size() > columnCount) {
+        throw std::invalid_argument("Could not build table: Too many headers provided");
+    }
+
+    if (columnWidths.size() < columnCount) {
+        throw std::invalid_argument("Could not build table: Too few column widths provided");
+    } else if (columnWidths.size() > columnCount) {
+        throw std::invalid_argument("Could not build table: Too many column widths provided");
+    }
+
+    if (justifications.size() < columnCount) {
+        throw std::invalid_argument("Could not build table: Too few justifications provided");
+    } else if (justifications.size() > columnCount) {
+        throw std::invalid_argument("Could not build table: Too many justifications provided");
+    }
+
+    int totalWidth = 1;
+    for (int width : columnWidths) {
+        totalWidth += width + 1;
+    }
+    std::vector<Color> colors(columnCount, Color::WHITE);
+
+    // Build title and headers 
+    std::string table = getTopLine({totalWidth});
+    table += getRow({title}, {totalWidth}, {Justification::CENTER}, {Color::WHITE});
+    table += getMidLine(columnWidths, Ticks::LOWER);
+    table += getRow(headers, columnWidths, justifications, colors);
+    table += getMidLine(columnWidths, Ticks::BOTH);
+
+    // Build data rows
+    std::vector<double> lastValues;
+    for (const auto& elem : data[0]) {
+        lastValues.push_back(std::stod(elem));
+    }
+
+    for (const auto& row : data) {
+        if (highlightChange) {
+            for (int i = 0; i < columnCount; i++) {
+                double value = std::stod(row[i]);
+                if (value > lastValues[i]) {
+                    colors[i] = Color::GREEN;
+                } else if (value < lastValues[i]) {
+                    colors[i] = Color::RED;
+                } else {
+                    colors[i] = Color::WHITE;
+                }
+            }
+            // Set last values to current row
+            lastValues.clear();
+            for (const auto& elem : row) {
+                lastValues.push_back(std::stod(elem));
+            }
+        }
+        table += getRow(row, columnWidths, justifications, colors);
+    }    
+    // Build bottom line
+    table += getBottomLine(columnWidths);
+    return table;
 }
