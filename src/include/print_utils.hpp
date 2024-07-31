@@ -61,7 +61,7 @@ std::string getRow(const std::vector<std::string>& row,
                    const std::vector<Color>& colors);
 
 std::string getTable(const std::string title, 
-                     const std::vector<std::time_t> dates, 
+                     const std::vector<std::string> dates, 
                      const std::vector<std::vector<std::string>>& data, 
                      const std::vector<std::string>& headers, 
                      const std::vector<int>& columnWidths, 

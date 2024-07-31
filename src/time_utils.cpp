@@ -18,13 +18,17 @@ std::time_t dateStringToEpoch(const std::string& dateStr) {
     return time;
 }
 
-std::string epochToDateString(const std::time_t time) {
-    std::tm* tm = std::localtime(&time);
+std::string epochToDateString(const std::time_t date, bool includeTime) {
+    std::tm* tm = std::localtime(&date);
     if (tm == nullptr) {
         return "Invalid time";
     }
     std::ostringstream oss;
-    oss << std::put_time(tm, "%Y-%m-%d");
+    if (includeTime) {
+        oss << std::put_time(tm, "%Y-%m-%d %H:%M:%S");
+    } else {
+        oss << std::put_time(tm, "%Y-%m-%d");
+    }
     return oss.str();
 }
 

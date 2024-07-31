@@ -61,6 +61,7 @@ std::string SimpleMovingAverage::toString() const {
     // Table data
     str += getMidLine(columnWidths, Ticks::BOTH);
     double lastSma;
+    bool isFirstRow = true;
     for (const auto& [date, sma] : data) {
         std::vector<std::string> row = {
             epochToDateString(date),
@@ -68,7 +69,7 @@ std::string SimpleMovingAverage::toString() const {
         };
 
         // Color SMA based on direction
-        if (lastSma) {
+        if (!isFirstRow) {
             if (sma > lastSma) {
                 colors[1] = Color::GREEN;
             } else if (sma < lastSma) {
@@ -77,11 +78,10 @@ std::string SimpleMovingAverage::toString() const {
                 colors[1] = Color::WHITE;
             }
         } else {
-            std::cout << epochToDateString(date) << std::endl;
-        }
-        lastSma = sma;
+            isFirstRow = false;
+        } 
 
-        // Add row 
+        lastSma = sma;
         str += getRow(row, columnWidths, justifications, colors);
     }
     str += getBottomLine(columnWidths);

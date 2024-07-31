@@ -21,7 +21,7 @@ constexpr std::time_t YEAR_DURATION = DAY_DURATION * 365;
 constexpr std::array<std::string_view, 6> VALID_INTERVALS{"1m", "1h", "1d", "1wk", "1mo", "1y"};
 
 std::time_t dateStringToEpoch(const std::string& dateStr);
-std::string epochToDateString(const std::time_t time);
+std::string epochToDateString(const std::time_t date, bool includeTime = false);
 std::time_t intervalToSeconds(const std::string& interval);
 bool isInvalidInterval(const std::string& interval);
 

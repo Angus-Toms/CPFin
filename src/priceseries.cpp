@@ -174,105 +174,115 @@ PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::st
 }
 
 std::string PriceSeries::toString() const {
-    // Table constants
+    // Table constants 
     std::vector<int> columnWidths = {13, 10, 10, 10, 10, 10, 15};
     std::vector<Justification> justifications = {
-        Justification::LEFT,
-        Justification::RIGHT,
-        Justification::RIGHT,
-        Justification::RIGHT,
-        Justification::RIGHT,
-        Justification::RIGHT,
+        Justification::LEFT, Justification::RIGHT, Justification::RIGHT, 
+        Justification::RIGHT, Justification::RIGHT, Justification::RIGHT, 
         Justification::RIGHT
     };
-    std::vector<Color> colors = {Color::WHITE, Color::WHITE, Color::WHITE, Color::WHITE, Color::WHITE, Color::WHITE, Color::WHITE};
+    std::vector<Color> colors = {
+        Color::WHITE, Color::WHITE, Color::WHITE, 
+        Color::WHITE, Color::WHITE, Color::WHITE, 
+        Color::WHITE
+    };
     int totalWidth = 84;
 
-    // Table title
+    // Table title 
     std::string str = getTopLine({totalWidth});
     str += getRow({ticker}, {totalWidth}, {Justification::CENTER}, {Color::WHITE});
 
-    // Column headers
-    str += getMidLine({columnWidths}, Ticks::LOWER);
-    std::vector<std::string> headers = {
-        "Date",
-        "Open",
-        "High",
-        "Low",
-        "Close",
-        "Adj Close",
-        "Volume"
-    };
-    str += getRow(headers, columnWidths, justifications, colors);
-    str += getMidLine({columnWidths}, Ticks::BOTH);
+    // Table headers
+    str += getMidLine(columnWidths, Ticks::LOWER);
+    str += getRow(
+        {"Date", "Open", "High", "Low", "Close", "Adj Close", "Volume"}, 
+        columnWidths, justifications, colors
+    );
+    str += getMidLine(columnWidths, Ticks::BOTH);
 
-
-    double lastOpen, lastClose, lastHigh, lastLow, lastAdjClose, lastVolume;
-
+    // Table data
+    double lastOpen, lastHigh, lastLow, lastClose, lastAdjClose, lastVolume;
+    bool isFirstRow = true;
     for (const auto& [date, ohcl] : data) {
-        if (lastOpen) {
-            // Later records, set colors
-            if (ohcl.open > lastOpen) {
+        // Change highlighting 
+        double open = ohcl.getOpen();
+        double high = ohcl.getHigh();
+        double low = ohcl.getLow();
+        double close = ohcl.getClose();
+        double adjClose = ohcl.getAdjClose();
+        double volume = ohcl.getVolume();
+
+        if (!isFirstRow) {
+            if (open > lastOpen) {
                 colors[1] = Color::GREEN;
-            } else if (ohcl.open < lastOpen) {
+            } else if (open < lastOpen) {
                 colors[1] = Color::RED;
             } else {
                 colors[1] = Color::WHITE;
             }
 
-            if (ohcl.high > lastHigh) {
+            if (high > lastHigh) {
                 colors[2] = Color::GREEN;
-            } else if (ohcl.high < lastHigh) {
+            } else if (high < lastHigh) {
                 colors[2] = Color::RED;
             } else {
                 colors[2] = Color::WHITE;
             }
 
-            if (ohcl.low > lastLow) {
+            if (low > lastLow) {
                 colors[3] = Color::GREEN;
-            } else if (ohcl.low < lastLow) {
+            } else if (low < lastLow) {
                 colors[3] = Color::RED;
             } else {
                 colors[3] = Color::WHITE;
             }
 
-            if (ohcl.close > lastClose) {
+            if (close > lastClose) {
                 colors[4] = Color::GREEN;
-            } else if (ohcl.close < lastClose) {
+            } else if (close < lastClose) {
                 colors[4] = Color::RED;
             } else {
                 colors[4] = Color::WHITE;
             }
 
-            if (ohcl.adjClose > lastAdjClose) {
+            if (adjClose > lastAdjClose) {
                 colors[5] = Color::GREEN;
-            } else if (ohcl.adjClose < lastAdjClose) {
+            } else if (adjClose < lastAdjClose) {
                 colors[5] = Color::RED;
             } else {
                 colors[5] = Color::WHITE;
             }
 
-            if (ohcl.volume > lastVolume) {
+            if (volume > lastVolume) {
                 colors[6] = Color::GREEN;
-            } else if (ohcl.volume < lastVolume) {
+            } else if (volume < lastVolume) {
                 colors[6] = Color::RED;
             } else {
                 colors[6] = Color::WHITE;
             }
+        } else {
+            isFirstRow = false;
         }
 
-        // Update last values 
-        lastOpen = ohcl.open;
-        lastClose = ohcl.close;
-        lastHigh = ohcl.high;
-        lastLow = ohcl.low;
-        lastAdjClose = ohcl.adjClose;
-        lastVolume = ohcl.volume;
+        str += getRow(
+            {
+                epochToDateString(date), std::to_string(open), 
+                std::to_string(high), std::to_string(low), 
+                std::to_string(close), std::to_string(adjClose), 
+                std::to_string(volume)
+            }, 
+            columnWidths, justifications, colors
+        );
 
-        std::string dateStr = epochToDateString(date);
-        str += getRow({dateStr, std::to_string(ohcl.open), std::to_string(ohcl.high), std::to_string(ohcl.low), std::to_string(ohcl.close), std::to_string(ohcl.adjClose), std::to_string(ohcl.volume)}, columnWidths, justifications, colors);
+        // Update last values
+        lastOpen = open;
+        lastHigh = high;
+        lastLow = low;
+        lastClose = close;
+        lastAdjClose = adjClose;
+        lastVolume = volume;
     }
-    str += getBottomLine(columnWidths);
+    str += getBottomLine({totalWidth});
     return str;
 }
 
