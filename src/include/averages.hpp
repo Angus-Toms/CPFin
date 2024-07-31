@@ -15,7 +15,7 @@ private:
     SimpleMovingAverage(const PriceSeries& priceSeries, int window)
         : window(window), ticker(priceSeries.getTicker()) {
         getSMA(priceSeries);
-        }
+    }
 
     void getSMA(const PriceSeries& priceSeries);
 

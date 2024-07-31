@@ -77,6 +77,7 @@ std::string SimpleMovingAverage::toString() const {
             } else {
                 colors[1] = Color::WHITE;
             }
+            
         } else {
             isFirstRow = false;
         } 
