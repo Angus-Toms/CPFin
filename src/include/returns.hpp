@@ -6,22 +6,19 @@
 #include <string>
 
 #include "timeseries.hpp"
-#include "priceseries.hpp"
 #include "print_utils.hpp"
 
-struct ReturnMetrics {
+class PriceSeries;
+
+struct ReturnMetricRecord {
     double daily;
     double cumulative;
     double annualized;
     double log;
 
-    // Constructor definitions
-    // Default constructor
-    ReturnMetrics() = default;
-    ReturnMetrics(double daily, double cumulative, double annualized, double log)
+    ReturnMetricRecord() = default;
+    ReturnMetricRecord(double daily, double cumulative, double annualized, double log)
         : daily(daily), cumulative(cumulative), annualized(annualized), log(log) {}
-
-    std::string toString() const;
 
     double getDaily() const { return daily; }
     double getCumulative() const { return cumulative; }
@@ -29,26 +26,19 @@ struct ReturnMetrics {
     double getLog() const { return log; }
 };
 
-class ReturnSeries : public TimeSeries<ReturnMetrics> {
+class ReturnMetrics : public TimeSeries<ReturnMetricRecord> {
 private:
-    std::string ticker;
+    const PriceSeries& priceSeries;
 
-    // Private constructor
-    ReturnSeries(const PriceSeries& priceSeries)
-        : ticker(priceSeries.getTicker()) {
-        getReturns(priceSeries);
-    }
+    void calculate();
 
-    void getReturns(const PriceSeries& priceSeries);
+public:
+    // Constructor
+    ReturnMetrics(const PriceSeries& priceSeries);
 
-public: 
-    // Virtual methods 
-    ~ReturnSeries() = default;
+    // Implement virtual methods from TimeSeries
     int plot() const override;
     std::string toString() const override;
-
-    //Factory methods 
-    static ReturnSeries getReturnSeries(const PriceSeries& priceSeries);
 };
 
 #endif // RETURNS_HPP

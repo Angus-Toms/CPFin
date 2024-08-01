@@ -14,6 +14,10 @@
 #include "print_utils.hpp"
 #include "timeseries.hpp"
 
+// Forward declaration of analysis classes
+class SMA;
+class ReturnMetrics;
+
 struct OHCLRecord {
     double open;
     double high;
@@ -79,10 +83,20 @@ public:
     // Number of datapoints constructor (date string)
     static PriceSeries getPriceSeries(const std::string& ticker, const std::string &start, const std::string &interval, const std::size_t count);
 
-    // Getters
+    // Getters 
     std::map<std::time_t, OHCLRecord> getData() const;
     OHCLRecord getRecord(const std::time_t date) const;
     std::string getTicker() const;
+
+    // Analyses ================================================================
+    // Simple moving average ---------------------------------------------------
+    // Default window - 20 days
+    SMA getSMA() const; 
+    // Specific window
+    SMA getSMA(int window) const;
+
+    // Returns -----------------------------------------------------------------
+    ReturnMetrics getReturns() const;    
     
 };
 

@@ -1,5 +1,8 @@
 #include "priceseries.hpp"
 
+#include "averages.hpp"
+#include "returns.hpp"
+
 // OHCLRecord struct ===========================================================
 OHCLRecord::OHCLRecord(double open, double high, double low, double close, double adjClose, double volume)
     : open(open), high(high), low(low), close(close), adjClose(adjClose), volume(volume) {};
@@ -297,4 +300,20 @@ OHCLRecord PriceSeries::getRecord(const std::time_t date) const {
 
 std::string PriceSeries::getTicker() const {
     return ticker;
+}
+
+// Analyses ====================================================================
+// Simple Moving Average -------------------------------------------------------
+// No window supplied
+SMA PriceSeries::getSMA() const {
+    return SMA(*this, 20);
+}
+
+SMA PriceSeries::getSMA(int window) const {
+    return SMA(*this, window);
+}
+
+// Returns ---------------------------------------------------------------------
+ReturnMetrics PriceSeries::getReturns() const {
+    return ReturnMetrics(*this);
 }

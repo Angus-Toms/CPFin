@@ -4,32 +4,22 @@
 #define AVERAGES_HPP
 
 #include "timeseries.hpp"
-#include "priceseries.hpp"
 
-class SimpleMovingAverage : public TimeSeries<double> {
+class PriceSeries;
+
+class SMA : public TimeSeries<double> {
 private:
+    const PriceSeries& priceSeries;
     int window;
-    std::string ticker;
 
-    // Private constructor 
-    SimpleMovingAverage(const PriceSeries& priceSeries, int window)
-        : window(window), ticker(priceSeries.getTicker()) {
-        getSMA(priceSeries);
-    }
-
-    void getSMA(const PriceSeries& priceSeries);
+    void calculate();
 
 public:
-    // Virtual methods 
-    ~SimpleMovingAverage() = default;
+    SMA(const PriceSeries& priceSeries, int window);
+
+    // Implement virtual methods from TimeSeries
     int plot() const override;
     std::string toString() const override;
-
-    // Factory methods 
-    // Specified window size constructor 
-    static SimpleMovingAverage getSimpleMovingAverage(const PriceSeries& priceSeries, int window);
-    // Default window size constructor - defaults to 20d window
-    static SimpleMovingAverage getSimpleMovingAverage(const PriceSeries& priceSeries);
 
 };
 #endif // AVERAGES_HPP

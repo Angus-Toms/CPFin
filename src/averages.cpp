@@ -1,6 +1,13 @@
 #include "averages.hpp"
+#include "priceseries.hpp"
 
-void SimpleMovingAverage::getSMA(const PriceSeries& priceSeries) {
+// Constructor -----------------------------------------------------------------
+SMA::SMA(const PriceSeries& priceSeries, int window)
+    : priceSeries(priceSeries), window(window) {
+    calculate();
+}
+
+void SMA::calculate() {
     size_t windowSize = static_cast<size_t>(window);
     const std::map<std::time_t, OHCLRecord>& priceData = priceSeries.getData();
     // Check if window size is valid 
@@ -28,22 +35,14 @@ void SimpleMovingAverage::getSMA(const PriceSeries& priceSeries) {
     }
 }
 
-int SimpleMovingAverage::plot() const {
+
+// Virtual methods -------------------------------------------------------------
+int SMA::plot() const {
     std::cout << "TODO: Write SMA plot routine\n";
     return 0;
 }
 
-// Factory methods -------------------------------------------------------------
-// Specified window size constructor
-SimpleMovingAverage SimpleMovingAverage::getSimpleMovingAverage(const PriceSeries& priceSeries, int windowSize) {
-    return SimpleMovingAverage(priceSeries, windowSize);
-}
-// Default window size constructor - defaults to 20d window
-SimpleMovingAverage SimpleMovingAverage::getSimpleMovingAverage(const PriceSeries &priceSeries) {
-    return SimpleMovingAverage(priceSeries, 20);
-}
-
-std::string SimpleMovingAverage::toString() const {
+std::string SMA::toString() const {
     // Table constants 
     std::vector<int> columnWidths = {13, 10};
     std::vector<Justification> justifications = {Justification::LEFT, Justification::RIGHT};
@@ -52,7 +51,7 @@ std::string SimpleMovingAverage::toString() const {
 
     // Table title 
     std::string str = getTopLine({totalWidth});
-    str += getRow({fmt::format("{} - SMA ({}d)", ticker, window)}, {totalWidth}, {Justification::CENTER}, {Color::WHITE});
+    str += getRow({fmt::format("{} - SMA ({}d)", priceSeries.getTicker(), window)}, {totalWidth}, {Justification::CENTER}, {Color::WHITE});
 
     // Table headers
     str += getMidLine(columnWidths, Ticks::LOWER);

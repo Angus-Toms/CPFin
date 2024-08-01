@@ -1,12 +1,13 @@
 #include "returns.hpp"
+#include "priceseries.hpp"
 
-// ReturnMetrics struct ========================================================
-std::string ReturnMetrics::toString() const {
-    return "TODO: Write ReturnMetrics toString routine";
-};
+// Constructor -----------------------------------------------------------------
+ReturnMetrics::ReturnMetrics(const PriceSeries& priceSeries)
+    : priceSeries(priceSeries) {
+    calculate();
+}
 
-// ReturnSeries class ==========================================================
-void ReturnSeries::getReturns(const PriceSeries& priceSeries) {
+void ReturnMetrics::calculate() {
     const std::map<std::time_t, OHCLRecord>& priceData = priceSeries.getData();
 
     // Get first price record
@@ -21,26 +22,21 @@ void ReturnSeries::getReturns(const PriceSeries& priceSeries) {
         double cumulative = (p - p_start) / p_start * 100;
         double annualized = 0;
         double log = std::log(p / p_last);
-        ReturnMetrics metrics(daily, cumulative, annualized, log);
+        ReturnMetricRecord metrics(daily, cumulative, annualized, log);
         data[date] = metrics;
 
         // Update last price
         p_last = p;
     }
- }
-
-// Factory method --------------------------------------------------------------
-ReturnSeries ReturnSeries::getReturnSeries(const PriceSeries& priceSeries) {
-    return ReturnSeries(priceSeries);
 }
 
-// Virtual methods ------------------------------------------------------------
-int ReturnSeries::plot() const {
+// Virtual methods -------------------------------------------------------------
+int ReturnMetrics::plot() const {
     std::cout << "TODO: Write ReturnSeries plot routine\n";
     return 0;
 }
 
-std::string ReturnSeries::toString() const {
+std::string ReturnMetrics::toString() const {
     // Table constants 
     std::vector<int> columnWidths = {13, 10, 10, 10, 10};
     std::vector<Justification> justifications = {Justification::LEFT, 
@@ -52,7 +48,7 @@ std::string ReturnSeries::toString() const {
 
     // Table title 
     std::string str = getTopLine({totalWidth});
-    str += getRow({fmt::format("{} - Returns", ticker)}, {totalWidth}, 
+    str += getRow({fmt::format("{} - Returns", priceSeries.getTicker())}, {totalWidth}, 
         {Justification::CENTER}, {Color::WHITE});
     
     // Table headers 
