@@ -4,6 +4,11 @@
 // Constructor -----------------------------------------------------------------
 SMA::SMA(const PriceSeries& priceSeries, int window)
     : priceSeries(priceSeries), window(window) {
+    // Set table printing values 
+    name = fmt::format("{} - SMA ({}d)", priceSeries.getTicker(), window);
+    columnHeaders = {"Date", "SMA"};
+    columnWidths = {13, 10};
+
     calculate();
 }
 
@@ -42,48 +47,14 @@ int SMA::plot() const {
     return 0;
 }
 
-std::string SMA::toString() const {
-    // Table constants 
-    std::vector<int> columnWidths = {13, 10};
-    std::vector<Justification> justifications = {Justification::LEFT, Justification::RIGHT};
-    std::vector<Color> colors = {Color::WHITE, Color::WHITE};
-    int totalWidth = 24;
-
-    // Table title 
-    std::string str = getTopLine({totalWidth});
-    str += getRow({fmt::format("{} - SMA ({}d)", priceSeries.getTicker(), window)}, {totalWidth}, {Justification::CENTER}, {Color::WHITE});
-
-    // Table headers
-    str += getMidLine(columnWidths, Ticks::LOWER);
-    str += getRow({"Date", "SMA"}, columnWidths, justifications, colors);
-
-    // Table data
-    str += getMidLine(columnWidths, Ticks::BOTH);
-    double lastSma;
-    bool isFirstRow = true;
+std::vector<std::vector<std::string>> SMA::getAllData() const {
+    std::vector<std::vector<std::string>> allData;
     for (const auto& [date, sma] : data) {
-        std::vector<std::string> row = {
+        allData.push_back({
             epochToDateString(date),
             fmt::format("{:.2f}", sma)
-        };
-
-        // Color SMA based on direction
-        if (!isFirstRow) {
-            if (sma > lastSma) {
-                colors[1] = Color::GREEN;
-            } else if (sma < lastSma) {
-                colors[1] = Color::RED;
-            } else {
-                colors[1] = Color::WHITE;
-            }
-            
-        } else {
-            isFirstRow = false;
-        } 
-
-        lastSma = sma;
-        str += getRow(row, columnWidths, justifications, colors);
+        });
     }
-    str += getBottomLine(columnWidths);
-    return str;
+
+    return allData;
 }

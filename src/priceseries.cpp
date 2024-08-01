@@ -136,6 +136,22 @@ int PriceSeries::plot() const {
     return 0;
 }
 
+std::vector<std::vector<std::string>> PriceSeries::getAllData() const {
+    std::vector<std::vector<std::string>> allData;
+    for (const auto& [date, record] : data) {
+        allData.push_back({
+            epochToDateString(date),
+            fmt::format("{:.2f}", record.getOpen()),
+            fmt::format("{:.2f}", record.getHigh()),
+            fmt::format("{:.2f}", record.getLow()),
+            fmt::format("{:.2f}", record.getClose()),
+            fmt::format("{:.2f}", record.getAdjClose()),
+            fmt::format("{:.0f}", record.getVolume())
+        });
+    }
+    return allData;
+}
+
 // Factory methods -------------------------------------------------------------
 // All-argument constructor (date objects)
 PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval) {
@@ -176,130 +192,13 @@ PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::st
     return PriceSeries(ticker, startEpoch, end, interval);
 }
 
-std::string PriceSeries::toString() const {
-    // Table constants 
-    std::vector<int> columnWidths = {13, 10, 10, 10, 10, 10, 15};
-    std::vector<Justification> justifications = {
-        Justification::LEFT, Justification::RIGHT, Justification::RIGHT, 
-        Justification::RIGHT, Justification::RIGHT, Justification::RIGHT, 
-        Justification::RIGHT
-    };
-    std::vector<Color> colors = {
-        Color::WHITE, Color::WHITE, Color::WHITE, 
-        Color::WHITE, Color::WHITE, Color::WHITE, 
-        Color::WHITE
-    };
-    int totalWidth = 84;
-
-    // Table title 
-    std::string str = getTopLine({totalWidth});
-    str += getRow({ticker}, {totalWidth}, {Justification::CENTER}, {Color::WHITE});
-
-    // Table headers
-    str += getMidLine(columnWidths, Ticks::LOWER);
-    str += getRow(
-        {"Date", "Open", "High", "Low", "Close", "Adj Close", "Volume"}, 
-        columnWidths, justifications, colors
-    );
-    str += getMidLine(columnWidths, Ticks::BOTH);
-
-    // Table data
-    double lastOpen, lastHigh, lastLow, lastClose, lastAdjClose, lastVolume;
-    bool isFirstRow = true;
-    for (const auto& [date, ohcl] : data) {
-        // Change highlighting 
-        double open = ohcl.getOpen();
-        double high = ohcl.getHigh();
-        double low = ohcl.getLow();
-        double close = ohcl.getClose();
-        double adjClose = ohcl.getAdjClose();
-        double volume = ohcl.getVolume();
-
-        if (!isFirstRow) {
-            if (open > lastOpen) {
-                colors[1] = Color::GREEN;
-            } else if (open < lastOpen) {
-                colors[1] = Color::RED;
-            } else {
-                colors[1] = Color::WHITE;
-            }
-
-            if (high > lastHigh) {
-                colors[2] = Color::GREEN;
-            } else if (high < lastHigh) {
-                colors[2] = Color::RED;
-            } else {
-                colors[2] = Color::WHITE;
-            }
-
-            if (low > lastLow) {
-                colors[3] = Color::GREEN;
-            } else if (low < lastLow) {
-                colors[3] = Color::RED;
-            } else {
-                colors[3] = Color::WHITE;
-            }
-
-            if (close > lastClose) {
-                colors[4] = Color::GREEN;
-            } else if (close < lastClose) {
-                colors[4] = Color::RED;
-            } else {
-                colors[4] = Color::WHITE;
-            }
-
-            if (adjClose > lastAdjClose) {
-                colors[5] = Color::GREEN;
-            } else if (adjClose < lastAdjClose) {
-                colors[5] = Color::RED;
-            } else {
-                colors[5] = Color::WHITE;
-            }
-
-            if (volume > lastVolume) {
-                colors[6] = Color::GREEN;
-            } else if (volume < lastVolume) {
-                colors[6] = Color::RED;
-            } else {
-                colors[6] = Color::WHITE;
-            }
-        } else {
-            isFirstRow = false;
-        }
-
-        str += getRow(
-            {
-                epochToDateString(date), std::to_string(open), 
-                std::to_string(high), std::to_string(low), 
-                std::to_string(close), std::to_string(adjClose), 
-                std::to_string(volume)
-            }, 
-            columnWidths, justifications, colors
-        );
-
-        // Update last values
-        lastOpen = open;
-        lastHigh = high;
-        lastLow = low;
-        lastClose = close;
-        lastAdjClose = adjClose;
-        lastVolume = volume;
-    }
-    str += getBottomLine({totalWidth});
-    return str;
-}
-
 // Getters ---------------------------------------------------------------------
-std::map<std::time_t, OHCLRecord> PriceSeries::getData() const {
-    return data;
-}
-
-OHCLRecord PriceSeries::getRecord(const std::time_t date) const {
-    return data.at(date);
-}
-
 std::string PriceSeries::getTicker() const {
     return ticker;
+}
+
+std::map<std::time_t, OHCLRecord> PriceSeries::getData() const {
+    return data;
 }
 
 // Analyses ====================================================================

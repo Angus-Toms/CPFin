@@ -92,19 +92,18 @@ std::string getRow(const std::vector<std::string>& row,
     
     std::string rowStr = V_LINE;
     for (size_t i = 0; i < row.size(); i++) {
-        std::string text = isNumber(row[i]) ? fmt::format("{:.2f}", std::stod(row[i])) : row[i];
         std::string colorCode = colorToAnsi(colors[i]);
         std::string resetCode = colorToAnsi(Color::RESET);
  
         switch (justifications[i]) {
             case Justification::LEFT:
-                rowStr += fmt::format("{}{:<{}}{}", colorCode, text, columnWidths[i], resetCode);
+                rowStr += fmt::format("{}{:<{}}{}", colorCode, row[i], columnWidths[i], resetCode);
                 break;
             case Justification::RIGHT:
-                rowStr += fmt::format("{}{:>{}}{}", colorCode, text, columnWidths[i], resetCode);
+                rowStr += fmt::format("{}{:>{}}{}", colorCode, row[i], columnWidths[i], resetCode);
                 break;
             case Justification::CENTER:
-                rowStr += fmt::format("{}{:^{}}{}", colorCode, text, columnWidths[i], resetCode);
+                rowStr += fmt::format("{}{:^{}}{}", colorCode, row[i], columnWidths[i], resetCode);
                 break;
         }
 

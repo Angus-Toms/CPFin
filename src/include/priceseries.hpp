@@ -51,6 +51,11 @@ private:
     // Private constructor 
     PriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval)
         : ticker(ticker), start(start), end(end), interval(interval) {
+        // Set table printing values
+        name = ticker;
+        columnHeaders = {"Date", "Open", "High", "Low", "Close", "Adj Close", "Volume"};
+        columnWidths = {13, 10, 10, 10, 10, 10, 12};
+
         checkArguments();
         fetchCSV();
     }
@@ -67,9 +72,9 @@ public:
     // Virtual methods 
     ~PriceSeries() = default;
     int plot() const override;
-    std::string toString() const override;
+    std::vector<std::vector<std::string>> getAllData() const override;
 
-    // Factory methods 
+    // Factory methods ---------------------------------------------------------
     // All-argument constructor (date objects)
     static PriceSeries getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval);
     // All-argument constructor (date strings)
@@ -83,19 +88,18 @@ public:
     // Number of datapoints constructor (date string)
     static PriceSeries getPriceSeries(const std::string& ticker, const std::string &start, const std::string &interval, const std::size_t count);
 
-    // Getters 
-    std::map<std::time_t, OHCLRecord> getData() const;
-    OHCLRecord getRecord(const std::time_t date) const;
+    // Getters -----------------------------------------------------------------
     std::string getTicker() const;
+    std::map<std::time_t, OHCLRecord> getData() const;
 
-    // Analyses ================================================================
-    // Simple moving average ---------------------------------------------------
+    // Analyses ----------------------------------------------------------------
+    // Simple moving average 
     // Default window - 20 days
     SMA getSMA() const; 
     // Specific window
     SMA getSMA(int window) const;
 
-    // Returns -----------------------------------------------------------------
+    // Returns 
     ReturnMetrics getReturns() const;    
     
 };

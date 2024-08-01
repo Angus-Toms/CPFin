@@ -19,7 +19,7 @@ public:
 
     // Implement virtual methods from TimeSeries
     int plot() const override;
-    std::string toString() const override;
+    std::vector<std::vector<std::string>> getAllData() const override;
 
 };
 #endif // AVERAGES_HPP
