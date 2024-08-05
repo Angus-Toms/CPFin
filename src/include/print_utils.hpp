@@ -22,12 +22,6 @@ enum class Ticks {
     BOTH
 };
 
-enum class Colors {
-    RED,
-    GREEN,
-    WHITE
-};
-
 enum class Color {
     RED,
     GREEN,
@@ -59,13 +53,5 @@ std::string getRow(const std::vector<std::string>& row,
                    const std::vector<int>& columnWidths, 
                    const std::vector<Justification>& justifications, 
                    const std::vector<Color>& colors);
-
-std::string getTable(const std::string title, 
-                     const std::vector<std::string> dates, 
-                     const std::vector<std::vector<std::string>>& data, 
-                     const std::vector<std::string>& headers, 
-                     const std::vector<int>& columnWidths, 
-                     const std::vector<Justification>& justifications, 
-                     bool highlightChange);
 
 #endif // PRINT_UTILS_HPP

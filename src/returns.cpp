@@ -48,7 +48,7 @@ std::vector<std::vector<std::string>> ReturnMetrics::getAllData() const {
             fmt::format("{:.2f}", record.getDaily()),
             fmt::format("{:.2f}", record.getCumulative()),
             fmt::format("{:.2f}", record.getAnnualized()),
-            fmt::format("{:.2f}", record.getLog())
+            fmt::format("{:.4f}", record.getLog())
         });
     }
     return allData;

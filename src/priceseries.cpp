@@ -14,27 +14,27 @@ std::string OHCLRecord::toString() const {
 // Getters ---------------------------------------------------------------------
 double OHCLRecord::getOpen() const {
     return open;
-};
+}
 
 double OHCLRecord::getHigh() const {
     return high;
-};
+}
 
 double OHCLRecord::getLow() const {
     return low;
-};
+}
 
 double OHCLRecord::getClose() const {
     return close;
-};
+}
 
 double OHCLRecord::getAdjClose() const {
     return adjClose;
-};
+}
 
 double OHCLRecord::getVolume() const {
     return volume;
-};
+}
 
 // PriceSeries class ===========================================================
 void PriceSeries::checkArguments() {
@@ -69,9 +69,8 @@ void PriceSeries::checkArguments() {
         for (const auto& interval : VALID_INTERVALS) {
             supportedIntervals << interval << " ";
         }
-        throw std::invalid_argument("Could not get PriceSeries. Interval " + interval + " is not supported\n Supported intervals: " + supportedIntervals.str());
+        throw std::invalid_argument("Could not get PriceSeries. Interval " + interval + " is not supported\nSupported intervals: " + supportedIntervals.str());
     }
-    return;
 }
 
 void PriceSeries::fetchCSV() {
@@ -82,7 +81,7 @@ void PriceSeries::fetchCSV() {
                 << "&period2=" << end
                 << "&interval=" << interval;
     std::string url = urlBuilder.str();
-    // std::cout << "Fetching from " << url << std::endl;
+    std::cout << "Fetching from " << url << std::endl;
 
     CURL* curl = curl_easy_init();
     std::string readBuffer;
@@ -201,18 +200,60 @@ std::map<std::time_t, OHCLRecord> PriceSeries::getData() const {
     return data;
 }
 
-// Analyses ====================================================================
-// Simple Moving Average -------------------------------------------------------
-// No window supplied
-SMA PriceSeries::getSMA() const {
-    return SMA(*this, 20);
-}
-
+// Analyses --------------------------------------------------------------------
+// Simple Moving Average 
+// Default window is 20d
 SMA PriceSeries::getSMA(int window) const {
     return SMA(*this, window);
 }
 
-// Returns ---------------------------------------------------------------------
+// Exponential Moving Average
+EMA PriceSeries::getEMA(int window, double smoothingFactor) const {
+    return EMA(*this, window, smoothingFactor);
+}
+
+// Returns
 ReturnMetrics PriceSeries::getReturns() const {
     return ReturnMetrics(*this);
 }
+
+// MultiPriceSeries class ======================================================
+// void MultiPriceSeries::checkArguments() {
+//     // TODO: Validate tickers 
+
+//     // Validate start time 
+//     if (start < 0) {
+//         throw std::invalid_argument("Could not get MultiPriceSeries. Invalid start time");
+//     }
+
+//     if (start > std::time(nullptr)) {
+//         throw std::invalid_argument("Could not get MultiPriceSeries. Start time is in the future");
+//     }
+
+//     if (start > end) {
+//         throw std::invalid_argument("Could not get MultiPriceSeries. Start time is after end time");
+//     }
+
+//     // Validate end time 
+//     if (end < 0) {
+//         throw std::invalid_argument("Could not get PriceSeries. Invalid end time");
+//     }
+
+//     if (end > std::time(nullptr)) {
+//         std::cout << "WARNING! End time is in future, cropping to current time";
+//         end = std::time_t(nullptr);
+//     }
+
+//     // Valid interval check 
+//     if (isInvalidInterval(interval)) {
+//         std::ostringstream supportedIntervals;
+//         for (const auto& interval : VALID_INTERVALS) {
+//             supportedIntervals << interval << " ";
+//         }
+//         throw std::invalid_argument("Could not get MultiPriceSeries. Interval " + interval + " is not supported\nSupported intervals: " + supportedIntervals.str());
+//     }
+// }
+
+// void MultiPriceSeries::fetchCSV() {
+//     // Call construction
+// }
