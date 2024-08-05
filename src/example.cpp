@@ -11,17 +11,14 @@ int main() {
     PriceSeries ps = PriceSeries::getPriceSeries("AAPL", "2021-01-01", "2021-01-31", "1d");
     std::cout << ps.toString() << std::endl;
 
-    // Test EMA constructions 
-    // No args specified, 20d and standard alpha 
-    EMA ema1 = ps.getEMA(10);
-    std::cout << ema1.toString() << std::endl;
+    EMA ema = EMA(ps, 20);
+    std::cout << ema.toString() << std::endl;
 
-    SMA sma1 = ps.getSMA(10);
-    std::cout << sma1.toString() << std::endl;
+    SMA sma = SMA(ps, 50);
+    std::cout << sma.toString() << std::endl;
 
-
-    // ReturnMetrics returns = ps.getReturns();
-    // std::cout << returns.toString() << std::endl;
+    ReturnMetrics returns = ps.getReturns();
+    std::cout << returns.toString() << std::endl;
 
     return 0;
 }

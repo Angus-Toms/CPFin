@@ -19,8 +19,7 @@ public:
 
     // Implement virtual methods from TimeSeries
     int plot() const override;
-    std::vector<std::vector<std::string>> getAllData() const override;
-
+    std::vector<std::vector<std::string>> getTableData() const override;
 };
 
 class EMA : public TimeSeries<double> {
@@ -35,7 +34,7 @@ public:
 
     // Implement virtual methods from TimeSeries 
     int plot() const override;
-    std::vector<std::vector<std::string>> getAllData() const override;
+    std::vector<std::vector<std::string>> getTableData() const override;
 };
 
 #endif // AVERAGES_HPP

@@ -21,7 +21,7 @@ protected:
 public:
     virtual ~TimeSeries() = default;
     virtual int plot() const = 0;
-    virtual std::vector<std::vector<std::string>> getAllData() const = 0;
+    virtual std::vector<std::vector<std::string>> getTableData() const = 0;
 
     std::string toString();
 };
@@ -55,7 +55,7 @@ std::string TimeSeries<T>::toString() {
     bool isFirstRow = true;
 
     // Content rows
-    for (const auto& row : getAllData()) {
+    for (const auto& row : getTableData()) {
         if (!isFirstRow) {
             for (int i = 1; i < columnCount; i++) {
                 double value = std::stod(row[i]);

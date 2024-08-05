@@ -34,13 +34,43 @@ void ReturnMetrics::calculate() {
     }
 }
 
+// Getters ---------------------------------------------------------------------
+std::vector<double> ReturnMetrics::getDailys() const {
+    std::vector<double> dailys;
+    for (const auto& [date, record] : data) {
+        dailys.push_back(record.getDaily());
+    }
+    return dailys;
+}
+std::vector<double> ReturnMetrics::getCummulatives() const {
+    std::vector<double> cummulatives;
+    for (const auto& [date, record] : data) {
+        cummulatives.push_back(record.getCumulative());
+    }
+    return cummulatives;
+}
+std::vector<double> ReturnMetrics::getAnnualizeds() const {
+    std::vector<double> annualizeds;
+    for (const auto& [date, record] : data) {
+        annualizeds.push_back(record.getAnnualized());
+    }
+    return annualizeds;
+}
+std::vector<double> ReturnMetrics::getLogs() const {
+    std::vector<double> logs;
+    for (const auto& [date, record] : data) {
+        logs.push_back(record.getLog());
+    }
+    return logs;
+}
+
 // Virtual methods -------------------------------------------------------------
 int ReturnMetrics::plot() const {
     std::cout << "TODO: Write ReturnSeries plot routine\n";
     return 0;
 }
 
-std::vector<std::vector<std::string>> ReturnMetrics::getAllData() const {
+std::vector<std::vector<std::string>> ReturnMetrics::getTableData() const {
     std::vector<std::vector<std::string>> allData;
     for (const auto& [date, record] : data) {
         allData.push_back({

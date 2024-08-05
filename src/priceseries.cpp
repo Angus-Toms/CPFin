@@ -12,29 +12,12 @@ std::string OHCLRecord::toString() const {
 }
 
 // Getters ---------------------------------------------------------------------
-double OHCLRecord::getOpen() const {
-    return open;
-}
-
-double OHCLRecord::getHigh() const {
-    return high;
-}
-
-double OHCLRecord::getLow() const {
-    return low;
-}
-
-double OHCLRecord::getClose() const {
-    return close;
-}
-
-double OHCLRecord::getAdjClose() const {
-    return adjClose;
-}
-
-double OHCLRecord::getVolume() const {
-    return volume;
-}
+double OHCLRecord::getOpen() const { return open; }
+double OHCLRecord::getHigh() const { return high; }
+double OHCLRecord::getLow() const { return low; }
+double OHCLRecord::getClose() const { return close; }
+double OHCLRecord::getAdjClose() const { return adjClose; }
+double OHCLRecord::getVolume() const { return volume; }
 
 // PriceSeries class ===========================================================
 void PriceSeries::checkArguments() {
@@ -81,7 +64,9 @@ void PriceSeries::fetchCSV() {
                 << "&period2=" << end
                 << "&interval=" << interval;
     std::string url = urlBuilder.str();
-    std::cout << "Fetching from " << url << std::endl;
+    
+    std::cout << "Period 1: " << start << std::endl;
+    std::cout << "Period 2: " << end << std::endl;
 
     CURL* curl = curl_easy_init();
     std::string readBuffer;
@@ -135,7 +120,7 @@ int PriceSeries::plot() const {
     return 0;
 }
 
-std::vector<std::vector<std::string>> PriceSeries::getAllData() const {
+std::vector<std::vector<std::string>> PriceSeries::getTableData() const {
     std::vector<std::vector<std::string>> allData;
     for (const auto& [date, record] : data) {
         allData.push_back({
@@ -156,33 +141,28 @@ std::vector<std::vector<std::string>> PriceSeries::getAllData() const {
 PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval) {
     return PriceSeries(ticker, start, end, interval);
 }
-
 // All-argument constructor (date strings)
 PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::string& start, const std::string& end, const std::string& interval) {
     std::time_t startEpoch = dateStringToEpoch(start);
     std::time_t endEpoch = dateStringToEpoch(end);
     return PriceSeries(ticker, startEpoch, endEpoch, interval);
 }
-
 // No interval constructor (date objects) - defaults to interval of "1d"
 PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end) {
     return PriceSeries(ticker, start, end, "1d");
 }
-
 // No interval constructor (date strings) - defaults to interval of "1d"
 PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::string& start, const std::string& end) {
     std::time_t startEpoch = dateStringToEpoch(start);
     std::time_t endEpoch = dateStringToEpoch(end);
     return PriceSeries(ticker, startEpoch, endEpoch, "1d");
 }
-
 // Number of datapoints constructor (date object)
 // TODO: Update to account for weekends
 PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::time_t start, const std::string& interval, const std::size_t count) {
     std::time_t end = start + count * intervalToSeconds(interval);
     return PriceSeries(ticker, start, end, interval);
 }
-
 // Number of datapoints constructor (date string)
 // TODO: Update to account for weekends
 PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::string& start, const std::string& interval, const std::size_t count) {
@@ -192,12 +172,49 @@ PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::st
 }
 
 // Getters ---------------------------------------------------------------------
-std::string PriceSeries::getTicker() const {
-    return ticker;
+std::string PriceSeries::getTicker() const { return ticker; }
+std::map<std::time_t, OHCLRecord> PriceSeries::getData() const { return data; }
+std::vector<double> PriceSeries::getOpens() const {
+    std::vector<double> opens;
+    for (const auto& [date, record] : data) {
+        opens.push_back(record.getOpen());
+    }
+    return opens;
 }
-
-std::map<std::time_t, OHCLRecord> PriceSeries::getData() const {
-    return data;
+std::vector<double> PriceSeries::getHighs() const {
+    std::vector<double> highs;
+    for (const auto& [date, record] : data) {
+        highs.push_back(record.getHigh());
+    }
+    return highs;
+}
+std::vector<double> PriceSeries::getLows() const {
+    std::vector<double> lows;
+    for (const auto& [date, record] : data) {
+        lows.push_back(record.getLow());
+    }
+    return lows;
+}
+std::vector<double> PriceSeries::getCloses() const {
+    std::vector<double> closes;
+    for (const auto& [date, record] : data) {
+        closes.push_back(record.getClose());
+    }
+    return closes;
+}
+std::vector<double> PriceSeries::getAdjCloses() const {
+    std::vector<double> adjCloses;
+    for (const auto& [date, record] : data) {
+        adjCloses.push_back(record.getAdjClose());
+    }
+    return adjCloses;
+}
+std::vector<double> PriceSeries::getVolumes() const {
+    std::vector<double> volumes;
+    for (const auto& [date, record] : data) {
+        volumes.push_back(record.getVolume());
+    }
+    return volumes;
 }
 
 // Analyses --------------------------------------------------------------------
@@ -206,54 +223,29 @@ std::map<std::time_t, OHCLRecord> PriceSeries::getData() const {
 SMA PriceSeries::getSMA(int window) const {
     return SMA(*this, window);
 }
-
 // Exponential Moving Average
 EMA PriceSeries::getEMA(int window, double smoothingFactor) const {
     return EMA(*this, window, smoothingFactor);
 }
-
 // Returns
 ReturnMetrics PriceSeries::getReturns() const {
     return ReturnMetrics(*this);
 }
+double PriceSeries::getStdDev() const {
+    // Welford's Method
+    const auto& closes = getCloses();
 
-// MultiPriceSeries class ======================================================
-// void MultiPriceSeries::checkArguments() {
-//     // TODO: Validate tickers 
+    double mean = 0.0;
+    double M2 = 0.0;
+    size_t n = 0;
 
-//     // Validate start time 
-//     if (start < 0) {
-//         throw std::invalid_argument("Could not get MultiPriceSeries. Invalid start time");
-//     }
+    for (const auto& close : closes) {
+        n++;
+        double delta = close - mean;
+        mean += delta / n;
+        double delta2 = close - mean;
+        M2 += delta * delta2;
+    }
 
-//     if (start > std::time(nullptr)) {
-//         throw std::invalid_argument("Could not get MultiPriceSeries. Start time is in the future");
-//     }
-
-//     if (start > end) {
-//         throw std::invalid_argument("Could not get MultiPriceSeries. Start time is after end time");
-//     }
-
-//     // Validate end time 
-//     if (end < 0) {
-//         throw std::invalid_argument("Could not get PriceSeries. Invalid end time");
-//     }
-
-//     if (end > std::time(nullptr)) {
-//         std::cout << "WARNING! End time is in future, cropping to current time";
-//         end = std::time_t(nullptr);
-//     }
-
-//     // Valid interval check 
-//     if (isInvalidInterval(interval)) {
-//         std::ostringstream supportedIntervals;
-//         for (const auto& interval : VALID_INTERVALS) {
-//             supportedIntervals << interval << " ";
-//         }
-//         throw std::invalid_argument("Could not get MultiPriceSeries. Interval " + interval + " is not supported\nSupported intervals: " + supportedIntervals.str());
-//     }
-// }
-
-// void MultiPriceSeries::fetchCSV() {
-//     // Call construction
-// }
+    return std::sqrt(M2 / n);
+}

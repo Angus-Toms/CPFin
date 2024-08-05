@@ -36,9 +36,15 @@ public:
     // Constructor
     ReturnMetrics(const PriceSeries& priceSeries);
 
+    // Getters -----------------------------------------------------------------
+    std::vector<double> getDailys() const;
+    std::vector<double> getCummulatives() const;
+    std::vector<double> getAnnualizeds() const;
+    std::vector<double> getLogs() const;
+
     // Implement virtual methods from TimeSeries
     int plot() const override;
-    std::vector<std::vector<std::string>> getAllData() const override;
+    std::vector<std::vector<std::string>> getTableData() const override;
 };
 
 #endif // RETURNS_HPP

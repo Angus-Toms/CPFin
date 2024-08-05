@@ -50,7 +50,7 @@ int SMA::plot() const {
     return 0;
 }
 
-std::vector<std::vector<std::string>> SMA::getAllData() const {
+std::vector<std::vector<std::string>> SMA::getTableData() const {
     std::vector<std::vector<std::string>> allData;
     for (const auto& [date, sma] : data) {
         allData.push_back({
@@ -120,7 +120,7 @@ int EMA::plot() const {
     return 0;
 }
 
-std::vector<std::vector<std::string>> EMA::getAllData() const {
+std::vector<std::vector<std::string>> EMA::getTableData() const {
     std::vector<std::vector<std::string>> allData;
     for (const auto& [date, ema] : data) {
         allData.push_back({
