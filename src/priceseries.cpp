@@ -2,6 +2,7 @@
 
 #include "averages.hpp"
 #include "returns.hpp"
+#include "bollinger.hpp"
 
 // OHCLRecord struct ===========================================================
 OHCLRecord::OHCLRecord(double open, double high, double low, double close, double adjClose, double volume)
@@ -231,15 +232,17 @@ EMA PriceSeries::getEMA(int window, double smoothingFactor) const {
 ReturnMetrics PriceSeries::getReturns() const {
     return ReturnMetrics(*this);
 }
+// Bollinger Bands
+BollingerBands PriceSeries::getBollingerBands(int window, double numStdDev, MovingAverageType maType) const {
+    return BollingerBands(*this, window, numStdDev, maType);
+}
 double PriceSeries::getStdDev() const {
     // Welford's Method
-    const auto& closes = getCloses();
-
     double mean = 0.0;
     double M2 = 0.0;
     size_t n = 0;
 
-    for (const auto& close : closes) {
+    for (const auto& close : getCloses()) {
         n++;
         double delta = close - mean;
         mean += delta / n;

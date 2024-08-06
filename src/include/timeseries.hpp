@@ -23,10 +23,16 @@ public:
     virtual int plot() const = 0;
     virtual std::vector<std::vector<std::string>> getTableData() const = 0;
 
+    std::map<std::time_t, T> getData() const;
     std::string toString();
 };
 
 // Templated definition must be in header file
+template <typename T>
+std::map<std::time_t, T> TimeSeries<T>::getData() const {
+    return data;
+}
+
 template <typename T>
 std::string TimeSeries<T>::toString() {
     int totalWidth = 0;
@@ -81,8 +87,6 @@ std::string TimeSeries<T>::toString() {
 
     // Bottom line 
     table += getBottomLine(columnWidths);
-
     return table;
 }
-
 #endif // TIMESERIES_HPP

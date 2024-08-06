@@ -10,6 +10,7 @@
 #include <curl/curl.h>
 #include <matplot/matplot.h>
 
+#include "enums.hpp"
 #include "time_utils.hpp"
 #include "print_utils.hpp"
 #include "timeseries.hpp"
@@ -18,6 +19,7 @@
 class SMA;
 class EMA;
 class ReturnMetrics;
+class BollingerBands;
 
 struct OHCLRecord {
     double open;
@@ -107,6 +109,8 @@ public:
     EMA getEMA(int window = 20, double smoothingFactor = -1) const;
     // Returns 
     ReturnMetrics getReturns() const;  
+    // Bollinger bands
+    BollingerBands getBollingerBands(int window = 20, double numStdDev = 2, MovingAverageType maType = MovingAverageType::SMA) const;
     // Standard deviations 
     double getStdDev() const;  
 };

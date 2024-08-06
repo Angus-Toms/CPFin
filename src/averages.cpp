@@ -1,8 +1,6 @@
 #include "averages.hpp"
 #include "priceseries.hpp"
 
-
-
 // SMA =========================================================================
 // Constructor -----------------------------------------------------------------
 SMA::SMA(const PriceSeries& priceSeries, int window)
@@ -14,7 +12,6 @@ SMA::SMA(const PriceSeries& priceSeries, int window)
 
     calculate();
 }
-
 void SMA::calculate() {
     size_t windowSize = static_cast<size_t>(window);
     const std::map<std::time_t, OHCLRecord>& priceData = priceSeries.getData();
@@ -25,31 +22,28 @@ void SMA::calculate() {
 
     // Get first window sum
     double sum(0);
-    auto w_end = priceData.begin();
+    auto wEnd = priceData.begin();
     for (size_t i = 0; i < windowSize; i++) {
-        sum += w_end->second.getClose();
-        w_end++;
+        sum += wEnd->second.getClose();
+        wEnd++;
     }
 
-    w_end--;
-    data[w_end->first] = sum / windowSize;
+    wEnd--;
+    data[wEnd->first] = sum / windowSize;
 
     // Slide window until end of data
-    auto w_start = priceData.begin()--;
-    while (++w_end != priceData.end()) {
-        sum += w_end->second.getClose() - w_start->second.getClose();
-        data[w_end->first] = sum / windowSize;
-        w_start++;
+    auto wStart = priceData.begin()--;
+    while (++wEnd != priceData.end()) {
+        sum += wEnd->second.getClose() - wStart->second.getClose();
+        data[wEnd->first] = sum / windowSize;
+        wStart++;
     }
 }
-
 
 // Virtual methods -------------------------------------------------------------
 int SMA::plot() const {
-
     return 0;
 }
-
 std::vector<std::vector<std::string>> SMA::getTableData() const {
     std::vector<std::vector<std::string>> allData;
     for (const auto& [date, sma] : data) {
@@ -79,7 +73,6 @@ EMA::EMA(const PriceSeries& priceSeries, int window, double smoothingFactor)
 
     calculate();
 }
-
 void EMA::calculate() {
     const std::map<std::time_t, OHCLRecord>& priceData = priceSeries.getData();
     // Check if window size is valid
@@ -89,11 +82,11 @@ void EMA::calculate() {
 
     // Get simple sum from first window
     double sum(0);
-    auto w_start = priceData.begin();
+    auto wStart = priceData.begin();
     auto idx = 0;
     while (idx < window) {
-        sum += w_start->second.getClose();
-        w_start++;
+        sum += wStart->second.getClose();
+        wStart++;
         idx++;
     }   
 
@@ -104,14 +97,12 @@ void EMA::calculate() {
     double ema = sum / window;
 
     // Move window until end of data 
-    w_start--;
-    while (w_start != priceData.end()) {
-        data[w_start->first ] = ema; // ema = yesterdays price 
-        w_start++;
-        ema = (w_start->second.getClose() * smoothingFactor) + (ema * (1 - smoothingFactor));
+    wStart--;
+    while (wStart != priceData.end()) {
+        data[wStart->first ] = ema; // ema = yesterdays price 
+        wStart++;
+        ema = (wStart->second.getClose() * smoothingFactor) + (ema * (1 - smoothingFactor));
     }
-    
-    
 }
 
 // Virtual methods -------------------------------------------------------------
