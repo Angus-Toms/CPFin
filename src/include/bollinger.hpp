@@ -5,7 +5,9 @@
 
 #include "enums.hpp"
 #include "timeseries.hpp"
+
 #include <fmt/format.h>
+#include <matplot/matplot.h>
 
 class PriceSeries;
 

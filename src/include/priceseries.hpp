@@ -93,8 +93,7 @@ public:
 
     // Getters -----------------------------------------------------------------
     std::string getTicker() const;
-    std::map<std::time_t, OHCLRecord> getData() const;
-
+    
     std::vector<double> getOpens() const;
     std::vector<double> getHighs() const;
     std::vector<double> getLows() const;
@@ -104,13 +103,13 @@ public:
 
     // Analyses ----------------------------------------------------------------
     // Simple moving average 
-    SMA getSMA(int window = 20) const;
+    const SMA getSMA(int window = 20) const;
     // Exponential moving average 
-    EMA getEMA(int window = 20, double smoothingFactor = -1) const;
+    const EMA getEMA(int window = 20, double smoothingFactor = -1) const;
     // Returns 
-    ReturnMetrics getReturns() const;  
+    const ReturnMetrics getReturns() const;  
     // Bollinger bands
-    BollingerBands getBollingerBands(int window = 20, double numStdDev = 2, MovingAverageType maType = MovingAverageType::SMA) const;
+    const BollingerBands getBollingerBands(int window = 20, double numStdDev = 2, MovingAverageType maType = MovingAverageType::SMA) const;
     // Standard deviations 
     double getStdDev() const;  
 };

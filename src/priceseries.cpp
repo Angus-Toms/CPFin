@@ -65,9 +65,6 @@ void PriceSeries::fetchCSV() {
                 << "&period2=" << end
                 << "&interval=" << interval;
     std::string url = urlBuilder.str();
-    
-    std::cout << "Period 1: " << start << std::endl;
-    std::cout << "Period 2: " << end << std::endl;
 
     CURL* curl = curl_easy_init();
     std::string readBuffer;
@@ -174,7 +171,6 @@ PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::st
 
 // Getters ---------------------------------------------------------------------
 std::string PriceSeries::getTicker() const { return ticker; }
-std::map<std::time_t, OHCLRecord> PriceSeries::getData() const { return data; }
 std::vector<double> PriceSeries::getOpens() const {
     std::vector<double> opens;
     for (const auto& [date, record] : data) {
@@ -221,19 +217,19 @@ std::vector<double> PriceSeries::getVolumes() const {
 // Analyses --------------------------------------------------------------------
 // Simple Moving Average 
 // Default window is 20d
-SMA PriceSeries::getSMA(int window) const {
+const SMA PriceSeries::getSMA(int window) const {
     return SMA(*this, window);
 }
 // Exponential Moving Average
-EMA PriceSeries::getEMA(int window, double smoothingFactor) const {
+const EMA PriceSeries::getEMA(int window, double smoothingFactor) const {
     return EMA(*this, window, smoothingFactor);
 }
 // Returns
-ReturnMetrics PriceSeries::getReturns() const {
+const ReturnMetrics PriceSeries::getReturns() const {
     return ReturnMetrics(*this);
 }
 // Bollinger Bands
-BollingerBands PriceSeries::getBollingerBands(int window, double numStdDev, MovingAverageType maType) const {
+const BollingerBands PriceSeries::getBollingerBands(int window, double numStdDev, MovingAverageType maType) const {
     return BollingerBands(*this, window, numStdDev, maType);
 }
 double PriceSeries::getStdDev() const {

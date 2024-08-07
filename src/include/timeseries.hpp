@@ -23,13 +23,13 @@ public:
     virtual int plot() const = 0;
     virtual std::vector<std::vector<std::string>> getTableData() const = 0;
 
-    std::map<std::time_t, T> getData() const;
+    const std::map<std::time_t, T>& getData() const;
     std::string toString();
 };
 
 // Templated definition must be in header file
 template <typename T>
-std::map<std::time_t, T> TimeSeries<T>::getData() const {
+const std::map<std::time_t, T>& TimeSeries<T>::getData() const {
     return data;
 }
 

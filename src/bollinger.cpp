@@ -1,5 +1,7 @@
 #include "bollinger.hpp"
+#include "averages.hpp"
 #include "priceseries.hpp"
+
 
 // Constructor -----------------------------------------------------------------
 BollingerBands::BollingerBands(const PriceSeries& priceSeries, int window, double numStdDev, MovingAverageType maType)
@@ -14,61 +16,34 @@ BollingerBands::BollingerBands(const PriceSeries& priceSeries, int window, doubl
 }
 
 void BollingerBands::calculate() {
-    // TODO: Debug SD calculations
-    size_t windowSize = static_cast<size_t>(window);
+    // TODO: This can greatly be improved, particularly for SMA middle band 
+    // See: https://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods
+    std::vector<double> closes = priceSeries.getCloses();
+    const std::map<std::time_t, double> movingAverages = 
+        (maType == MovingAverageType::SMA) ?
+        priceSeries.getSMA(window).getData() :
+        priceSeries.getEMA(window).getData();
 
-    const std::map<std::time_t, OHCLRecord>& priceData = priceSeries.getData();
-    auto wRight = priceData.begin();
-    auto wLeft = priceData.begin();
+    int wStart = 0;
 
-    // Ensure window size is valid
-    if (windowSize > priceData.size()) {
-        throw std::invalid_argument("Could not get Bollinger Bands: Window size must be less than data length");
-    }
+    for (const auto& [date, ma] : movingAverages) {
+        // Calculate standard deviation for window ending at date 
+        double sum = 0;
+        double sumSquares = 0;
+        for (int i = 0; i < window; i++) {
+            double close = closes[i+wStart];
+            sum += close;
+            sumSquares += close * close;
+        }
+        double stdDev = std::sqrt((sumSquares/window) - ((sum/window) * (sum/window)));
+        
+        double upperBand = ma + numStdDev * stdDev;
+        double lowerBand = ma - numStdDev * stdDev;
 
-    // Get std dev of first window
-    double sum = 0;
-    double sumSquares = 0;
-    for (size_t i = 0; i < windowSize; i++) {
-        double close = wRight->second.getClose();
-        sum += close;
-        sumSquares += close * close;
-
-        wRight++;
-    }
-    wRight--;  // Move one step back to correct position after the for loop
-
-    // Slide window, recompute std dev and bands for each
-    while (wRight != priceData.end()) {
-        double sma = sum / windowSize;
-
-        // Find stdDev of window: sqrt(E[X^2] - (E[X]^2))
-        double stdDev = std::sqrt((sumSquares / window) - (sma * sma));
-
-        std::cout << "SMA: " << sma << ", stdDev: " << stdDev << std::endl;
-
-        // Get bands 
-        double lowerBand = sma - numStdDev * stdDev;
-        double upperBand = sma + numStdDev * stdDev;
-
-        data[wRight->first] = std::make_tuple(lowerBand, sma, upperBand);
-
-        // Move to the next position before sliding the window
-        wRight++;
-        if (wRight == priceData.end()) break;
-
-        // Slide window 
-        double newClose = wRight->second.getClose();
-        double oldClose = wLeft->second.getClose();
-
-        sum += newClose - oldClose;
-        sumSquares += newClose * newClose - oldClose * oldClose;
-
-        wLeft++;
+        data[date] = std::make_tuple(lowerBand, ma, upperBand);
+        wStart++;
     }
 }
-
-
 
 // Virtual methods -------------------------------------------------------------
 int BollingerBands::plot() const {
