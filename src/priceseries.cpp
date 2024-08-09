@@ -232,6 +232,11 @@ const ReturnMetrics PriceSeries::getReturns() const {
 const BollingerBands PriceSeries::getBollingerBands(int window, double numStdDev, MovingAverageType maType) const {
     return BollingerBands(*this, window, numStdDev, maType);
 }
+// Moving-Average Convergence/Divergence
+const MACD PriceSeries::getMACD(int aPeriod, int bPeriod, int cPeriod) const {
+    return MACD(*this, aPeriod, bPeriod, cPeriod);
+}
+
 double PriceSeries::getStdDev() const {
     // Welford's Method
     double mean = 0.0;

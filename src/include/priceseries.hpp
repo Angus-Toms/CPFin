@@ -18,6 +18,7 @@
 // Forward declaration of analysis classes
 class SMA;
 class EMA;
+class MACD;
 class ReturnMetrics;
 class BollingerBands;
 
@@ -108,6 +109,8 @@ public:
     const EMA getEMA(int window = 20, double smoothingFactor = -1) const;
     // Returns 
     const ReturnMetrics getReturns() const;  
+    // Moving-Average Convergence/Divergence 
+    const MACD getMACD(int aPeriod = 12, int bPeriod = 26, int cPeriod = 9) const;
     // Bollinger bands
     const BollingerBands getBollingerBands(int window = 20, double numStdDev = 2, MovingAverageType maType = MovingAverageType::SMA) const;
     // Standard deviations 

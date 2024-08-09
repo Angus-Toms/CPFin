@@ -9,14 +9,11 @@
 
 int main() {
     // Get data
-    PriceSeries ps = PriceSeries::getPriceSeries("AAPL", "2021-01-01", "2021-01-31", "1d");
-    std::cout << ps.toString() << "\n";
+    PriceSeries ps = PriceSeries::getPriceSeries("AAPL", "2021-01-01", "2021-03-31", "1d");
+    // std::cout << ps.toString() << "\n";
 
-    SMA sma = ps.getSMA(3);
-    std::cout << sma.toString() << std::endl;
-
-    BollingerBands bb = ps.getBollingerBands(3, 2, MovingAverageType::SMA);
-    std::cout << bb.toString() << std::endl; 
+    MACD macd = ps.getMACD();
+    std::cout << macd.toString() << "\n";
 
     return 0;
 }

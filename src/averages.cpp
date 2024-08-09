@@ -21,7 +21,7 @@ void SMA::calculate() {
     }
 
     // Get first window sum
-    double sum(0);
+    double sum = 0.0;
     auto wEnd = priceData.begin();
     for (size_t i = 0; i < windowSize; i++) {
         sum += wEnd->second.getClose();
@@ -60,7 +60,6 @@ std::vector<std::vector<std::string>> SMA::getTableData() const {
 // Default window is 20, default smoothing factor is -1 (indicating needs to be calculated)
 EMA::EMA(const PriceSeries& priceSeries, int window, double smoothingFactor)
     : priceSeries(priceSeries), window(window) {
-
     // Calculate smoothing factor if not specified
     if (smoothingFactor == -1) {
         smoothingFactor = 2.0 / (window + 1);
@@ -112,12 +111,90 @@ int EMA::plot() const {
 }
 
 std::vector<std::vector<std::string>> EMA::getTableData() const {
-    std::vector<std::vector<std::string>> allData;
+    std::vector<std::vector<std::string>> tableData;
     for (const auto& [date, ema] : data) {
-        allData.push_back({
+        tableData.push_back({
             epochToDateString(date),
             fmt::format("{:.2f}", ema)
         });
     }
-    return allData;
+    return tableData;
+}
+
+// MACD ========================================================================
+// Constructor -----------------------------------------------------------------
+MACD::MACD(const PriceSeries& priceSeries, int aPeriod, int bPeriod, int cPeriod)
+    : priceSeries(priceSeries), aPeriod(aPeriod), bPeriod(bPeriod), cPeriod(cPeriod) {
+    // Set table printing values 
+    name = fmt::format("{}: MACD({}, {}, {})", priceSeries.getTicker(), aPeriod, bPeriod, cPeriod);
+    columnHeaders = {"Date", "MACD", "Signal", "Divergence"};
+    columnWidths = {13, 12, 12, 12};
+
+    calculate();
+}
+void MACD::calculate() {
+    // TODO: Lots of argument checking needed for this routine 
+    // TODO: Change highlighting needs to be redone for this analysis - check Wikipedia page for how this is interpreted
+    // Get MACD line
+    // aPeriod <= bPeriod, therefore there'll be more aPeriod data points than bPeriod 
+
+    const SMA aSMA = priceSeries.getSMA(aPeriod);
+    const SMA bSMA = priceSeries.getSMA(bPeriod);
+    const std::map<std::time_t, double> aData = aSMA.getData();
+    const std::map<std::time_t, double> bData = bSMA.getData();
+
+    std::map<std::time_t, double> macd;
+    for (const auto& [date, bSMAvalue] : bData) {
+        macd[date] = aData.at(date) - bSMAvalue;
+    }
+
+    // Get c-day SMA of MACD line
+    std::map<std::time_t, double> signal;
+    // Get first window sum
+    double sum = 0.0;
+    auto wEnd = macd.begin();
+    for (size_t i = 0; i < static_cast<size_t>(cPeriod); i++) {
+        sum += wEnd->second;
+        wEnd++;
+    }
+
+    wEnd--;
+    signal[wEnd->first] = sum / cPeriod;
+
+    // Slide window until end of data 
+    auto wStart = macd.begin()--;
+    while (++wEnd != macd.end()) {
+        sum += wEnd->second - wStart->second;
+        signal[wEnd->first] = sum / cPeriod;
+        wStart++;
+    } 
+
+
+    // Get histogram, construct MACDRecords
+    for (const auto& [date, signalValue] : signal) {
+        auto macdValue = macd.at(date);
+        data[date] = MACDRecord(
+            macdValue,
+            signalValue,
+            macdValue - signalValue
+        );
+    }
+}
+
+// Virtual methods -------------------------------------------------------------
+int MACD::plot() const {
+    return 0;
+}
+
+std::vector<std::vector<std::string>> MACD::getTableData() const {
+    std::vector<std::vector<std::string>> tableData;
+    for (const auto& [date, macdRecord] : data) {
+        tableData.push_back({
+            epochToDateString(date),
+            fmt::format("{:.2f}", macdRecord.macdLine),
+            fmt::format("{:.2f}", macdRecord.signalLine),
+            fmt::format("{:.2f}", macdRecord.histogram)
+        });
+    }
+    return tableData;
 }
