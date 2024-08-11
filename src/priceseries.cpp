@@ -3,6 +3,7 @@
 #include "averages.hpp"
 #include "returns.hpp"
 #include "bollinger.hpp"
+#include "rsi.hpp"
 
 // OHCLRecord struct ===========================================================
 OHCLRecord::OHCLRecord(double open, double high, double low, double close, double adjClose, double volume)
@@ -171,6 +172,13 @@ PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::st
 
 // Getters ---------------------------------------------------------------------
 std::string PriceSeries::getTicker() const { return ticker; }
+std::vector<std::time_t> PriceSeries::getDates() const {
+    std::vector<std::time_t> dates;
+    for (const auto& [date, _] : data) {
+        dates.push_back(date);
+    }
+    return dates;
+}
 std::vector<double> PriceSeries::getOpens() const {
     std::vector<double> opens;
     for (const auto& [date, record] : data) {
@@ -235,6 +243,9 @@ const BollingerBands PriceSeries::getBollingerBands(int window, double numStdDev
 // Moving-Average Convergence/Divergence
 const MACD PriceSeries::getMACD(int aPeriod, int bPeriod, int cPeriod) const {
     return MACD(*this, aPeriod, bPeriod, cPeriod);
+}
+const RSI PriceSeries::getRSI(int period) {
+    return RSI(*this, period);
 }
 
 double PriceSeries::getStdDev() const {

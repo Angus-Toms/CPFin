@@ -45,14 +45,14 @@ int SMA::plot() const {
     return 0;
 }
 std::vector<std::vector<std::string>> SMA::getTableData() const {
-    std::vector<std::vector<std::string>> allData;
+    std::vector<std::vector<std::string>> tableData;
     for (const auto& [date, sma] : data) {
-        allData.push_back({
+        tableData.push_back({
             epochToDateString(date),
             fmt::format("{:.2f}", sma)
         });
     }
-    return allData;
+    return tableData;
 }
 
 // EMA =========================================================================
@@ -135,9 +135,8 @@ MACD::MACD(const PriceSeries& priceSeries, int aPeriod, int bPeriod, int cPeriod
 void MACD::calculate() {
     // TODO: Lots of argument checking needed for this routine 
     // TODO: Change highlighting needs to be redone for this analysis - check Wikipedia page for how this is interpreted
+    
     // Get MACD line
-    // aPeriod <= bPeriod, therefore there'll be more aPeriod data points than bPeriod 
-
     const SMA aSMA = priceSeries.getSMA(aPeriod);
     const SMA bSMA = priceSeries.getSMA(bPeriod);
     const std::map<std::time_t, double> aData = aSMA.getData();

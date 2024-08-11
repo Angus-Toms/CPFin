@@ -15,12 +15,13 @@
 #include "print_utils.hpp"
 #include "timeseries.hpp"
 
-// Forward declaration of analysis classes
+// Forward declaration of indicator classes
 class SMA;
 class EMA;
 class MACD;
 class ReturnMetrics;
 class BollingerBands;
+class RSI;
 
 struct OHCLRecord {
     double open;
@@ -95,6 +96,7 @@ public:
     // Getters -----------------------------------------------------------------
     std::string getTicker() const;
     
+    std::vector<std::time_t> getDates() const;
     std::vector<double> getOpens() const;
     std::vector<double> getHighs() const;
     std::vector<double> getLows() const;
@@ -113,6 +115,8 @@ public:
     const MACD getMACD(int aPeriod = 12, int bPeriod = 26, int cPeriod = 9) const;
     // Bollinger bands
     const BollingerBands getBollingerBands(int window = 20, double numStdDev = 2, MovingAverageType maType = MovingAverageType::SMA) const;
+    // Relative Strength Index 
+    const RSI getRSI(int period = 14);
     // Standard deviations 
     double getStdDev() const;  
 };

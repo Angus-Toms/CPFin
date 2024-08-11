@@ -12,15 +12,17 @@ class PriceSeries;
 
 struct ReturnMetricRecord {
     double daily;
+    double dailyPct;
     double cumulative;
     double annualized;
     double log;
 
     ReturnMetricRecord() = default;
-    ReturnMetricRecord(double daily, double cumulative, double annualized, double log)
-        : daily(daily), cumulative(cumulative), annualized(annualized), log(log) {}
+    ReturnMetricRecord(double daily, double dailyPct, double cumulative, double annualized, double log)
+        : daily(daily), dailyPct(dailyPct), cumulative(cumulative), annualized(annualized), log(log) {}
 
     double getDaily() const { return daily; }
+    double getDailyPct() const { return dailyPct; }
     double getCumulative() const { return cumulative; }
     double getAnnualized() const { return annualized; }
     double getLog() const { return log; }
@@ -38,6 +40,7 @@ public:
 
     // Getters -----------------------------------------------------------------
     std::vector<double> getDailys() const;
+    std::vector<double> getDailyPcts() const;
     std::vector<double> getCummulatives() const;
     std::vector<double> getAnnualizeds() const;
     std::vector<double> getLogs() const;
