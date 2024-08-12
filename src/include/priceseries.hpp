@@ -75,40 +75,19 @@ private:
     void parseCSV(const std::string& readBuffer, std::map<std::time_t, OHCLRecord>& data);
 
 public:
+
     // Virtual methods 
     ~PriceSeries() = default;
     int plot() const override;
     std::vector<std::vector<std::string>> getTableData() const override;
 
-    // Factory methods ---------------------------------------------------------
-    // All-argument constructor (date objects)
-    static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, 
-                                                       const std::time_t start, 
-                                                       const std::time_t end, 
-                                                       const std::string& interval);
-    // All-argument constructor (date strings)
-    static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, 
-                                                       const std::string& start, 
-                                                       const std::string& end, 
-                                                       const std::string& interval);
-    // No interval constructor (date objects) - defaults to interval of "1d"
-    static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, 
-                                                       const std::time_t start, 
-                                                       const std::time_t end);
-    // No interval constructor (date strings) - defaults to interval of "1d"
-    static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, 
-                                                       const std::string& start, 
-                                                       const std::string& end);
-    // Number of datapoints constructor (date object)
-    static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, 
-                                                       const std::time_t start, 
-                                                       const std::string& interval, 
-                                                       const std::size_t count);
-    // Number of datapoints constructor (date string)
-    static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, 
-                                                       const std::string& start, 
-                                                       const std::string& interval, 
-                                                       const std::size_t count);
+     // Factory methods --------------------------------------------------------
+    static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval);
+    static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, const std::string& start, const std::string& end, const std::string& interval);
+    static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end);
+    static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, const std::string& start, const std::string& end);
+    static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, const std::time_t start, const std::string& interval, const std::size_t count);
+    static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, const std::string& start, const std::string& interval, const std::size_t count);
 
     // Getters -----------------------------------------------------------------
     std::string getTicker() const;

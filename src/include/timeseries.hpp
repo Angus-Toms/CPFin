@@ -6,6 +6,9 @@
 #include <map>
 #include <ctime>
 #include <vector>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
 #include "print_utils.hpp"
 
 template <typename T>
@@ -21,10 +24,15 @@ protected:
 public:
     virtual ~TimeSeries() = default;
     virtual int plot() const = 0;
-    virtual std::vector<std::vector<std::string>> getTableData() const = 0;
 
     const std::map<std::time_t, T>& getData() const;
+
+    // Table writing and exporting
+    virtual std::vector<std::vector<std::string>> getTableData() const = 0;
     std::string toString();
+    void exportToCSV(const std::string& filePath = "", 
+                     char seperator = ',',
+                     bool includeHeader = true, int precision = 2) const;
 };
 
 // Templated definition must be in header file
@@ -88,5 +96,44 @@ std::string TimeSeries<T>::toString() {
     // Bottom line 
     table += getBottomLine(columnWidths);
     return table;
+}
+
+template <typename T>
+void TimeSeries<T>::exportToCSV(const std::string& filePath, char separator, bool includeHeader, int precision) const {
+    std::string path = filePath.empty() ? name + ".csv" : filePath;
+    std::ofstream file(path);
+
+    if (!file.is_open()) {
+        throw std::ios_base::failure("Failed to open file for writing.");
+    }
+
+    // Write header if required 
+    if (includeHeader) {
+        size_t columnCount = columnHeaders.size();
+        for (size_t i = 0; i < columnCount; ++i) {
+            file << columnHeaders[i];
+            if (i != columnCount-1) {
+                file << separator;
+            }
+        }
+        file << "\n";
+    }
+
+    // Set precision 
+    file << std::fixed << std::setprecision(precision);
+
+    const auto& tableData = getTableData();
+    for (const auto& row : tableData) {
+        if (!row.empty()) {
+            file << row[0];
+
+            // Write rest of row (can safely assume they're numeric)
+            for (size_t i = 1; i < row.size(); ++i) {
+                file << separator;
+                file << row[i];
+            }
+            file << "\n";
+        }
+    }
 }
 #endif // TIMESERIES_HPP

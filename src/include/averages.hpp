@@ -3,6 +3,8 @@
 #ifndef AVERAGES_HPP 
 #define AVERAGES_HPP
 
+#include <memory>
+
 #include "timeseries.hpp"
 
 class PriceSeries;

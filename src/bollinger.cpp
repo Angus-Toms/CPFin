@@ -21,8 +21,8 @@ void BollingerBands::calculate() {
     std::vector<double> closes = priceSeries.getCloses();
     const std::map<std::time_t, double> movingAverages = 
         (maType == MovingAverageType::SMA) ?
-        priceSeries.getSMA(window).getData() :
-        priceSeries.getEMA(window).getData();
+        priceSeries.getSMA(window)->getData() :
+        priceSeries.getEMA(window)->getData();
 
     int wStart = 0;
 

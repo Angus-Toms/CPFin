@@ -137,10 +137,8 @@ void MACD::calculate() {
     // TODO: Change highlighting needs to be redone for this analysis - check Wikipedia page for how this is interpreted
     
     // Get MACD line
-    const SMA aSMA = priceSeries.getSMA(aPeriod);
-    const SMA bSMA = priceSeries.getSMA(bPeriod);
-    const std::map<std::time_t, double> aData = aSMA.getData();
-    const std::map<std::time_t, double> bData = bSMA.getData();
+    const std::map<std::time_t, double> aData = priceSeries.getSMA(aPeriod)->getData();
+    const std::map<std::time_t, double> bData = priceSeries.getSMA(bPeriod)->getData();
 
     std::map<std::time_t, double> macd;
     for (const auto& [date, bSMAvalue] : bData) {

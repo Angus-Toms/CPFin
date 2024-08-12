@@ -136,39 +136,34 @@ std::vector<std::vector<std::string>> PriceSeries::getTableData() const {
 }
 
 // Factory methods -------------------------------------------------------------
-// All-argument constructor (date objects)
 std::unique_ptr<PriceSeries> PriceSeries::getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval) {
-    return std::make_unique<PriceSeries>(ticker, start, end, interval);
+    return std::unique_ptr<PriceSeries>(new PriceSeries(ticker, start, end, interval));
 }
-// All-argument constructor (date strings)
+
 std::unique_ptr<PriceSeries> PriceSeries::getPriceSeries(const std::string& ticker, const std::string& start, const std::string& end, const std::string& interval) {
-    std::time_t startEpoch = dateStringToEpoch(start);
-    std::time_t endEpoch = dateStringToEpoch(end);
-    return std::make_unique<PriceSeries>(ticker, startEpoch, endEpoch, interval);
+    return getPriceSeries(ticker, dateStringToEpoch(start), dateStringToEpoch(end), interval);
 }
-// No interval constructor (date objects) - defaults to interval of "1d"
+
 std::unique_ptr<PriceSeries> PriceSeries::getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end) {
-    return std::make_unique<PriceSeries>(ticker, start, end, "1d");
+    return getPriceSeries(ticker, start, end, "1d");
 }
-// No interval constructor (date strings) - defaults to interval of "1d"
+
 std::unique_ptr<PriceSeries> PriceSeries::getPriceSeries(const std::string& ticker, const std::string& start, const std::string& end) {
-    std::time_t startEpoch = dateStringToEpoch(start);
-    std::time_t endEpoch = dateStringToEpoch(end);
-    return std::make_unique<PriceSeries>(ticker, startEpoch, endEpoch, "1d");
+    return getPriceSeries(ticker, dateStringToEpoch(start), dateStringToEpoch(end), "1d");
 }
-// Number of datapoints constructor (date object)
-// TODO: Update to account for weekends
+
 std::unique_ptr<PriceSeries> PriceSeries::getPriceSeries(const std::string& ticker, const std::time_t start, const std::string& interval, const std::size_t count) {
     std::time_t end = start + count * intervalToSeconds(interval);
-    return std::make_unique<PriceSeries>(ticker, start, end, interval);
+    return getPriceSeries(ticker, start, end, interval);
 }
-// Number of datapoints constructor (date string)
-// TODO: Update to account for weekends
+
 std::unique_ptr<PriceSeries> PriceSeries::getPriceSeries(const std::string& ticker, const std::string& start, const std::string& interval, const std::size_t count) {
-    std::time_t startEpoch = dateStringToEpoch(start);
-    std::time_t end = startEpoch + count * intervalToSeconds(interval);
-    return std::make_unique<PriceSeries>(ticker, startEpoch, end, interval);
+    std::time_t startTime = dateStringToEpoch(start);
+    std::time_t end = startTime + count * intervalToSeconds(interval);
+    return getPriceSeries(ticker, startTime, end, interval);
 }
+
+
 
 // Getters ---------------------------------------------------------------------
 std::string PriceSeries::getTicker() const { return ticker; }

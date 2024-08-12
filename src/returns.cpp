@@ -5,7 +5,7 @@
 ReturnMetrics::ReturnMetrics(const PriceSeries& priceSeries)
     : priceSeries(priceSeries) {
     // Set table printing values
-    name = fmt::format("{} - Returns", priceSeries.getTicker());
+    name = fmt::format("{}: Returns", priceSeries.getTicker());
     columnHeaders = {"Date", "Daily", "Daily %", "Cumulative", "Annualized", "Log"};
     columnWidths = {13, 10, 10, 12, 12, 10};
     calculate();

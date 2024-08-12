@@ -14,7 +14,7 @@ RSI::RSI(const PriceSeries& priceSeries, int period)
     calculate();
 }
 void RSI::calculate() {
-    const std::vector<double> returns = priceSeries.getReturns().getDailys();
+    const std::vector<double> returns = priceSeries.getReturns()->getDailys();
     std::vector<std::time_t> dates = priceSeries.getDates();
     double avgGain = 0, avgLoss = 0;
 
