@@ -137,37 +137,37 @@ std::vector<std::vector<std::string>> PriceSeries::getTableData() const {
 
 // Factory methods -------------------------------------------------------------
 // All-argument constructor (date objects)
-PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval) {
-    return PriceSeries(ticker, start, end, interval);
+std::unique_ptr<PriceSeries> PriceSeries::getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval) {
+    return std::make_unique<PriceSeries>(ticker, start, end, interval);
 }
 // All-argument constructor (date strings)
-PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::string& start, const std::string& end, const std::string& interval) {
+std::unique_ptr<PriceSeries> PriceSeries::getPriceSeries(const std::string& ticker, const std::string& start, const std::string& end, const std::string& interval) {
     std::time_t startEpoch = dateStringToEpoch(start);
     std::time_t endEpoch = dateStringToEpoch(end);
-    return PriceSeries(ticker, startEpoch, endEpoch, interval);
+    return std::make_unique<PriceSeries>(ticker, startEpoch, endEpoch, interval);
 }
 // No interval constructor (date objects) - defaults to interval of "1d"
-PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end) {
-    return PriceSeries(ticker, start, end, "1d");
+std::unique_ptr<PriceSeries> PriceSeries::getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end) {
+    return std::make_unique<PriceSeries>(ticker, start, end, "1d");
 }
 // No interval constructor (date strings) - defaults to interval of "1d"
-PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::string& start, const std::string& end) {
+std::unique_ptr<PriceSeries> PriceSeries::getPriceSeries(const std::string& ticker, const std::string& start, const std::string& end) {
     std::time_t startEpoch = dateStringToEpoch(start);
     std::time_t endEpoch = dateStringToEpoch(end);
-    return PriceSeries(ticker, startEpoch, endEpoch, "1d");
+    return std::make_unique<PriceSeries>(ticker, startEpoch, endEpoch, "1d");
 }
 // Number of datapoints constructor (date object)
 // TODO: Update to account for weekends
-PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::time_t start, const std::string& interval, const std::size_t count) {
+std::unique_ptr<PriceSeries> PriceSeries::getPriceSeries(const std::string& ticker, const std::time_t start, const std::string& interval, const std::size_t count) {
     std::time_t end = start + count * intervalToSeconds(interval);
-    return PriceSeries(ticker, start, end, interval);
+    return std::make_unique<PriceSeries>(ticker, start, end, interval);
 }
 // Number of datapoints constructor (date string)
 // TODO: Update to account for weekends
-PriceSeries PriceSeries::getPriceSeries(const std::string& ticker, const std::string& start, const std::string& interval, const std::size_t count) {
+std::unique_ptr<PriceSeries> PriceSeries::getPriceSeries(const std::string& ticker, const std::string& start, const std::string& interval, const std::size_t count) {
     std::time_t startEpoch = dateStringToEpoch(start);
     std::time_t end = startEpoch + count * intervalToSeconds(interval);
-    return PriceSeries(ticker, startEpoch, end, interval);
+    return std::make_unique<PriceSeries>(ticker, startEpoch, end, interval);
 }
 
 // Getters ---------------------------------------------------------------------
@@ -225,27 +225,27 @@ std::vector<double> PriceSeries::getVolumes() const {
 // Analyses --------------------------------------------------------------------
 // Simple Moving Average 
 // Default window is 20d
-const SMA PriceSeries::getSMA(int window) const {
-    return SMA(*this, window);
+std::unique_ptr<SMA> PriceSeries::getSMA(int window) const {
+    return std::make_unique<SMA>(*this, window);
 }
 // Exponential Moving Average
-const EMA PriceSeries::getEMA(int window, double smoothingFactor) const {
-    return EMA(*this, window, smoothingFactor);
+std::unique_ptr<EMA> PriceSeries::getEMA(int window, double smoothingFactor) const {
+    return std::make_unique<EMA>(*this, window, smoothingFactor);
 }
 // Returns
-const ReturnMetrics PriceSeries::getReturns() const {
-    return ReturnMetrics(*this);
+std::unique_ptr<ReturnMetrics> PriceSeries::getReturns() const {
+    return std::make_unique<ReturnMetrics>(*this);
 }
 // Bollinger Bands
-const BollingerBands PriceSeries::getBollingerBands(int window, double numStdDev, MovingAverageType maType) const {
-    return BollingerBands(*this, window, numStdDev, maType);
+std::unique_ptr<BollingerBands> PriceSeries::getBollingerBands(int window, double numStdDev, MovingAverageType maType) const {
+    return std::make_unique<BollingerBands>(*this, window, numStdDev, maType);
 }
 // Moving-Average Convergence/Divergence
-const MACD PriceSeries::getMACD(int aPeriod, int bPeriod, int cPeriod) const {
-    return MACD(*this, aPeriod, bPeriod, cPeriod);
+std::unique_ptr<MACD> PriceSeries::getMACD(int aPeriod, int bPeriod, int cPeriod) const {
+    return std::make_unique<MACD>(*this, aPeriod, bPeriod, cPeriod);
 }
-const RSI PriceSeries::getRSI(int period) {
-    return RSI(*this, period);
+std::unique_ptr<RSI> PriceSeries::getRSI(int period) {
+    return std::make_unique<RSI>(*this, period);
 }
 
 double PriceSeries::getStdDev() const {

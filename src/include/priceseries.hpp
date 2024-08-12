@@ -9,6 +9,7 @@
 #include <map>
 #include <curl/curl.h>
 #include <matplot/matplot.h>
+#include <memory>
 
 #include "enums.hpp"
 #include "time_utils.hpp"
@@ -81,21 +82,36 @@ public:
 
     // Factory methods ---------------------------------------------------------
     // All-argument constructor (date objects)
-    static PriceSeries getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval);
+    static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, 
+                                                       const std::time_t start, 
+                                                       const std::time_t end, 
+                                                       const std::string& interval);
     // All-argument constructor (date strings)
-    static PriceSeries getPriceSeries(const std::string& ticker, const std::string& start, const std::string& end, const std::string& interval);
+    static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, 
+                                                       const std::string& start, 
+                                                       const std::string& end, 
+                                                       const std::string& interval);
     // No interval constructor (date objects) - defaults to interval of "1d"
-    static PriceSeries getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end);
+    static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, 
+                                                       const std::time_t start, 
+                                                       const std::time_t end);
     // No interval constructor (date strings) - defaults to interval of "1d"
-    static PriceSeries getPriceSeries(const std::string& ticker, const std::string& start, const std::string& end);
+    static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, 
+                                                       const std::string& start, 
+                                                       const std::string& end);
     // Number of datapoints constructor (date object)
-    static PriceSeries getPriceSeries(const std::string& ticker, const std::time_t start, const std::string& interval, const std::size_t count);
+    static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, 
+                                                       const std::time_t start, 
+                                                       const std::string& interval, 
+                                                       const std::size_t count);
     // Number of datapoints constructor (date string)
-    static PriceSeries getPriceSeries(const std::string& ticker, const std::string& start, const std::string& interval, const std::size_t count);
+    static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, 
+                                                       const std::string& start, 
+                                                       const std::string& interval, 
+                                                       const std::size_t count);
 
     // Getters -----------------------------------------------------------------
     std::string getTicker() const;
-    
     std::vector<std::time_t> getDates() const;
     std::vector<double> getOpens() const;
     std::vector<double> getHighs() const;
@@ -106,17 +122,19 @@ public:
 
     // Analyses ----------------------------------------------------------------
     // Simple moving average 
-    const SMA getSMA(int window = 20) const;
+    std::unique_ptr<SMA> getSMA(int window = 20) const;
     // Exponential moving average 
-    const EMA getEMA(int window = 20, double smoothingFactor = -1) const;
+    std::unique_ptr<EMA> getEMA(int window = 20, double smoothingFactor = -1) const;
     // Returns 
-    const ReturnMetrics getReturns() const;  
+    std::unique_ptr<ReturnMetrics> getReturns() const;  
     // Moving-Average Convergence/Divergence 
-    const MACD getMACD(int aPeriod = 12, int bPeriod = 26, int cPeriod = 9) const;
+    std::unique_ptr<MACD> getMACD(int aPeriod = 12, int bPeriod = 26, int cPeriod = 9) const;
     // Bollinger bands
-    const BollingerBands getBollingerBands(int window = 20, double numStdDev = 2, MovingAverageType maType = MovingAverageType::SMA) const;
+    std::unique_ptr<BollingerBands> getBollingerBands(int window = 20, 
+                                                            double numStdDev = 2, 
+                                                            MovingAverageType maType = MovingAverageType::SMA) const;
     // Relative Strength Index 
-    const RSI getRSI(int period = 14);
+    std::unique_ptr<RSI> getRSI(int period = 14);
     // Standard deviations 
     double getStdDev() const;  
 };

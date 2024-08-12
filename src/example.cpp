@@ -7,16 +7,12 @@
 // TODO: Should getIndicator methods be returning pointers?
 // TODO: Sort out exception catching (mainly param checking)
 
+#include <chrono>
+#include <vector>
 
 int main() {
-    PriceSeries ps = PriceSeries::getPriceSeries("AAPL", "2021-01-01", "2021-01-15", "1d");
-    std::cout << ps.toString() << "\n";
-
-    ReturnMetrics returns = ps.getReturns();
-    //std::cout << returns.toString() << "\n";
-
-    RSI rsi = ps.getRSI(3);
-    std::cout << rsi.toString() << "\n";
+    std::unique_ptr<PriceSeries> ps = PriceSeries::getPriceSeries("AAPL", "2020-01-01", "2021-01-01", "1d");
+    
 
     return 0;
 }
