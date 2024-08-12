@@ -13,7 +13,7 @@ int main() {
     std::cout << ps.toString() << "\n";
 
     ReturnMetrics returns = ps.getReturns();
-    std::cout << returns.toString() << "\n";
+    //std::cout << returns.toString() << "\n";
 
     RSI rsi = ps.getRSI(3);
     std::cout << rsi.toString() << "\n";
