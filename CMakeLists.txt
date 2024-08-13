@@ -10,9 +10,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Add the fmt and curl packages
 find_package(fmt REQUIRED)
 find_package(CURL REQUIRED)
+find_package(Python3 COMPONENTS Development NumPy)
 
 # Include directories
 include_directories(src/include)
+include_directories(${Python3_INCLUDE_DIRS})
+include_directories(${Python3_NumPy_INCLUDE_DIRS})
 
 # Add the source directory and files
 file(GLOB_RECURSE SRC_FILES "src/*.cpp")
@@ -21,7 +24,7 @@ file(GLOB_RECURSE SRC_FILES "src/*.cpp")
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 
 # Link libraries
-target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt CURL::libcurl)
+target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt CURL::libcurl ${Python3_LIBRARIES})
 
 # Optionally add compiler flags (e.g., -Wall, -Wextra, -O2)
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -O2)

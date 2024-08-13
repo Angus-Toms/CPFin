@@ -8,13 +8,14 @@
 #include <thread>
 #include <map>
 #include <curl/curl.h>
-#include <matplot/matplot.h>
 #include <memory>
 
 #include "enums.hpp"
 #include "time_utils.hpp"
 #include "print_utils.hpp"
 #include "timeseries.hpp"
+
+#include "matplotlibcpp.h"
 
 // Forward declaration of indicator classes
 class SMA;

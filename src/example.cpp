@@ -15,8 +15,6 @@
 
 int main() {
     std::unique_ptr<PriceSeries> ps = PriceSeries::getPriceSeries("AAPL", "2000-01-01", "2021-01-01", "1d");
-    
-    ps->getEMA(5)->exportToCSV();
 
     return 0;
 }

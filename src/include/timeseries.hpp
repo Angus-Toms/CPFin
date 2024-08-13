@@ -44,12 +44,11 @@ const std::map<std::time_t, T>& TimeSeries<T>::getData() const {
 template <typename T>
 std::string TimeSeries<T>::toString() {
     int totalWidth = 0;
-    int columnCount = 0;
     for (const auto& width : columnWidths) {
         totalWidth += width;
-        columnCount++;
     }
     // Account for width of column seperators
+    auto columnCount = columnWidths.size();
     totalWidth += (columnCount-1);
 
     // Title
@@ -127,7 +126,7 @@ void TimeSeries<T>::exportToCSV(const std::string& filePath, char separator, boo
         if (!row.empty()) {
             file << row[0];
 
-            // Write rest of row (can safely assume they're numeric)
+            // Write rest of row (can safely assume all are numeric)
             for (size_t i = 1; i < row.size(); ++i) {
                 file << separator;
                 file << row[i];

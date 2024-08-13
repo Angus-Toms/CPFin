@@ -114,8 +114,14 @@ void PriceSeries::parseCSV(const std::string& readBuffer, std::map<std::time_t, 
 
 // Virtual methods -------------------------------------------------------------
 int PriceSeries::plot() const {
-    // Construct date strings
-    // TODO: Implement
+    std::vector<double> closes = getCloses();
+    matplotlibcpp::plot(closes);
+
+    matplotlibcpp::xlabel("Time");
+    matplotlibcpp::ylabel("Price");
+
+    matplotlibcpp::show();
+
     return 0;
 }
 
@@ -162,8 +168,6 @@ std::unique_ptr<PriceSeries> PriceSeries::getPriceSeries(const std::string& tick
     std::time_t end = startTime + count * intervalToSeconds(interval);
     return getPriceSeries(ticker, startTime, end, interval);
 }
-
-
 
 // Getters ---------------------------------------------------------------------
 std::string PriceSeries::getTicker() const { return ticker; }
