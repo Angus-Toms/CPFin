@@ -114,13 +114,21 @@ void PriceSeries::parseCSV(const std::string& readBuffer, std::map<std::time_t, 
 
 // Virtual methods -------------------------------------------------------------
 int PriceSeries::plot() const {
+    // Plot basic line 
+    namespace plt = matplotlibcpp;
+
     std::vector<double> closes = getCloses();
-    matplotlibcpp::plot(closes);
+    std::vector<std::time_t> xs = getDates();
+    plt::named_plot("Price", xs, closes, "b-");
 
-    matplotlibcpp::xlabel("Time");
-    matplotlibcpp::ylabel("Price");
+    // Plot overlays
+    for (const auto& overlay : overlays) {
+        overlay->plot();
+    }
 
-    matplotlibcpp::show();
+    // General plot aesthetics 
+    plt::title(ticker);
+    plt::legend();
 
     return 0;
 }
@@ -221,45 +229,28 @@ std::vector<double> PriceSeries::getVolumes() const {
     return volumes;
 }
 
-// Analyses --------------------------------------------------------------------
-// Simple Moving Average 
-// Default window is 20d
-std::unique_ptr<SMA> PriceSeries::getSMA(int window) const {
-    return std::make_unique<SMA>(*this, window);
+// Overlays --------------------------------------------------------------------
+// Simple Moving Average, default period is 20d
+void PriceSeries::getSMA(int period) {
+    addOverlay(std::make_unique<SMA>(*this, period));
 }
-// Exponential Moving Average
-std::unique_ptr<EMA> PriceSeries::getEMA(int window, double smoothingFactor) const {
-    return std::make_unique<EMA>(*this, window, smoothingFactor);
+// Exponential Moving Average, default period is 20d, default smoothing is 
+void PriceSeries::getEMA(int period, double smoothingFactor) {
+    addOverlay(std::make_unique<EMA>(*this, period, smoothingFactor));
 }
 // Returns
-std::unique_ptr<ReturnMetrics> PriceSeries::getReturns() const {
-    return std::make_unique<ReturnMetrics>(*this);
+void PriceSeries::getReturns() {
+    addOverlay(std::make_unique<ReturnMetrics>(*this));
 }
-// Bollinger Bands
-std::unique_ptr<BollingerBands> PriceSeries::getBollingerBands(int window, double numStdDev, MovingAverageType maType) const {
-    return std::make_unique<BollingerBands>(*this, window, numStdDev, maType);
+// Moving-Average Convergence/Divergence, default periods are 12, 2, 9
+void PriceSeries::getMACD(int aPeriod, int bPeriod, int cPeriod) {
+    addOverlay(std::make_unique<MACD>(*this, aPeriod, bPeriod, cPeriod));
 }
-// Moving-Average Convergence/Divergence
-std::unique_ptr<MACD> PriceSeries::getMACD(int aPeriod, int bPeriod, int cPeriod) const {
-    return std::make_unique<MACD>(*this, aPeriod, bPeriod, cPeriod);
+// Bollinger Bands, default period is 20d, default SD is 2
+void PriceSeries::getBollingerBands(int period, double numStdDev, MovingAverageType maType) {
+    addOverlay(std::make_unique<BollingerBands>(*this, period, numStdDev, maType));
 }
-std::unique_ptr<RSI> PriceSeries::getRSI(int period) {
-    return std::make_unique<RSI>(*this, period);
-}
-
-double PriceSeries::getStdDev() const {
-    // Welford's Method
-    double mean = 0.0;
-    double M2 = 0.0;
-    size_t n = 0;
-
-    for (const auto& close : getCloses()) {
-        n++;
-        double delta = close - mean;
-        mean += delta / n;
-        double delta2 = close - mean;
-        M2 += delta * delta2;
-    }
-
-    return std::sqrt(M2 / n);
+// Relative Strength Index, default period is 14d
+void PriceSeries::getRSI(int period) {
+    addOverlay(std::make_unique<RSI>(*this, period));
 }

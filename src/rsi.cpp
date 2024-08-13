@@ -49,6 +49,17 @@ void RSI::calculate() {
 
 // Virtual methods -------------------------------------------------------------
 int RSI::plot() const {
+    namespace plt = matplotlibcpp;
+
+    std::vector<std::time_t> xs;
+    std::vector<double> ys;
+    for (const auto& [date, rsi] : data) {
+        xs.push_back(date);
+        ys.push_back(rsi);
+    }
+
+    plt::named_plot(name, xs, ys, "o--");
+
     return 0;
 }
 std::vector<std::vector<std::string>> RSI::getTableData() const {

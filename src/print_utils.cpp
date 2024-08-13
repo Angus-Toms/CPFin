@@ -114,3 +114,16 @@ std::string getRow(const std::vector<std::string>& row,
     rowStr += V_LINE + "\n";
     return rowStr;
 }
+
+std::string getTable(const std::vector<std::vector<std::string>>& tableData, 
+                     const std::vector<int>& columnWidths, 
+                     const std::vector<std::string>& columnHeaders) {
+    // TODO: Finish + Conditional highlighting
+    std::string tableStr;
+    int totalWidth = columnHeaders.size() - 1;
+    for (int width : columnWidths) {
+        totalWidth += width;
+    }
+
+    return tableStr;
+}   

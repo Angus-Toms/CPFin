@@ -23,12 +23,12 @@ struct MACDRecord {
 class SMA : public TimeSeries<double> {
 private:
     const PriceSeries& priceSeries;
-    int window;
+    int period;
 
     void calculate();
 
 public:
-    SMA(const PriceSeries& priceSeries, int window = 20);
+    SMA(const PriceSeries& priceSeries, int period = 20);
 
     // Implement virtual methods from TimeSeries
     int plot() const override;
@@ -38,13 +38,13 @@ public:
 class EMA : public TimeSeries<double> {
 private:
     const PriceSeries& priceSeries;
-    int window;
+    int period;
     double smoothingFactor;
 
     void calculate();
 
 public:
-    EMA(const PriceSeries& priceSeries, int window = 20, double smoothingFactor = -1);
+    EMA(const PriceSeries& priceSeries, int period = 20, double smoothingFactor = -1);
 
     // Implement virtual methods from TimeSeries 
     int plot() const override;

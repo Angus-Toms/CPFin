@@ -18,31 +18,31 @@ BollingerBands::BollingerBands(const PriceSeries& priceSeries, int window, doubl
 void BollingerBands::calculate() {
     // TODO: This can greatly be improved, particularly for SMA middle band 
     // See: https://en.wikipedia.org/wiki/Standard_deviation#Rapid_calculation_methods
-    std::vector<double> closes = priceSeries.getCloses();
-    const std::map<std::time_t, double> movingAverages = 
-        (maType == MovingAverageType::SMA) ?
-        priceSeries.getSMA(window)->getData() :
-        priceSeries.getEMA(window)->getData();
+    // std::vector<double> closes = priceSeries.getCloses();
+    // const std::map<std::time_t, double> movingAverages = 
+    //     (maType == MovingAverageType::SMA) ?
+    //     priceSeries.getSMA(window)->getData() :
+    //     priceSeries.getEMA(window)->getData();
 
-    int wStart = 0;
+    // int wStart = 0;
 
-    for (const auto& [date, ma] : movingAverages) {
-        // Calculate standard deviation for window ending at date 
-        double sum = 0;
-        double sumSquares = 0;
-        for (int i = 0; i < window; i++) {
-            double close = closes[i+wStart];
-            sum += close;
-            sumSquares += close * close;
-        }
-        double stdDev = std::sqrt((sumSquares/window) - ((sum/window) * (sum/window)));
+    // for (const auto& [date, ma] : movingAverages) {
+    //     // Calculate standard deviation for window ending at date 
+    //     double sum = 0;
+    //     double sumSquares = 0;
+    //     for (int i = 0; i < window; i++) {
+    //         double close = closes[i+wStart];
+    //         sum += close;
+    //         sumSquares += close * close;
+    //     }
+    //     double stdDev = std::sqrt((sumSquares/window) - ((sum/window) * (sum/window)));
         
-        double upperBand = ma + numStdDev * stdDev;
-        double lowerBand = ma - numStdDev * stdDev;
+    //     double upperBand = ma + numStdDev * stdDev;
+    //     double lowerBand = ma - numStdDev * stdDev;
 
-        data[date] = std::make_tuple(lowerBand, ma, upperBand);
-        wStart++;
-    }
+    //     data[date] = std::make_tuple(lowerBand, ma, upperBand);
+    //     wStart++;
+    // }
 }
 
 // Virtual methods -------------------------------------------------------------

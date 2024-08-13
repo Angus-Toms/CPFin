@@ -3,45 +3,56 @@
 
 // SMA =========================================================================
 // Constructor -----------------------------------------------------------------
-SMA::SMA(const PriceSeries& priceSeries, int window)
-    : priceSeries(priceSeries), window(window) {
+SMA::SMA(const PriceSeries& priceSeries, int period)
+    : priceSeries(priceSeries), period(period) {
     // Set table printing values 
-    name = fmt::format("{}: SMA({}d)", priceSeries.getTicker(), window);
+    name = fmt::format("{}: SMA({}d)", priceSeries.getTicker(), period);
     columnHeaders = {"Date", "SMA"};
     columnWidths = {13, 10};
 
     calculate();
 }
 void SMA::calculate() {
-    size_t windowSize = static_cast<size_t>(window);
+    size_t periodSize = static_cast<size_t>(period);
     const std::map<std::time_t, OHCLRecord>& priceData = priceSeries.getData();
     // Check if window size is valid 
-    if (windowSize > priceData.size()) {
+    if (periodSize > priceData.size()) {
         throw std::invalid_argument("Could not get SMA: Window size must be less than data length");
     }
 
     // Get first window sum
     double sum = 0.0;
     auto wEnd = priceData.begin();
-    for (size_t i = 0; i < windowSize; i++) {
+    for (size_t i = 0; i < periodSize; i++) {
         sum += wEnd->second.getClose();
         wEnd++;
     }
 
     wEnd--;
-    data[wEnd->first] = sum / windowSize;
+    data[wEnd->first] = sum / periodSize;
 
     // Slide window until end of data
     auto wStart = priceData.begin()--;
     while (++wEnd != priceData.end()) {
         sum += wEnd->second.getClose() - wStart->second.getClose();
-        data[wEnd->first] = sum / windowSize;
+        data[wEnd->first] = sum / periodSize;
         wStart++;
     }
 }
 
 // Virtual methods -------------------------------------------------------------
 int SMA::plot() const {
+    namespace plt = matplotlibcpp;
+
+    std::vector<std::time_t> xs;
+    std::vector<double> ys;
+    for (const auto& [date, sma] : data) {
+        xs.push_back(date);
+        ys.push_back(sma);
+    }
+
+    plt::named_plot(name, xs, ys, "r--");
+    
     return 0;
 }
 std::vector<std::vector<std::string>> SMA::getTableData() const {
@@ -57,16 +68,16 @@ std::vector<std::vector<std::string>> SMA::getTableData() const {
 
 // EMA =========================================================================
 // Constuctor ------------------------------------------------------------------
-// Default window is 20, default smoothing factor is -1 (indicating needs to be calculated)
-EMA::EMA(const PriceSeries& priceSeries, int window, double smoothingFactor)
-    : priceSeries(priceSeries), window(window) {
+// Default period is 20, default smoothing factor is -1 (indicating needs to be calculated)
+EMA::EMA(const PriceSeries& priceSeries, int period, double smoothingFactor)
+    : priceSeries(priceSeries), period(period) {
     // Calculate smoothing factor if not specified
     if (smoothingFactor == -1) {
-        smoothingFactor = 2.0 / (window + 1);
+        smoothingFactor = 2.0 / (period + 1);
     }
 
     // Set table printing values 
-    name = fmt::format("{}: EMA({}d, α={:.4f})", priceSeries.getTicker(), window, smoothingFactor);
+    name = fmt::format("{}: EMA({}d, α={:.4f})", priceSeries.getTicker(), period, smoothingFactor);
     columnHeaders = {"Date", "EMA"};
     columnWidths = {13, 12};
 
@@ -75,7 +86,7 @@ EMA::EMA(const PriceSeries& priceSeries, int window, double smoothingFactor)
 void EMA::calculate() {
     const std::map<std::time_t, OHCLRecord>& priceData = priceSeries.getData();
     // Check if window size is valid
-    if (static_cast<size_t>(window) > priceData.size()) {
+    if (static_cast<size_t>(period) > priceData.size()) {
         throw std::invalid_argument("Could not get EMA: Window size must be less than data length");
     }
 
@@ -83,7 +94,7 @@ void EMA::calculate() {
     double sum(0);
     auto wStart = priceData.begin();
     auto idx = 0;
-    while (idx < window) {
+    while (idx < period) {
         sum += wStart->second.getClose();
         wStart++;
         idx++;
@@ -91,9 +102,9 @@ void EMA::calculate() {
 
     // Calculate smoothing factor if not specified 
     if (!smoothingFactor) {
-        smoothingFactor = 2.0 / (window + 1);
+        smoothingFactor = 2.0 / (period + 1);
     }
-    double ema = sum / window;
+    double ema = sum / period;
 
     // Move window until end of data 
     wStart--;
@@ -137,45 +148,45 @@ void MACD::calculate() {
     // TODO: Change highlighting needs to be redone for this analysis - check Wikipedia page for how this is interpreted
     
     // Get MACD line
-    const std::map<std::time_t, double> aData = priceSeries.getSMA(aPeriod)->getData();
-    const std::map<std::time_t, double> bData = priceSeries.getSMA(bPeriod)->getData();
+    // const std::map<std::time_t, double> aData = priceSeries.getSMA(aPeriod)->getData();
+    // const std::map<std::time_t, double> bData = priceSeries.getSMA(bPeriod)->getData();
 
-    std::map<std::time_t, double> macd;
-    for (const auto& [date, bSMAvalue] : bData) {
-        macd[date] = aData.at(date) - bSMAvalue;
-    }
+    // std::map<std::time_t, double> macd;
+    // for (const auto& [date, bSMAvalue] : bData) {
+    //     macd[date] = aData.at(date) - bSMAvalue;
+    // }
 
-    // Get c-day SMA of MACD line
-    std::map<std::time_t, double> signal;
-    // Get first window sum
-    double sum = 0.0;
-    auto wEnd = macd.begin();
-    for (size_t i = 0; i < static_cast<size_t>(cPeriod); i++) {
-        sum += wEnd->second;
-        wEnd++;
-    }
+    // // Get c-day SMA of MACD line
+    // std::map<std::time_t, double> signal;
+    // // Get first window sum
+    // double sum = 0.0;
+    // auto wEnd = macd.begin();
+    // for (size_t i = 0; i < static_cast<size_t>(cPeriod); i++) {
+    //     sum += wEnd->second;
+    //     wEnd++;
+    // }
 
-    wEnd--;
-    signal[wEnd->first] = sum / cPeriod;
+    // wEnd--;
+    // signal[wEnd->first] = sum / cPeriod;
 
-    // Slide window until end of data 
-    auto wStart = macd.begin()--;
-    while (++wEnd != macd.end()) {
-        sum += wEnd->second - wStart->second;
-        signal[wEnd->first] = sum / cPeriod;
-        wStart++;
-    } 
+    // // Slide window until end of data 
+    // auto wStart = macd.begin()--;
+    // while (++wEnd != macd.end()) {
+    //     sum += wEnd->second - wStart->second;
+    //     signal[wEnd->first] = sum / cPeriod;
+    //     wStart++;
+    // } 
 
 
-    // Get histogram, construct MACDRecords
-    for (const auto& [date, signalValue] : signal) {
-        auto macdValue = macd.at(date);
-        data[date] = MACDRecord(
-            macdValue,
-            signalValue,
-            macdValue - signalValue
-        );
-    }
+    // // Get histogram, construct MACDRecords
+    // for (const auto& [date, signalValue] : signal) {
+    //     auto macdValue = macd.at(date);
+    //     data[date] = MACDRecord(
+    //         macdValue,
+    //         signalValue,
+    //         macdValue - signalValue
+    //     );
+    // }
 }
 
 // Virtual methods -------------------------------------------------------------

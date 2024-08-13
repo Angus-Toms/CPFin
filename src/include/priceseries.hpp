@@ -21,7 +21,6 @@
 class SMA;
 class EMA;
 class MACD;
-class ReturnMetrics;
 class BollingerBands;
 class RSI;
 
@@ -54,6 +53,8 @@ private:
     std::time_t start;
     std::time_t end;
     std::string interval;
+    
+    std::vector<std::unique_ptr<TimeSeries>> overlays;
 
     // Private constructor 
     PriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval)
@@ -100,23 +101,24 @@ public:
     std::vector<double> getAdjCloses() const;
     std::vector<double> getVolumes() const;
 
-    // Analyses ----------------------------------------------------------------
+    // Overlays ----------------------------------------------------------------
+    template <typename T>
+    void addOverlay(std::unique_ptr<TimeSeries<T>> overlay) {
+        overlays.push_back(std::move(overlay));
+    }
     // Simple moving average 
-    std::unique_ptr<SMA> getSMA(int window = 20) const;
+    void getSMA(int period = 20);
     // Exponential moving average 
-    std::unique_ptr<EMA> getEMA(int window = 20, double smoothingFactor = -1) const;
+    void getEMA(int period = 20, double smoothingFactor = -1);
     // Returns 
-    std::unique_ptr<ReturnMetrics> getReturns() const;  
+    void getReturns();  
     // Moving-Average Convergence/Divergence 
-    std::unique_ptr<MACD> getMACD(int aPeriod = 12, int bPeriod = 26, int cPeriod = 9) const;
+    void getMACD(int aPeriod = 12, int bPeriod = 26, int cPeriod = 9);
     // Bollinger bands
-    std::unique_ptr<BollingerBands> getBollingerBands(int window = 20, 
-                                                            double numStdDev = 2, 
-                                                            MovingAverageType maType = MovingAverageType::SMA) const;
+    void getBollingerBands(int period = 20, double numStdDev = 2, 
+                           MovingAverageType maType = MovingAverageType::SMA);
     // Relative Strength Index 
-    std::unique_ptr<RSI> getRSI(int period = 14);
-    // Standard deviations 
-    double getStdDev() const;  
+    void getRSI(int period = 14);
 };
 
 #endif // PRICESERIES_HPP
