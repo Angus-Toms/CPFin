@@ -1,11 +1,11 @@
 #include "overlays/macd.hpp"
+#include "priceseries.hpp"
 
-MACD::MACD(PriceSeries& priceSeries, int aPeriod, int bPeriod, int cPeriod)
-    : aPeriod(aPeriod), bPeriod(bPeriod), cPeriod(cPeriod) {
-    ps = std::make_unique<PriceSeries>(priceSeries);
+MACD::MACD(std::shared_ptr<PriceSeries> priceSeries, int aPeriod, int bPeriod, int cPeriod)
+    : IOverlay(std::move(priceSeries)), aPeriod(aPeriod), bPeriod(bPeriod), cPeriod(cPeriod) {
 
     // Set table printing values
-    name = fmt::format("{}: MACD({}, {}, {})", ps->getTicker(), aPeriod, bPeriod, cPeriod);
+    name = fmt::format("{}: MACD({}, {}, {})", priceSeries->getTicker(), aPeriod, bPeriod, cPeriod);
     columnHeaders = {"Date", "MACD", "Signal", "Divergence"};
     columnWidths = {13, 12, 12, 12};
 
@@ -68,7 +68,8 @@ void MACD::plot() const {
 
 std::vector<std::vector<std::string>> MACD::getTableData() const {
     std::vector<std::vector<std::string>> tableData;
-    for (const auto& [date, [macd, signal, divergence]] : data) {
+    for (const auto& [date, val] : data) {
+        const auto& [macd, signal, divergence] = val;
         tableData.push_back({
             fmt::format(epochToDateString(date)),
             fmt::format("{:.2f}", macd),
@@ -77,4 +78,8 @@ std::vector<std::vector<std::string>> MACD::getTableData() const {
         });
     }
     return tableData;
+}
+
+std::string MACD::toString() const {
+    return "MACD";
 }

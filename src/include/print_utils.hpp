@@ -53,5 +53,8 @@ std::string getRow(const std::vector<std::string>& row,
                    const std::vector<int>& columnWidths, 
                    const std::vector<Justification>& justifications, 
                    const std::vector<Color>& colors);
+std::string getTable(const std::vector<std::vector<std::string>>& tableData, 
+                     const std::vector<int>& columnWidths, 
+                     const std::vector<std::string>& columnHeaders);
 
 #endif // PRINT_UTILS_HPP

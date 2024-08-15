@@ -1,12 +1,11 @@
 #include "overlays/sma.hpp"
 #include "priceseries.hpp"
 
-SMA::SMA(PriceSeries& priceSeries, int period) 
-    : period(period) {
-    ps = std::make_unique<PriceSeries>(priceSeries);
+SMA::SMA(std::shared_ptr<PriceSeries> priceSeries, int period) 
+    : IOverlay(std::move(priceSeries)), period(period) {
 
     // Set table printing values 
-    name = fmt::format("{}: SMA({}d)", ps.getTicker(), period);
+    name = fmt::format("{}: SMA({}d)", priceSeries->getTicker(), period);
     columnHeaders = {"Date", "SMA"};
     columnWidths = {12, 10};
 
@@ -18,30 +17,26 @@ void SMA::checkArguments() {
 }
 
 void SMA::calculate() {
-    size_t periodSize = static_cast<size_t>(period);
-    const std::map<std::time_t, OHCLRecord>& priceData = ps->getData();
+    const std::vector<std::time_t> dates = priceSeries->getDates();
+    const std::vector<double> closes = priceSeries->getCloses();
 
-    // Get first window sum 
-    double sum = 0.0;
-    auto wEnd = priceData.begin();
-    for (size_t i = 0; i < periodSize; i++) {
-        sum += wEnd->second.getClose();
-        wEnd++;
+    // Get first window 
+    double sma = 0.0;
+    for (int i = 0; i < period; ++i) {
+        sma += closes[i];
     }
-
-    wEnd--;
-    data[wEnd->first] = sum / periodSize;
+    sma /= period;
 
     // Slide window until end of data
-    auto wStart = priceData.begin()--;
-    while (++wEnd != priceData.end()) {
-        sum += wEnd->second.getClose() - wStart->second.getClose();
-        data[wEnd->first] = sum / periodSize;
-        wStart++;
+    data[dates[period-1]] = sma;
+    for (size_t i = period; i < closes.size(); ++i) {
+        sma += (closes[i] - closes[i-period]) / period;
+        data[dates[i]] = sma;
     }
+
 }
 
-void plot() const {
+void SMA::plot() const {
     namespace plt = matplotlibcpp;
 
     std::vector<std::time_t> xs;
@@ -54,7 +49,7 @@ void plot() const {
     plt::named_plot(name, xs, ys, "r--");
 }
 
-std::vector<std::vector<std::string>> getTableData() const {
+std::vector<std::vector<std::string>> SMA::getTableData() const {
     std::vector<std::vector<std::string>> tableData;
     for (const auto& [date, sma] : data) {
         tableData.push_back({
@@ -65,6 +60,6 @@ std::vector<std::vector<std::string>> getTableData() const {
     return tableData;
 }
 
-std::string toString() const {
-    return getTable(getTableData(), columnHeaders, columnWidths);
+std::string SMA::toString() const {
+    return "SMA";
 }

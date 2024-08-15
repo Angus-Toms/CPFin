@@ -1069,6 +1069,8 @@ bool scatter(const std::vector<NumericX>& x,
              const long fig_number=0) {
   detail::_interpreter::get();
 
+  assert(s); // Turn off unused parameter warnings
+
   // Same as with plot_surface: We lazily load the modules here the first time 
   // this function is called because I'm not sure that we can assume "matplotlib 
   // installed" implies "mpl_toolkits installed" on all platforms, and we don't 

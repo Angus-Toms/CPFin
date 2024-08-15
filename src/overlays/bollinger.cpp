@@ -1,11 +1,11 @@
 #include "overlays/bollinger.hpp"
+#include "priceseries.hpp"
 
-BollingerBands::BollingerBands(PriceSeries& priceSeries, int period, double numStdDev, const std::string& maType) 
-    : period(period), numStdDev(numStdDev), maType(maType) {
-    ps = std::make_unique<PriceSeries>(priceSeries);
+BollingerBands::BollingerBands(std::shared_ptr<PriceSeries> priceSeries, int period, double numStdDev, const std::string& maType) 
+    : IOverlay(std::move(priceSeries)), period(period), numStdDev(numStdDev), maType(maType) {
 
     // Set table printing values
-    name = fmt::format("{}: BB({}d, {}σ, {})", ps->getTicker(), period, numStdDev, maType);
+    name = fmt::format("{}: BB({}d, {}σ, {})", priceSeries->getTicker(), period, numStdDev, maType);
     columnHeaders = {"Date", "Upper Band", "Middle Band", "Lower Band"};
     columnWidths = {12, 10, 10, 10};
 
@@ -26,21 +26,23 @@ void BollingerBands::plot() const {
     std::vector<std::time_t> xs;
     std::vector<double> lows;
     std::vector<double> mids;
-    std::vector<double> uppers;
-    for (const auto& [low, mid, upper] : data) {
+    std::vector<double> highs;
+    for (const auto& [date, val] : data) {
+        const auto& [low, mid, high] = val;
         lows.push_back(low);
         mids.push_back(mid);
-        uppers.push_back(upper);
+        highs.push_back(high);
     }
 
     plt::named_plot("Low", xs, lows, "r-");
     plt::named_plot("Middle", xs, mids, "g");
-    plt::named_plot("Upper", xs, uppers, "r-");
+    plt::named_plot("Upper", xs, highs, "r-");
 }
 
-std::vector<std::vector<std::string>> getTableData() const {
+std::vector<std::vector<std::string>> BollingerBands::getTableData() const {
     std::vector<std::vector<std::string>> tableData;
-    for (const auto& [date, [low, mid, high]] : data) {
+    for (const auto& [date, val] : data) {
+        const auto& [low, mid, high] = val;
         tableData.push_back({
             fmt::format("{:%Y-%m-%d}", date),
             fmt::format("{:.2f}", low),

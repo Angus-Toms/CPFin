@@ -12,12 +12,14 @@
 #include <fmt/core.h>
 
 #include "time_utils.hpp"
+#include "print_utils.hpp"
+#include "matplotlibcpp.h"
 
 class PriceSeries;
 
 class IOverlay {
-private:
-    const std::unique_ptr<PriceSeries> ps;
+protected:
+    std::shared_ptr<PriceSeries> priceSeries;
     
     // Table printing values 
     std::string name;
@@ -25,13 +27,18 @@ private:
     std::vector<int> columnWidths;
 
 public:
+    IOverlay() = default;
     virtual ~IOverlay() = default;
 
-    virtual void checkArguments() = 0;
-    virtual void calculate() = 0;
-    virtual void plot() const = 0;
-    virtual std::vector<std::vector<std::string>> getTableData() const = 0;
-    virtual std::string toString() const;
+    // Constructor that takes ownership of a PriceSeries object
+    IOverlay(std::shared_ptr<PriceSeries> priceSeries)
+        : priceSeries(std::move(priceSeries)) {}
+
+    virtual void checkArguments() {};
+    virtual void calculate() {};
+    virtual void plot() const {};
+    virtual std::vector<std::vector<std::string>> getTableData() const { return {}; };
+    virtual std::string toString() const { return ""; };
 };
 
 #endif // OVERLAYS_HPP

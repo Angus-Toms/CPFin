@@ -7,7 +7,6 @@
 #include <ctime>
 
 #include "priceseries.hpp"
-#include "averages.hpp"
 
 int main();
 

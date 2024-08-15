@@ -1,8 +1,8 @@
 #include "overlays/ema.hpp"
+#include "priceseries.hpp"
 
-EMA::EMA(PriceSeries& priceSeries, int period, double smoothingFactor)
-    : period(period), smoothingFactor(smoothingFactor) {
-    ps = std::make_unique<PriceSeries>(priceSeries);
+EMA::EMA(std::shared_ptr<PriceSeries> priceSeries, int period, double smoothingFactor)
+    : IOverlay(std::move(priceSeries)), period(period), smoothingFactor(smoothingFactor) {
 
     // Calculate smoothing factor if not specified
     if (smoothingFactor == -1) {
@@ -10,7 +10,7 @@ EMA::EMA(PriceSeries& priceSeries, int period, double smoothingFactor)
     }
 
     // Set table printing values
-    name = fmt::format("{}: EMA({}d, α={:.2f})", ps->getTicker(), period, smoothingFactor);
+    name = fmt::format("{}: EMA({}d, α={:.2f})", priceSeries->getTicker(), period, smoothingFactor);
     columnHeaders = {"Date", "EMA"};
     columnWidths = {12, 10};
 
@@ -23,25 +23,21 @@ void EMA::checkArguments() {
 }
 
 void EMA::calculate() {
-    const std::map<std::time_t, OHCLRecord>& priceData = ps.getData();
+    const std::vector<std::time_t>& dates = priceSeries->getDates();
+    const std::vector<double> closes = priceSeries->getCloses();
 
+    // Calculate first EMA
     double ema = 0.0;
-    auto wStart = priceData.begin();
-    auto idx = 0;
-    while (idx < period) {
-        ema += wStart->second.getClose();
-        wStart++;
-        idx++;
+    for (int i = 0; i < period; i++) {
+        ema += closes[i];
     }
-
     ema /= period;
 
     // Slide window until end of data
-    wStart--;
-    while (wStart != priceData.end()) {
-        data[wStart->first] = ema
-        wStart++;
-        ema = (wStart->second.getClose() * smoothingFactor) + (ema * (1 - smoothingFactor));
+    data[dates[period-1]] = ema;
+    for (size_t i = period; i < closes.size(); i++) {
+        ema = (closes[i] * smoothingFactor) + (ema * (1 - smoothingFactor));
+        data[dates[i]] = ema;
     }
 }
 
@@ -58,7 +54,7 @@ void EMA::plot() const {
     plt::named_plot(name, xs, ys, "r--");   
 }
 
-std::vector<std::vector<std::string>> getTableData() const {
+std::vector<std::vector<std::string>> EMA::getTableData() const {
     std::vector<std::vector<std::string>> tableData;
     for (const auto& [date, ema] : data) {
         tableData.push_back({
@@ -69,6 +65,6 @@ std::vector<std::vector<std::string>> getTableData() const {
     return tableData;
 }
 
-std::string toString() const {
+std::string EMA::toString() const {
     return name;
 }

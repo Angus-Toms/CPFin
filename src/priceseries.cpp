@@ -1,27 +1,20 @@
 #include "priceseries.hpp"
 
-#include "averages.hpp"
-#include "returns.hpp"
-#include "bollinger.hpp"
-#include "rsi.hpp"
+#include "overlays/overlays.hpp"
+#include "overlays/bollinger.hpp"
+#include "overlays/ema.hpp"
+#include "overlays/macd.hpp"
+#include "overlays/rsi.hpp"
+#include "overlays/sma.hpp"
 
-// OHCLRecord struct ===========================================================
-OHCLRecord::OHCLRecord(double open, double high, double low, double close, double adjClose, double volume)
-    : open(open), high(high), low(low), close(close), adjClose(adjClose), volume(volume) {};
-
-std::string OHCLRecord::toString() const {
-    return "";
+PriceSeries::PriceSeries() = default;
+PriceSeries::~PriceSeries() = default;
+PriceSeries::PriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval)
+    : ticker(ticker), start(start), end(end), interval(interval) {
+    checkArguments();
+    fetchCSV();
 }
 
-// Getters ---------------------------------------------------------------------
-double OHCLRecord::getOpen() const { return open; }
-double OHCLRecord::getHigh() const { return high; }
-double OHCLRecord::getLow() const { return low; }
-double OHCLRecord::getClose() const { return close; }
-double OHCLRecord::getAdjClose() const { return adjClose; }
-double OHCLRecord::getVolume() const { return volume; }
-
-// PriceSeries class ===========================================================
 void PriceSeries::checkArguments() {
     // TODO: Validate ticker
 
@@ -81,10 +74,10 @@ void PriceSeries::fetchCSV() {
         }
         curl_easy_cleanup(curl);
     }
-    parseCSV(readBuffer, data);
+    parseCSV(readBuffer);
 }
 
-void PriceSeries::parseCSV(const std::string& readBuffer, std::map<std::time_t, OHCLRecord>& data) {
+void PriceSeries::parseCSV(const std::string& readBuffer) {
     std::istringstream ss(readBuffer);
     std::string line;
 
@@ -99,21 +92,23 @@ void PriceSeries::parseCSV(const std::string& readBuffer, std::map<std::time_t, 
         std::istringstream lineStream(line);
         std::string dateStr, openStr, highStr, lowStr, closeStr, adjCloseStr, volumeStr;
         std::getline(lineStream, dateStr, ',');
+        dates.push_back(dateStringToEpoch(dateStr));
         std::getline(lineStream, openStr, ',');
+        opens.push_back(std::stod(openStr));
         std::getline(lineStream, highStr, ',');
+        highs.push_back(std::stod(highStr));
         std::getline(lineStream, lowStr, ',');
+        lows.push_back(std::stod(lowStr));
         std::getline(lineStream, closeStr, ',');
+        closes.push_back(std::stod(closeStr));
         std::getline(lineStream, adjCloseStr, ',');
+        adjCloses.push_back(std::stod(adjCloseStr));
         std::getline(lineStream, volumeStr, ',');
-        OHCLRecord ohcl(std::stod(openStr), std::stod(highStr), std::stod(lowStr), std::stod(closeStr), std::stod(adjCloseStr), std::stod(volumeStr));
-        
-        std::time_t date = dateStringToEpoch(dateStr);
-        data[date] = ohcl;
+        volumes.push_back(std::stol(volumeStr));
     }
 }
 
-// Virtual methods -------------------------------------------------------------
-int PriceSeries::plot() const {
+void PriceSeries::plot() const {
     // Plot basic line 
     namespace plt = matplotlibcpp;
 
@@ -130,23 +125,11 @@ int PriceSeries::plot() const {
     plt::title(ticker);
     plt::legend();
 
-    return 0;
+    plt::show();
 }
 
-std::vector<std::vector<std::string>> PriceSeries::getTableData() const {
-    std::vector<std::vector<std::string>> allData;
-    for (const auto& [date, record] : data) {
-        allData.push_back({
-            epochToDateString(date),
-            fmt::format("{:.2f}", record.getOpen()),
-            fmt::format("{:.2f}", record.getHigh()),
-            fmt::format("{:.2f}", record.getLow()),
-            fmt::format("{:.2f}", record.getClose()),
-            fmt::format("{:.2f}", record.getAdjClose()),
-            fmt::format("{:.0f}", record.getVolume())
-        });
-    }
-    return allData;
+std::string PriceSeries::toString() const {
+    return ticker;
 }
 
 // Factory methods -------------------------------------------------------------
@@ -179,78 +162,39 @@ std::unique_ptr<PriceSeries> PriceSeries::getPriceSeries(const std::string& tick
 
 // Getters ---------------------------------------------------------------------
 std::string PriceSeries::getTicker() const { return ticker; }
-std::vector<std::time_t> PriceSeries::getDates() const {
-    std::vector<std::time_t> dates;
-    for (const auto& [date, _] : data) {
-        dates.push_back(date);
-    }
-    return dates;
-}
-std::vector<double> PriceSeries::getOpens() const {
-    std::vector<double> opens;
-    for (const auto& [date, record] : data) {
-        opens.push_back(record.getOpen());
-    }
-    return opens;
-}
-std::vector<double> PriceSeries::getHighs() const {
-    std::vector<double> highs;
-    for (const auto& [date, record] : data) {
-        highs.push_back(record.getHigh());
-    }
-    return highs;
-}
-std::vector<double> PriceSeries::getLows() const {
-    std::vector<double> lows;
-    for (const auto& [date, record] : data) {
-        lows.push_back(record.getLow());
-    }
-    return lows;
-}
-std::vector<double> PriceSeries::getCloses() const {
-    std::vector<double> closes;
-    for (const auto& [date, record] : data) {
-        closes.push_back(record.getClose());
-    }
-    return closes;
-}
-std::vector<double> PriceSeries::getAdjCloses() const {
-    std::vector<double> adjCloses;
-    for (const auto& [date, record] : data) {
-        adjCloses.push_back(record.getAdjClose());
-    }
-    return adjCloses;
-}
-std::vector<double> PriceSeries::getVolumes() const {
-    std::vector<double> volumes;
-    for (const auto& [date, record] : data) {
-        volumes.push_back(record.getVolume());
-    }
-    return volumes;
-}
+std::vector<std::time_t> PriceSeries::getDates() const { return dates; }
+std::vector<double> PriceSeries::getOpens() const { return opens; }
+std::vector<double> PriceSeries::getHighs() const { return highs;}
+std::vector<double> PriceSeries::getLows() const { return lows; }
+std::vector<double> PriceSeries::getCloses() const { return closes; }
+std::vector<double> PriceSeries::getAdjCloses() const { return adjCloses; }
+std::vector<long> PriceSeries::getVolumes() const { return volumes;}
 
 // Overlays --------------------------------------------------------------------
-// Simple Moving Average, default period is 20d
-void PriceSeries::getSMA(int period) {
-    addOverlay(std::make_unique<SMA>(*this, period));
+void PriceSeries::addOverlay(std::shared_ptr<IOverlay> overlay) {
+    overlays.push_back(std::move(overlay));
 }
-// Exponential Moving Average, default period is 20d, default smoothing is 
-void PriceSeries::getEMA(int period, double smoothingFactor) {
-    addOverlay(std::make_unique<EMA>(*this, period, smoothingFactor));
+
+const std::vector<std::shared_ptr<IOverlay>>& PriceSeries::getOverlays() const {
+    return overlays;
 }
-// Returns
-void PriceSeries::getReturns() {
-    addOverlay(std::make_unique<ReturnMetrics>(*this));
+
+void PriceSeries::addSMA(int period) {
+    addOverlay(std::make_unique<SMA>(std::make_shared<PriceSeries>(*this), period));
 }
-// Moving-Average Convergence/Divergence, default periods are 12, 2, 9
-void PriceSeries::getMACD(int aPeriod, int bPeriod, int cPeriod) {
-    addOverlay(std::make_unique<MACD>(*this, aPeriod, bPeriod, cPeriod));
+
+void PriceSeries::addEMA(int period, double smoothingFactor) {
+    addOverlay(std::make_unique<EMA>(std::make_shared<PriceSeries>(*this), period, smoothingFactor));
 }
-// Bollinger Bands, default period is 20d, default SD is 2
-void PriceSeries::getBollingerBands(int period, double numStdDev, MovingAverageType maType) {
-    addOverlay(std::make_unique<BollingerBands>(*this, period, numStdDev, maType));
+
+void PriceSeries::addMACD(int aPeriod, int bPeriod, int cPeriod) {
+    addOverlay(std::make_unique<MACD>(std::make_shared<PriceSeries>(*this), aPeriod, bPeriod, cPeriod));
 }
-// Relative Strength Index, default period is 14d
-void PriceSeries::getRSI(int period) {
-    addOverlay(std::make_unique<RSI>(*this, period));
+
+void PriceSeries::addBollingerBands(int period, double numStdDev, const std::string& maType) {
+    addOverlay(std::make_unique<BollingerBands>(std::make_shared<PriceSeries>(*this), period, numStdDev, maType));
+}
+
+void PriceSeries::addRSI(int period) {
+    addOverlay(std::make_unique<RSI>(std::make_shared<PriceSeries>(*this), period));
 }
