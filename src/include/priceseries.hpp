@@ -10,7 +10,7 @@
 #include <curl/curl.h>
 #include <memory>
 
-#include "enums.hpp"
+#include "types.hpp"
 #include "time_utils.hpp"
 #include "print_utils.hpp"
 
@@ -84,13 +84,19 @@ public:
     std::vector<long> getVolumes() const;
 
     // Overlays ----------------------------------------------------------------
-    void addOverlay(std::shared_ptr<IOverlay> overlay);
+    void addOverlay(const std::shared_ptr<IOverlay> overlay);
     const std::vector<std::shared_ptr<IOverlay>>& getOverlays() const;
 
     void addSMA(int period = 20);
     void addEMA(int period = 20, double smoothingFactor = -1);
     void addMACD(int aPeriod = 12, int bPeriod = 26, int cPeriod = 9);
-    void addBollingerBands(int period = 20, double numStdDev = 2, const std::string& maType = "sma");
+    void addBollingerBands(int period = 20, double numStdDev = 2, MovingAverageType maType = MovingAverageType::SMA);
     void addRSI(int period = 14);
+
+    const std::shared_ptr<SMA> getSMA(int period = 20) const;
+    const std::shared_ptr<EMA> getEMA(int period = 20, double smoothingFactor = -1) const;
+    const std::shared_ptr<MACD> getMACD(int aPeriod = 12, int bPeriod = 26, int cPeriod = 9) const;
+    const std::shared_ptr<BollingerBands> getBollingerBands(int period = 20, double numStdDev = 2, MovingAverageType maType = MovingAverageType::SMA) const;
+    const std::shared_ptr<RSI> getRSI(int period = 14) const;
 };
 #endif // PRICESERIES_HPP

@@ -11,7 +11,7 @@ class EMA : public IOverlay {
 private:
     int period;
     double smoothingFactor;
-    std::map<std::time_t, double> data;
+    TimeSeries<double> data;
 
 public:
     EMA(std::shared_ptr<PriceSeries> priceSeries, int period = 20, double smoothingFactor = -1);
@@ -21,6 +21,8 @@ public:
     void plot() const override;
     std::vector<std::vector<std::string>> getTableData() const override;
     std::string toString() const override;
+
+    const TimeSeries<double> getData() const;
 };
 
 #endif // EMA_HPP

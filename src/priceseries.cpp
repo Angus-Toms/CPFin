@@ -58,7 +58,7 @@ void PriceSeries::fetchCSV() {
                 << "?period1=" << start
                 << "&period2=" << end
                 << "&interval=" << interval;
-    std::string url = urlBuilder.str();
+    std::string url = urlBuilder.str(); // TODO: Use fmt here
 
     CURL* curl = curl_easy_init();
     std::string readBuffer;
@@ -124,6 +124,9 @@ void PriceSeries::plot() const {
     // General plot aesthetics 
     plt::title(ticker);
     plt::legend();
+    plt::xlabel("Date");
+    plt::ylabel("Price");
+    plt::xlim(xs.front(), xs.back());
 
     plt::show();
 }
@@ -171,7 +174,7 @@ std::vector<double> PriceSeries::getAdjCloses() const { return adjCloses; }
 std::vector<long> PriceSeries::getVolumes() const { return volumes;}
 
 // Overlays --------------------------------------------------------------------
-void PriceSeries::addOverlay(std::shared_ptr<IOverlay> overlay) {
+void PriceSeries::addOverlay(const std::shared_ptr<IOverlay> overlay) {
     overlays.push_back(std::move(overlay));
 }
 
@@ -180,21 +183,41 @@ const std::vector<std::shared_ptr<IOverlay>>& PriceSeries::getOverlays() const {
 }
 
 void PriceSeries::addSMA(int period) {
-    addOverlay(std::make_unique<SMA>(std::make_shared<PriceSeries>(*this), period));
+    addOverlay(getSMA(period));
 }
 
 void PriceSeries::addEMA(int period, double smoothingFactor) {
-    addOverlay(std::make_unique<EMA>(std::make_shared<PriceSeries>(*this), period, smoothingFactor));
+    addOverlay(getEMA(period, smoothingFactor));
 }
 
 void PriceSeries::addMACD(int aPeriod, int bPeriod, int cPeriod) {
-    addOverlay(std::make_unique<MACD>(std::make_shared<PriceSeries>(*this), aPeriod, bPeriod, cPeriod));
+    addOverlay(getMACD(aPeriod, bPeriod, cPeriod));
 }
 
-void PriceSeries::addBollingerBands(int period, double numStdDev, const std::string& maType) {
-    addOverlay(std::make_unique<BollingerBands>(std::make_shared<PriceSeries>(*this), period, numStdDev, maType));
+void PriceSeries::addBollingerBands(int period, double numStdDev, MovingAverageType maType) {
+    addOverlay(getBollingerBands(period, numStdDev, maType));
 }
 
 void PriceSeries::addRSI(int period) {
-    addOverlay(std::make_unique<RSI>(std::make_shared<PriceSeries>(*this), period));
+    addOverlay(getRSI(period));
+}
+
+const std::shared_ptr<SMA> PriceSeries::getSMA(int period) const {
+    return std::make_shared<SMA>(std::make_shared<PriceSeries>(*this), period);
+}
+
+const std::shared_ptr<EMA> PriceSeries::getEMA(int period, double smoothingFactor) const {
+    return std::make_shared<EMA>(std::make_shared<PriceSeries>(*this), period, smoothingFactor);
+}
+
+const std::shared_ptr<MACD> PriceSeries::getMACD(int aPeriod, int bPeriod, int cPeriod) const {
+    return std::make_shared<MACD>(std::make_shared<PriceSeries>(*this), aPeriod, bPeriod, cPeriod);
+}
+
+const std::shared_ptr<BollingerBands> PriceSeries::getBollingerBands(int period, double numStdDev, MovingAverageType maType) const {
+    return std::make_shared<BollingerBands>(std::make_shared<PriceSeries>(*this), period, numStdDev, maType);
+}
+
+const std::shared_ptr<RSI> PriceSeries::getRSI(int period) const {
+    return std::make_shared<RSI>(std::make_shared<PriceSeries>(*this), period);
 }

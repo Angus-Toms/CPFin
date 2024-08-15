@@ -2,10 +2,10 @@
 #include "priceseries.hpp"
 
 SMA::SMA(std::shared_ptr<PriceSeries> priceSeries, int period) 
-    : IOverlay(std::move(priceSeries)), period(period) {
+    : IOverlay(priceSeries), period(period) {
 
     // Set table printing values 
-    name = fmt::format("{}: SMA({}d)", priceSeries->getTicker(), period);
+    name = fmt::format("SMA({}d)", period);
     columnHeaders = {"Date", "SMA"};
     columnWidths = {12, 10};
 
@@ -46,7 +46,7 @@ void SMA::plot() const {
         ys.push_back(sma);
     }
 
-    plt::named_plot(name, xs, ys, "r--");
+    plt::named_plot(name, xs, ys, "-");
 }
 
 std::vector<std::vector<std::string>> SMA::getTableData() const {
@@ -62,4 +62,8 @@ std::vector<std::vector<std::string>> SMA::getTableData() const {
 
 std::string SMA::toString() const {
     return "SMA";
+}
+
+const TimeSeries<double> SMA::getData() const {
+    return data;
 }

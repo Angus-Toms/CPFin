@@ -10,7 +10,7 @@ class PriceSeries;
 class SMA : public IOverlay {
 private:
     int period;
-    std::map<std::time_t, double> data;
+    TimeSeries<double> data;
 
 public:
     SMA(std::shared_ptr<PriceSeries> priceSeries, int period = 20);
@@ -20,6 +20,8 @@ public:
     void plot() const override;
     std::vector<std::vector<std::string>> getTableData() const override;
     std::string toString() const override;
+
+    const TimeSeries<double> getData() const;
 };
 
 #endif // SMA_HPP

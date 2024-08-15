@@ -12,6 +12,7 @@
 #include <fmt/core.h>
 
 #include "time_utils.hpp"
+#include "types.hpp"
 #include "print_utils.hpp"
 #include "matplotlibcpp.h"
 

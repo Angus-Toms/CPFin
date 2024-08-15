@@ -2,15 +2,15 @@
 #include "priceseries.hpp"
 
 EMA::EMA(std::shared_ptr<PriceSeries> priceSeries, int period, double smoothingFactor)
-    : IOverlay(std::move(priceSeries)), period(period), smoothingFactor(smoothingFactor) {
+    : IOverlay(priceSeries), period(period), smoothingFactor(smoothingFactor) {
 
     // Calculate smoothing factor if not specified
-    if (smoothingFactor == -1) {
-        smoothingFactor = 2.0 / (period+1);
+    if (this->smoothingFactor == -1) {
+        this->smoothingFactor = 2.0 / (period+1);
     }
 
     // Set table printing values
-    name = fmt::format("{}: EMA({}d, α={:.2f})", priceSeries->getTicker(), period, smoothingFactor);
+    name = fmt::format("EMA({}d, α={:.2f})", period, this->smoothingFactor);
     columnHeaders = {"Date", "EMA"};
     columnWidths = {12, 10};
 
@@ -26,7 +26,7 @@ void EMA::calculate() {
     const std::vector<std::time_t>& dates = priceSeries->getDates();
     const std::vector<double> closes = priceSeries->getCloses();
 
-    // Calculate first EMA
+    // Calculate SMA of first window
     double ema = 0.0;
     for (int i = 0; i < period; i++) {
         ema += closes[i];
@@ -51,7 +51,7 @@ void EMA::plot() const {
         ys.push_back(ema);
     }
 
-    plt::named_plot(name, xs, ys, "r--");   
+    plt::named_plot(name, xs, ys, "--");   
 }
 
 std::vector<std::vector<std::string>> EMA::getTableData() const {
@@ -67,4 +67,8 @@ std::vector<std::vector<std::string>> EMA::getTableData() const {
 
 std::string EMA::toString() const {
     return name;
+}
+
+const TimeSeries<double> EMA::getData() const {
+    return data;
 }

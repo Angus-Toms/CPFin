@@ -4,6 +4,7 @@
 #define BOLLINGER_HPP
 
 #include "overlays.hpp"
+#include "types.hpp"
 
 class PriceSeries;
 
@@ -11,11 +12,11 @@ class BollingerBands : public IOverlay {
 private:
     int period;
     double numStdDev;
-    std::string maType;
+    MovingAverageType maType;
     std::map<std::time_t, std::tuple<double, double, double>> data;
 
 public:
-    BollingerBands(std::shared_ptr<PriceSeries> priceSeries, int period = 20, double numStdDev = 2, const std::string& maType = "sma");
+    BollingerBands(std::shared_ptr<PriceSeries> priceSeries, int period = 20, double numStdDev = 2, MovingAverageType maType = MovingAverageType::SMA);
 
     void checkArguments() override;
     void calculate() override;
