@@ -111,22 +111,21 @@ void PriceSeries::parseCSV(const std::string& readBuffer) {
 void PriceSeries::plot() const {
     // Plot basic line 
     namespace plt = matplotlibcpp;
-
-    std::vector<double> closes = getCloses();
-    std::vector<std::time_t> xs = getDates();
-    plt::named_plot("Price", xs, closes, "b-");
+    plt::plot(dates, closes);
 
     // Plot overlays
     for (const auto& overlay : overlays) {
+        std::cout << overlay->toString() << "\n";
         overlay->plot();
     }
 
     // General plot aesthetics 
-    plt::title(ticker);
+    plt::title("AAPL");
     plt::legend();
     plt::xlabel("Date");
     plt::ylabel("Price");
-    plt::xlim(xs.front(), xs.back());
+    plt::grid(true);
+    plt::xlim(dates.front(), dates.back());
 
     plt::show();
 }
@@ -164,14 +163,14 @@ std::unique_ptr<PriceSeries> PriceSeries::getPriceSeries(const std::string& tick
 }
 
 // Getters ---------------------------------------------------------------------
-std::string PriceSeries::getTicker() const { return ticker; }
-std::vector<std::time_t> PriceSeries::getDates() const { return dates; }
-std::vector<double> PriceSeries::getOpens() const { return opens; }
-std::vector<double> PriceSeries::getHighs() const { return highs;}
-std::vector<double> PriceSeries::getLows() const { return lows; }
-std::vector<double> PriceSeries::getCloses() const { return closes; }
-std::vector<double> PriceSeries::getAdjCloses() const { return adjCloses; }
-std::vector<long> PriceSeries::getVolumes() const { return volumes;}
+const std::string PriceSeries::getTicker() const { return ticker; }
+const std::vector<std::time_t> PriceSeries::getDates() const { return dates; }
+const std::vector<double> PriceSeries::getOpens() const { return opens; }
+const std::vector<double> PriceSeries::getHighs() const { return highs;}
+const std::vector<double> PriceSeries::getLows() const { return lows; }
+const std::vector<double> PriceSeries::getCloses() const { return closes; }
+const std::vector<double> PriceSeries::getAdjCloses() const { return adjCloses; }
+const std::vector<long> PriceSeries::getVolumes() const { return volumes;}
 
 // Overlays --------------------------------------------------------------------
 void PriceSeries::addOverlay(const std::shared_ptr<IOverlay> overlay) {

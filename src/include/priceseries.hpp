@@ -55,12 +55,6 @@ private:
 public:
     PriceSeries();
     ~PriceSeries();
-
-    // // Move constructor
-    // PriceSeries(PriceSeries&& other) noexcept = default;
-
-    // // Move assignment operator
-    // PriceSeries& operator=(PriceSeries&& other) noexcept = default;
     
     void plot() const;
     std::string toString() const;
@@ -74,14 +68,14 @@ public:
     static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, const std::string& start, const std::string& interval, const std::size_t count);
 
     // Getters -----------------------------------------------------------------
-    std::string getTicker() const;
-    std::vector<std::time_t> getDates() const;
-    std::vector<double> getOpens() const;
-    std::vector<double> getHighs() const;
-    std::vector<double> getLows() const;
-    std::vector<double> getCloses() const;
-    std::vector<double> getAdjCloses() const;
-    std::vector<long> getVolumes() const;
+    const std::string getTicker() const;
+    const std::vector<std::time_t> getDates() const;
+    const std::vector<double> getOpens() const;
+    const std::vector<double> getHighs() const;
+    const std::vector<double> getLows() const;
+    const std::vector<double> getCloses() const;
+    const std::vector<double> getAdjCloses() const;
+    const std::vector<long> getVolumes() const;
 
     // Overlays ----------------------------------------------------------------
     void addOverlay(const std::shared_ptr<IOverlay> overlay);

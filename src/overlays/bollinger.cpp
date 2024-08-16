@@ -57,10 +57,8 @@ void BollingerBands::calculate() {
 void BollingerBands::plot() const {
     namespace plt = matplotlibcpp;
 
-    std::vector<std::time_t> xs;
-    std::vector<double> lows;
-    std::vector<double> mids;
-    std::vector<double> highs;
+    size_t n = data.size();
+    std::vector<double> xs(n), lows(n), mids(n), highs(n);
     for (const auto& [date, val] : data) {
         xs.push_back(date);
         const auto& [low, mid, high] = val;
@@ -69,8 +67,8 @@ void BollingerBands::plot() const {
         highs.push_back(high);
     }
 
-    plt::named_plot("BB: Low", xs, lows, "--");
-    plt::named_plot("BB: Middle", xs, mids, "-.");
+    plt::named_plot("BB: Lower", xs, lows, ":");
+    plt::named_plot("BB: Middle", xs, mids, ":");
     plt::named_plot("BB: Upper", xs, highs, ":");
 }
 
