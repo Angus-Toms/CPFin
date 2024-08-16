@@ -111,7 +111,7 @@ void PriceSeries::parseCSV(const std::string& readBuffer) {
 void PriceSeries::plot() const {
     // Plot basic line 
     namespace plt = matplotlibcpp;
-    plt::plot(dates, closes);
+    plt::named_plot("Price", dates, closes);
 
     // Plot overlays
     for (const auto& overlay : overlays) {

@@ -4,13 +4,14 @@
 #define MACD_HPP 
 
 #include "overlays.hpp"
+#include "ema.hpp" // Full include needed as getEMA called in calculate method
 
 class PriceSeries;
 
 class MACD : public IOverlay {
 private:
     int aPeriod, bPeriod, cPeriod;
-    std::map<std::time_t, std::tuple<double, double, double>> data;
+    TimeSeries<std::tuple<double, double, double>> data;
 
 public:
     MACD(std::shared_ptr<PriceSeries> priceSeries, int aPeriod = 12, int bPeriod = 26, int cPeriod = 9);

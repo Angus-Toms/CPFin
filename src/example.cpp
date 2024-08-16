@@ -14,11 +14,8 @@
 int main() {
     auto ps = PriceSeries::getPriceSeries("AAPL", "2021-01-01", "2021-03-31", "1d");
 
-    // ps->addSMA();
-    // ps->addSMA(10);
-    // ps->addEMA();
-    // ps->addEMA(10);
-    ps->addBollingerBands();
+    ps->addSMA(20);
+    ps->addMACD();
     ps->plot();
 
     return 0;

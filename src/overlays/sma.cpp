@@ -38,7 +38,6 @@ void SMA::calculate() {
 
 void SMA::plot() const {
     namespace plt = matplotlibcpp;
-
     std::vector<std::time_t> xs;
     std::vector<double> ys;
     for (const auto& [date, sma] : data) {

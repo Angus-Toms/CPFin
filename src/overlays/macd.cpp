@@ -2,10 +2,10 @@
 #include "priceseries.hpp"
 
 MACD::MACD(std::shared_ptr<PriceSeries> priceSeries, int aPeriod, int bPeriod, int cPeriod)
-    : IOverlay(std::move(priceSeries)), aPeriod(aPeriod), bPeriod(bPeriod), cPeriod(cPeriod) {
+    : IOverlay(priceSeries), aPeriod(aPeriod), bPeriod(bPeriod), cPeriod(cPeriod) {
 
     // Set table printing values
-    name = fmt::format("{}: MACD({}, {}, {})", priceSeries->getTicker(), aPeriod, bPeriod, cPeriod);
+    name = fmt::format("MACD({}, {}, {})", aPeriod, bPeriod, cPeriod);
     columnHeaders = {"Date", "MACD", "Signal", "Divergence"};
     columnWidths = {13, 12, 12, 12};
 
@@ -17,53 +17,63 @@ void MACD::checkArguments() {
 }
 
 void MACD::calculate() {
-    // TODO: Lots of argument checking needed for this routine 
-    // TODO: Change highlighting needs to be redone for this analysis - check Wikipedia page for how this is interpreted
-    
     // Get MACD line
-    // const std::map<std::time_t, double> aData = priceSeries.getSMA(aPeriod)->getData();
-    // const std::map<std::time_t, double> bData = priceSeries.getSMA(bPeriod)->getData();
+    const TimeSeries<double> aData = priceSeries->getEMA(aPeriod)->getData();
+    const TimeSeries<double> bData = priceSeries->getEMA(bPeriod)->getData();
 
-    // std::map<std::time_t, double> macd;
-    // for (const auto& [date, bSMAvalue] : bData) {
-    //     macd[date] = aData.at(date) - bSMAvalue;
-    // }
+    TimeSeries<double> macd; // MACD = EMA_a - EMA_b
+    for (const auto& [date, bEMAvalue] : bData) {
+        if (aData.count(date)) {
+            macd[date] = aData.at(date) - bEMAvalue;
+        }
+    }
 
-    // // Get c-day SMA of MACD line
-    // std::map<std::time_t, double> signal;
-    // // Get first window sum
-    // double sum = 0.0;
-    // auto wEnd = macd.begin();
-    // for (size_t i = 0; i < static_cast<size_t>(cPeriod); i++) {
-    //     sum += wEnd->second;
-    //     wEnd++;
-    // }
+    // Signal line = EMA_c(MACD)
+    // Get first period sum
+    TimeSeries<double> signal;
+    double multiplier = 2.0 / (cPeriod + 1);
+    double sum = 0.0;
+    auto it = macd.begin();
+    for (int i = 0; i < cPeriod; ++i, ++it) {
+        sum += it->second;
+    }
+    signal[it->first] = sum / cPeriod;
 
-    // wEnd--;
-    // signal[wEnd->first] = sum / cPeriod;
+    // Update window
+    for (++it; it != macd.end(); ++it) {
+        double value = (it->second - signal.rbegin()->second) * multiplier + signal.rbegin()->second;
+        signal[it->first] = value;
+    }
 
-    // // Slide window until end of data 
-    // auto wStart = macd.begin()--;
-    // while (++wEnd != macd.end()) {
-    //     sum += wEnd->second - wStart->second;
-    //     signal[wEnd->first] = sum / cPeriod;
-    //     wStart++;
-    // } 
-
-
-    // // Get histogram, construct MACDRecords
-    // for (const auto& [date, signalValue] : signal) {
-    //     auto macdValue = macd.at(date);
-    //     data[date] = MACDRecord(
-    //         macdValue,
-    //         signalValue,
-    //         macdValue - signalValue
-    //     );
-    // }
+    // Construct MACD data
+    for (const auto& [date, signalValue] : signal) {
+        double macdValue = macd.at(date);
+        data[date] = std::make_tuple(
+            macdValue,
+            signalValue,
+            macdValue - signalValue
+        );
+    }
 }
 
-void MACD::plot() const {
 
+void MACD::plot() const {
+    // This needs to be a subplot
+    namespace plt = matplotlibcpp;
+    std::vector<std::time_t> xs;
+    std::vector<double> macd, signal, divergence;
+
+    for (const auto& [date, val] : data) {
+        const auto& [macdVal, signalVal, divergenceVal] = val;
+        xs.push_back(date);
+        macd.push_back(macdVal);
+        signal.push_back(signalVal);
+        divergence.push_back(divergenceVal);
+    }
+
+    plt::named_plot("MACD", xs, macd, "--");
+    plt::named_plot("Signal", xs, signal, "--");
+    plt::named_plot("Divergence", xs, divergence, "--");
 }
 
 std::vector<std::vector<std::string>> MACD::getTableData() const {
