@@ -108,24 +108,30 @@ void PriceSeries::parseCSV(const std::string& readBuffer) {
     }
 }
 
-void PriceSeries::plot() const {
-    // Plot basic line 
+void PriceSeries::plot(const std::string& type, const bool includeVolume) const {
+    // Plot price line 
     namespace plt = matplotlibcpp;
-    plt::named_plot("Price", dates, closes);
+    plt::subplot2grid(2, 1, 0, 0);
+    plt::bar(closes);
+    // plt::named_plot("Price", dates, closes);
 
-    // Plot overlays
-    for (const auto& overlay : overlays) {
-        std::cout << overlay->toString() << "\n";
-        overlay->plot();
-    }
+    // // Plot overlays
+    // for (const auto& overlay : overlays) {
+    //     std::cout << overlay->toString() << "\n";
+    //     overlay->plot();
+    // }
+
+    // Plot volumes
+    plt::subplot2grid(2, 1, 1, 0);
+    plt::bar(dates, volumes);
 
     // General plot aesthetics 
-    plt::title("AAPL");
-    plt::legend();
-    plt::xlabel("Date");
-    plt::ylabel("Price");
-    plt::grid(true);
-    plt::xlim(dates.front(), dates.back());
+    // plt::title("AAPL");
+    // plt::legend();
+    // plt::xlabel("Date");
+    // plt::ylabel("Price");
+    // plt::grid(true);
+    // plt::xlim(dates.front(), dates.back());
 
     plt::show();
 }
