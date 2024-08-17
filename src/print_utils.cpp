@@ -113,26 +113,13 @@ std::string getRow(const std::vector<std::string>& row,
     }
     rowStr += V_LINE + "\n";
     return rowStr;
-}
-
-// std::string getTable(const std::vector<std::vector<std::string>>& tableData, 
-//                      const std::vector<int>& columnWidths, 
-//                      const std::vector<std::string>& columnHeaders) {
-//     // TODO: Finish + Conditional highlighting
-//     std::string tableStr;
-//     int totalWidth = columnHeaders.size() - 1;
-//     for (int width : columnWidths) {
-//         totalWidth += width;
-//     }
-
-//     return tableStr;
-// }   
+} 
 
 std::string getTable(const std::string& title,
                      const std::vector<std::vector<std::string>>& tableData,
                      const std::vector<int>& columnWidths,
-                     const std::vector<std::string>& columnHeaders) {
-
+                     const std::vector<std::string>& columnHeaders,
+                     bool changeHighlighting) {
     std::string table;
     size_t colCount = columnWidths.size();
     std::vector<Color> colors(colCount, Color::WHITE);
@@ -151,10 +138,39 @@ std::string getTable(const std::string& title,
     table += getRow(columnHeaders, columnWidths, justifications, colors); // Headers
     table += getMidLine(columnWidths, Ticks::BOTH);
 
-    for (const auto& row : tableData) {
-        table += getRow(row, columnWidths, justifications, colors); // Body
+    // Conditionally update column colors based on whether value is (in/de)creasing
+    std::vector<double> previous;
+    if (changeHighlighting) {
+        for (size_t i = 1; i < colCount; ++i) {
+            // Find first entry in each column 
+            int j = 0;
+            while (!isNumber(tableData[j][i])) { j++; }
+            previous.push_back(std::stod(tableData[j][i]));
+        }
     }
-    
+    for (const auto& row : tableData) {
+        if (changeHighlighting) {
+            for (size_t i = 1; i < colCount; ++i) {
+                double current = 0.0;
+                if (isNumber(row[i])) {
+                    current = std::stod(row[i]);
+
+                    // Compare and set color
+                    if (current > previous[i - 1]) {
+                        colors[i] = Color::GREEN;
+                    } else if (current < previous[i - 1]) {
+                        colors[i] = Color::RED;
+                    } else {
+                        colors[i] = Color::WHITE;
+                    }
+
+                    // Save current value
+                    previous[i-1] = current;
+                }
+            }
+        }
+        table += getRow(row, columnWidths, justifications, colors);
+    }
     table += getBottomLine(columnWidths);
     return table;
 }

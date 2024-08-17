@@ -51,7 +51,8 @@ public:
             name,
             getTableData(),
             columnWidths,
-            columnHeaders
+            columnHeaders,
+            true
         );
     }
 };

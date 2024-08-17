@@ -170,7 +170,7 @@ std::vector<std::vector<std::string>> PriceSeries::getTableData() const {
     return tableData;
 }
 
-std::string PriceSeries::toString(bool includeOverlays) const {
+std::string PriceSeries::toString(bool includeOverlays, bool changeHighlighting) const {
     std::vector<int> columnWidths = {12, 10, 10, 10, 10, 12, 12};
     std::vector<std::string> columnHeaders = {"Date", "Open", "High", "Low", "Close", "adjClose", "Volume"};
     std::vector<std::vector<std::string>> tableData = getTableData();
@@ -208,7 +208,7 @@ std::string PriceSeries::toString(bool includeOverlays) const {
         }
     }
     // TODO: write return
-    return getTable(ticker, tableData, columnWidths, columnHeaders);
+    return getTable(ticker, tableData, columnWidths, columnHeaders, changeHighlighting);
 }
 
 // Factory methods -------------------------------------------------------------

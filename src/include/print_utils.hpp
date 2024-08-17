@@ -55,6 +55,7 @@ std::string getRow(const std::vector<std::string>& row,
 std::string getTable(const std::string& title,
                      const std::vector<std::vector<std::string>>& tableData, 
                      const std::vector<int>& columnWidths, 
-                     const std::vector<std::string>& columnHeaders);
+                     const std::vector<std::string>& columnHeaders,
+                     bool changeHighlighting);
 
 #endif // PRINT_UTILS_HPP
