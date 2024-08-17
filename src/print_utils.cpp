@@ -115,15 +115,27 @@ std::string getRow(const std::vector<std::string>& row,
     return rowStr;
 }
 
-std::string getTable(const std::vector<std::vector<std::string>>& tableData, 
-                     const std::vector<int>& columnWidths, 
+// std::string getTable(const std::vector<std::vector<std::string>>& tableData, 
+//                      const std::vector<int>& columnWidths, 
+//                      const std::vector<std::string>& columnHeaders) {
+//     // TODO: Finish + Conditional highlighting
+//     std::string tableStr;
+//     int totalWidth = columnHeaders.size() - 1;
+//     for (int width : columnWidths) {
+//         totalWidth += width;
+//     }
+
+//     return tableStr;
+// }   
+
+std::string getTable(const std::string& title,
+                     const std::vector<std::vector<std::string>>& tableData,
+                     const std::vector<int>& columnWidths,
                      const std::vector<std::string>& columnHeaders) {
-    // TODO: Finish + Conditional highlighting
-    std::string tableStr;
+    std::string table;
     int totalWidth = columnHeaders.size() - 1;
     for (int width : columnWidths) {
         totalWidth += width;
     }
 
-    return tableStr;
-}   
+}

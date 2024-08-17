@@ -56,7 +56,7 @@ public:
     PriceSeries();
     ~PriceSeries();
     
-    void plot(const std::string& type = "line", const bool includeVolume = false) const;
+    void plot(const std::string& type = "line", const bool includeVolume = false);
     std::string toString() const;
 
     // Factory methods ---------------------------------------------------------

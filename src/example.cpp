@@ -1,7 +1,6 @@
 #include "example.hpp"
 
 // ROADMAP
-// 0. Get overlays working again
 // 1. Sort out exception catching (mainly param checking) for analysis methods
 //    Each needs a checkParams function
 // 2. Exporting to various formats 
@@ -14,7 +13,8 @@
 int main() {
     auto ps = PriceSeries::getPriceSeries("AAPL", "2021-01-01", "2021-03-31", "1d");
 
-    ps->plot();
+    ps->plot("line", true);
+    ps->plot("line", false);
 
     return 0;
 }

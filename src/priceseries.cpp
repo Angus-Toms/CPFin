@@ -108,30 +108,48 @@ void PriceSeries::parseCSV(const std::string& readBuffer) {
     }
 }
 
-void PriceSeries::plot(const std::string& type, const bool includeVolume) const {
+void PriceSeries::plot(const std::string& type, const bool includeVolume) {
     // Plot price line 
     namespace plt = matplotlibcpp;
-    plt::subplot2grid(2, 1, 0, 0);
-    plt::bar(closes);
-    // plt::named_plot("Price", dates, closes);
 
-    // // Plot overlays
-    // for (const auto& overlay : overlays) {
-    //     std::cout << overlay->toString() << "\n";
-    //     overlay->plot();
-    // }
+    // Dummy data
+    dates = {
+        dateStringToEpoch("2020-01-01"),
+        dateStringToEpoch("2020-01-02"),
+        dateStringToEpoch("2020-01-03"),
+        dateStringToEpoch("2020-01-04"),
+        dateStringToEpoch("2020-01-05"),
+    };
+    closes = {100, 101, 104, 98, 103};
+    volumes = {5000, 7000, 4000, 5500, 3000};
 
-    // Plot volumes
-    plt::subplot2grid(2, 1, 1, 0);
-    plt::bar(dates, volumes);
+    if (includeVolume) {
+        // Volume subplot
+        plt::subplot2grid(3, 1, 2, 0, 1, 1);
+        plt::bar(dates, volumes, "grey", "--", 40);
+        plt::xlim(dates.front() - intervalToSeconds("1d")/2, dates.back() + intervalToSeconds("1d")/2);
+        plt::xlabel("Date");
+        plt::ylabel("Volume");
 
-    // General plot aesthetics 
-    // plt::title("AAPL");
-    // plt::legend();
-    // plt::xlabel("Date");
-    // plt::ylabel("Price");
-    // plt::grid(true);
-    // plt::xlim(dates.front(), dates.back());
+        // Price subplot
+        plt::subplot2grid(3, 1, 0, 0, 2, 1);
+        plt::named_plot("Price", dates, closes);
+
+        // Plot overlays 
+        for (const auto& overlay : overlays) {
+            overlay->plot();
+        }
+    } else {
+        // Price fullplot
+        plt::named_plot("Price", dates, closes);
+        plt::xlabel("Date");
+    }
+
+    plt::title(ticker);
+    plt::legend();
+    plt::ylabel("Price");
+    plt::grid(true);
+    plt::xlim(dates.front() - intervalToSeconds("1d")/2, dates.back() + intervalToSeconds("1d")/2);
 
     plt::show();
 }
