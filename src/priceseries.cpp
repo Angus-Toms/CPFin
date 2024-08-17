@@ -164,19 +164,51 @@ std::vector<std::vector<std::string>> PriceSeries::getTableData() const {
             fmt::format("{:.2f}", lows[i]),
             fmt::format("{:.2f}", closes[i]),
             fmt::format("{:.2f}", adjCloses[i]),
-            fmt::format("{:.0f}", volumes[i])
+            fmt::format("{}", volumes[i])
         });
     }
     return tableData;
 }
 
-std::string PriceSeries::toString() const {
-    return getTable(
-        ticker,
-        getTableData(),
-        {12, 10, 10, 10, 10, 12, 12},
-        {"Date", "Open", "High", "Low", "Close", "adjClose", "Volume"}
-    );
+std::string PriceSeries::toString(bool includeOverlays) const {
+    std::vector<int> columnWidths = {12, 10, 10, 10, 10, 12, 12};
+    std::vector<std::string> columnHeaders = {"Date", "Open", "High", "Low", "Close", "adjClose", "Volume"};
+    std::vector<std::vector<std::string>> tableData = getTableData();
+
+    if (includeOverlays) {
+        for (const auto& overlay : overlays) {
+            const auto& overlayData = overlay->getDataMap();
+            // Find size of value vectors 
+            std::size_t n = overlayData.begin()->second.size();
+
+            // Add column headers and widths
+            const auto& newHeaders = overlay->getColumnHeaders();
+            const auto& newWidths = overlay->getColumnWidths();
+            for (size_t i = 0; i < n; ++i) {
+                columnHeaders.push_back(newHeaders[i+1]);
+                columnWidths.push_back(newWidths[i+1]);
+            }
+
+            size_t dateCount = dates.size();
+            for (size_t i = 0; i < dateCount; ++i) {
+                const auto& date = dates[i];
+                // Check if a corresponding entry exists in the overlay data map
+                if (overlayData.find(date) != overlayData.end()) {
+                    // Add n overlay datapoints to row
+                    for (const auto& overlayVal : overlayData.at(date)) {
+                        tableData.at(i).push_back(fmt::format("{:.2f}", overlayVal));
+                    }
+                } else {
+                    // If not, add n blank datapoints to row
+                    for (size_t j = 0; j < n; ++j) {
+                        tableData.at(i).push_back(" ");
+                    }
+                }
+            }
+        }
+    }
+    // TODO: write return
+    return getTable(ticker, tableData, columnWidths, columnHeaders);
 }
 
 // Factory methods -------------------------------------------------------------

@@ -58,7 +58,7 @@ public:
     
     void plot(const std::string& type = "line", const bool includeVolume = false);
     std::vector<std::vector<std::string>> getTableData() const;
-    std::string toString() const; // TODO: string or pointer?
+    std::string toString(bool includeOverlays = false) const; // TODO: string or pointer?
 
     // Factory methods ---------------------------------------------------------
     static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval);
@@ -93,5 +93,28 @@ public:
     const std::shared_ptr<MACD> getMACD(int aPeriod = 12, int bPeriod = 26, int cPeriod = 9) const;
     const std::shared_ptr<BollingerBands> getBollingerBands(int period = 20, double numStdDev = 2, MovingAverageType maType = MovingAverageType::SMA) const;
     const std::shared_ptr<RSI> getRSI(int period = 14) const;
+
+    // temp setters 
+    void setDates(std::vector<std::time_t> dates) {
+        this->dates = dates;
+    }
+    void setOpens(std::vector<double> opens) {
+        this->opens = opens;
+    }
+    void setHighs(std::vector<double> highs) {
+        this->highs = highs;
+    }
+    void setCloses(std::vector<double> closes) {
+        this->closes = closes;
+    }
+    void setAdjCloses(std::vector<double> adjCloses) {
+        this->adjCloses = adjCloses;
+    }
+    void setLows(std::vector<double> lows) {
+        this->lows = lows;
+    }
+    void setVolumes(std::vector<long> volumes) {
+        this->volumes = volumes;
+    }
 };
 #endif // PRICESERIES_HPP

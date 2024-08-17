@@ -35,13 +35,25 @@ public:
     IOverlay(std::shared_ptr<PriceSeries> priceSeries)
         : priceSeries(std::move(priceSeries)) {}
 
-    virtual void checkArguments();
-    virtual void calculate();
-    virtual void plot() const;
+    virtual void checkArguments() = 0;
+    virtual void calculate() = 0;
+    virtual void plot() const = 0;
+    // Get map where each row of data is a vector
+    // used for printing price series with overlays
+    virtual TimeSeries<std::vector<double>> getDataMap() const = 0;
+    virtual std::vector<std::vector<std::string>> getTableData() const = 0;
 
-    const std::string getName() const;
-    virtual std::vector<std::vector<std::string>> getTableData() const;
-    const std::string toString() const;
+    const std::string getName() const { return name; }
+    const std::vector<std::string> getColumnHeaders() const { return columnHeaders; }
+    const std::vector<int> getColumnWidths() const { return columnWidths; }
+    const std::string toString() const {
+        return getTable(
+            name,
+            getTableData(),
+            columnWidths,
+            columnHeaders
+        );
+    }
 };
 
 #endif // IOVERLAY_HPP

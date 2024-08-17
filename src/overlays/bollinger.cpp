@@ -10,7 +10,7 @@ BollingerBands::BollingerBands(std::shared_ptr<PriceSeries> priceSeries, int per
     std::string maTypeString = maType == MovingAverageType::SMA ? "SMA" : "EMA";
     name = fmt::format("BB({}d, {}σ, {})", period, numStdDev, maTypeString);
     columnHeaders = {"Date", "Upper Band", "Middle Band", "Lower Band"};
-    columnWidths = {12, 10, 10, 10};
+    columnWidths = {12, 12, 12, 12};
 
     checkArguments();
     calculate();
@@ -70,6 +70,15 @@ void BollingerBands::plot() const {
     plt::named_plot("BB: Lower", xs, lows, ":");
     plt::named_plot("BB: Middle", xs, mids, ":");
     plt::named_plot("BB: Upper", xs, highs, ":");
+}
+
+TimeSeries<std::vector<double>> BollingerBands::getDataMap() const {
+    TimeSeries<std::vector<double>> dataMap;
+    for (const auto& [date, val] : data) {
+        const auto& [low, mid, high] = val;
+        dataMap[date] = {low, mid, high};
+    }
+    return dataMap;
 }
 
 std::vector<std::vector<std::string>> BollingerBands::getTableData() const {

@@ -48,6 +48,14 @@ void SMA::plot() const {
     plt::named_plot(name, xs, ys, "-");
 }
 
+TimeSeries<std::vector<double>> SMA::getDataMap() const {
+    TimeSeries<std::vector<double>> dataMap;
+    for (const auto& [date, sma] : data) {
+        dataMap[date] = {sma};
+    }
+    return dataMap;
+}
+
 std::vector<std::vector<std::string>> SMA::getTableData() const {
     std::vector<std::vector<std::string>> tableData;
     for (const auto& [date, sma] : data) {

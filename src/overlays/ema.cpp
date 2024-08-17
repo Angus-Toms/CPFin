@@ -65,6 +65,14 @@ std::vector<std::vector<std::string>> EMA::getTableData() const {
     return tableData;
 }
 
+TimeSeries<std::vector<double>> EMA::getDataMap() const {
+    TimeSeries<std::vector<double>> dataMap;
+    for (const auto& [date, ema] : data) {
+        dataMap[date] = {ema};
+    }
+    return dataMap;
+}
+
 const TimeSeries<double> EMA::getData() const {
     return data;
 }

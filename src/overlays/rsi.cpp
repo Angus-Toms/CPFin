@@ -67,6 +67,14 @@ void RSI::plot() const {
     plt::named_plot(name, xs, ys, "--");
 }
 
+TimeSeries<std::vector<double>> RSI::getDataMap() const {
+    TimeSeries<std::vector<double>> dataMap;
+    for (const auto& [date, rsi] : data) {
+        dataMap[date] = {rsi};
+    }
+    return dataMap;
+}
+
 std::vector<std::vector<std::string>> RSI::getTableData() const {
     std::vector<std::vector<std::string>> tableData;
     for (const auto& [date, rsi] : data) {

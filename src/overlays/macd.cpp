@@ -76,6 +76,15 @@ void MACD::plot() const {
     plt::named_plot("Divergence", xs, divergence, "--");
 }
 
+TimeSeries<std::vector<double>> MACD::getDataMap() const {
+    TimeSeries<std::vector<double>> dataMap;
+    for (const auto& [date, val] : data) {
+        const auto& [macd, signal, divergence] = val;
+        dataMap[date] = {macd, signal, divergence};
+    }
+    return dataMap;
+}
+
 std::vector<std::vector<std::string>> MACD::getTableData() const {
     std::vector<std::vector<std::string>> tableData;
     for (const auto& [date, val] : data) {

@@ -18,6 +18,7 @@ public:
     void checkArguments() override;
     void calculate() override;
     void plot() const override;
+    TimeSeries<std::vector<double>> getDataMap() const override;
     std::vector<std::vector<std::string>> getTableData() const override;
 
     const TimeSeries<double> getData() const;

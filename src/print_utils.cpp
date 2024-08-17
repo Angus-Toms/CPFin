@@ -132,6 +132,7 @@ std::string getTable(const std::string& title,
                      const std::vector<std::vector<std::string>>& tableData,
                      const std::vector<int>& columnWidths,
                      const std::vector<std::string>& columnHeaders) {
+
     std::string table;
     size_t colCount = columnWidths.size();
     std::vector<Color> colors(colCount, Color::WHITE);
@@ -151,9 +152,6 @@ std::string getTable(const std::string& title,
     table += getMidLine(columnWidths, Ticks::BOTH);
 
     for (const auto& row : tableData) {
-        for (const auto& entry : row) {
-            std::cout << entry << " ";
-        }
         table += getRow(row, columnWidths, justifications, colors); // Body
     }
     
