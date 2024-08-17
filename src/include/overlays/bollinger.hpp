@@ -3,7 +3,7 @@
 #ifndef BOLLINGER_HPP
 #define BOLLINGER_HPP
 
-#include "overlays.hpp"
+#include "ioverlay.hpp"
 #include "types.hpp"
 
 class PriceSeries;
@@ -22,7 +22,6 @@ public:
     void calculate() override;
     void plot() const override;
     std::vector<std::vector<std::string>> getTableData() const override;
-    std::string toString() const override;
 };
 
 #endif // BOLLINGER_HPP

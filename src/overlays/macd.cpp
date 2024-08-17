@@ -89,7 +89,3 @@ std::vector<std::vector<std::string>> MACD::getTableData() const {
     }
     return tableData;
 }
-
-std::string MACD::toString() const {
-    return "MACD";
-}

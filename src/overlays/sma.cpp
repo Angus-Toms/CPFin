@@ -59,10 +59,6 @@ std::vector<std::vector<std::string>> SMA::getTableData() const {
     return tableData;
 }
 
-std::string SMA::toString() const {
-    return "SMA";
-}
-
 const TimeSeries<double> SMA::getData() const {
     return data;
 }

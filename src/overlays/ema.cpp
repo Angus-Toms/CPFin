@@ -65,10 +65,6 @@ std::vector<std::vector<std::string>> EMA::getTableData() const {
     return tableData;
 }
 
-std::string EMA::toString() const {
-    return name;
-}
-
 const TimeSeries<double> EMA::getData() const {
     return data;
 }

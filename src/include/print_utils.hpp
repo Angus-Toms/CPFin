@@ -48,7 +48,6 @@ const std::string H_LINE = "─";
 std::string getTopLine(const std::vector<int>& columnWidths);
 std::string getMidLine(const std::vector<int>& columnWidths, Ticks ticks);
 std::string getBottomLine(const std::vector<int>& columnWidths);
-
 std::string getRow(const std::vector<std::string>& row, 
                    const std::vector<int>& columnWidths, 
                    const std::vector<Justification>& justifications, 

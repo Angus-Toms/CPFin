@@ -3,7 +3,7 @@
 #ifndef SMA_HPP
 #define SMA_HPP
 
-#include "overlays.hpp"
+#include "ioverlay.hpp"
 
 class PriceSeries;
 
@@ -19,7 +19,6 @@ public:
     void calculate() override;
     void plot() const override;
     std::vector<std::vector<std::string>> getTableData() const override;
-    std::string toString() const override;
 
     const TimeSeries<double> getData() const;
 };

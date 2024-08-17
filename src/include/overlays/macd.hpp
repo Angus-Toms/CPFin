@@ -3,7 +3,7 @@
 #ifndef MACD_HPP
 #define MACD_HPP 
 
-#include "overlays.hpp"
+#include "ioverlay.hpp"
 #include "ema.hpp" // Full include needed as getEMA called in calculate method
 
 class PriceSeries;
@@ -20,7 +20,6 @@ public:
     void calculate() override;
     void plot() const override;
     std::vector<std::vector<std::string>> getTableData() const override;
-    std::string toString() const override;
 };
 
 #endif // MACD_HPP

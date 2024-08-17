@@ -57,7 +57,8 @@ public:
     ~PriceSeries();
     
     void plot(const std::string& type = "line", const bool includeVolume = false);
-    std::string toString() const;
+    std::vector<std::vector<std::string>> getTableData() const;
+    std::string toString() const; // TODO: string or pointer?
 
     // Factory methods ---------------------------------------------------------
     static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval);

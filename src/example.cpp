@@ -9,12 +9,8 @@
 
 #include <chrono>
 
-
 int main() {
     auto ps = PriceSeries::getPriceSeries("AAPL", "2021-01-01", "2021-03-31", "1d");
-
-    ps->plot("line", true);
-    ps->plot("line", false);
 
     return 0;
 }

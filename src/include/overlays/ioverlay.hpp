@@ -1,7 +1,7 @@
 #pragma once 
 
-#ifndef OVERLAYS_HPP
-#define OVERLAYS_HPP
+#ifndef IOVERLAY_HPP
+#define IOVERLAY_HPP
 
 #include <ctime>
 #include <map>
@@ -35,11 +35,13 @@ public:
     IOverlay(std::shared_ptr<PriceSeries> priceSeries)
         : priceSeries(std::move(priceSeries)) {}
 
-    virtual void checkArguments() {};
-    virtual void calculate() {};
-    virtual void plot() const {};
-    virtual std::vector<std::vector<std::string>> getTableData() const { return {}; };
-    virtual std::string toString() const { return ""; };
+    virtual void checkArguments();
+    virtual void calculate();
+    virtual void plot() const;
+
+    const std::string getName() const;
+    virtual std::vector<std::vector<std::string>> getTableData() const;
+    const std::string toString() const;
 };
 
-#endif // OVERLAYS_HPP
+#endif // IOVERLAY_HPP

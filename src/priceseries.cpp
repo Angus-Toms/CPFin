@@ -1,6 +1,6 @@
 #include "priceseries.hpp"
 
-#include "overlays/overlays.hpp"
+#include "overlays/ioverlay.hpp"
 #include "overlays/bollinger.hpp"
 #include "overlays/ema.hpp"
 #include "overlays/macd.hpp"
@@ -154,8 +154,29 @@ void PriceSeries::plot(const std::string& type, const bool includeVolume) {
     plt::show();
 }
 
+std::vector<std::vector<std::string>> PriceSeries::getTableData() const {
+    std::vector<std::vector<std::string>> tableData;
+    for (size_t i = 0; i < dates.size(); ++i) {
+        tableData.push_back({
+            epochToDateString(dates[i]),
+            fmt::format("{:.2f}", opens[i]),
+            fmt::format("{:.2f}", highs[i]),
+            fmt::format("{:.2f}", lows[i]),
+            fmt::format("{:.2f}", closes[i]),
+            fmt::format("{:.2f}", adjCloses[i]),
+            fmt::format("{:.0f}", volumes[i])
+        });
+    }
+    return tableData;
+}
+
 std::string PriceSeries::toString() const {
-    return ticker;
+    return getTable(
+        ticker,
+        getTableData(),
+        {12, 10, 10, 10, 10, 12, 12},
+        {"Date", "Open", "High", "Low", "Close", "adjClose", "Volume"}
+    );
 }
 
 // Factory methods -------------------------------------------------------------

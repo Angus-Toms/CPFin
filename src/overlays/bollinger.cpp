@@ -85,7 +85,3 @@ std::vector<std::vector<std::string>> BollingerBands::getTableData() const {
     }
     return tableData;
 } 
-
-std::string BollingerBands::toString() const {
-    return name;
-}

@@ -77,7 +77,3 @@ std::vector<std::vector<std::string>> RSI::getTableData() const {
     }
     return tableData;
 }
-
-std::string RSI::toString() const {
-    return "RSI";
-}

@@ -133,9 +133,30 @@ std::string getTable(const std::string& title,
                      const std::vector<int>& columnWidths,
                      const std::vector<std::string>& columnHeaders) {
     std::string table;
-    int totalWidth = columnHeaders.size() - 1;
-    for (int width : columnWidths) {
-        totalWidth += width;
+    size_t colCount = columnWidths.size();
+    std::vector<Color> colors(colCount, Color::WHITE);
+    std::vector<Justification> justifications = {Justification::LEFT};
+    int totalWidth = colCount - 1;
+    for (size_t i = 0; i < colCount; ++i) {
+        totalWidth += columnWidths[i];
+        if (i != 0) {
+            justifications.push_back(Justification::RIGHT);
+        }
     }
 
+    table += getTopLine({totalWidth});
+    table += getRow({title}, {totalWidth}, {Justification::CENTER}, {Color::WHITE}); // Title
+    table += getMidLine(columnWidths, Ticks::LOWER);
+    table += getRow(columnHeaders, columnWidths, justifications, colors); // Headers
+    table += getMidLine(columnWidths, Ticks::BOTH);
+
+    for (const auto& row : tableData) {
+        for (const auto& entry : row) {
+            std::cout << entry << " ";
+        }
+        table += getRow(row, columnWidths, justifications, colors); // Body
+    }
+    
+    table += getBottomLine(columnWidths);
+    return table;
 }
