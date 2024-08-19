@@ -417,7 +417,7 @@ PyObject* get_array(const std::vector<Numeric>& v)
 // sometimes, for labels and such, we need string arrays
 inline PyObject * get_array(const std::vector<std::string>& strings)
 {
-  PyObject* list = PyList_New(strings.size());
+  PyObject* list = PyList_New(strings.size()); // List declaration
   for (std::size_t i = 0; i < strings.size(); ++i) {
     PyList_SetItem(list, i, PyString_FromString(strings[i].c_str()));
   }
@@ -1220,6 +1220,63 @@ bool boxplot(const std::vector<Numeric>& data,
 
     return res;
 }
+
+
+/*
+Extended version of bar function seen below allowing for width and bottom
+setting
+*/
+template <typename Numeric>
+bool bar(const std::vector<Numeric> & x,
+         const std::vector<Numeric> & y,
+         std::string ec = "black",
+         std::string ls = "-",
+         double lw = 1.0,
+         double width = 0.8,
+         const std::vector<double> & bottom = {},
+         const std::map<std::string, std::string> & keywords = {}) 
+{
+    detail::_interpreter::get();
+
+    PyObject * xarray = detail::get_array(x);
+    PyObject * yarray = detail::get_array(y);
+
+    PyObject * kwargs = PyDict_New();
+
+    PyDict_SetItemString(kwargs, "ec", PyString_FromString(ec.c_str()));
+    PyDict_SetItemString(kwargs, "ls", PyString_FromString(ls.c_str()));
+    PyDict_SetItemString(kwargs, "lw", PyFloat_FromDouble(lw));
+
+    // Set width 
+    PyDict_SetItemString(kwargs, "width", PyFloat_FromDouble(width));
+    // Set bottoms if specified 
+    if (bottom.size() > 0) {
+        PyObject * bottomList = detail::get_array(bottom);
+        PyDict_SetItemString(kwargs, "bottom", bottomList);
+    }
+
+    for (std::map<std::string, std::string>::const_iterator it =
+         keywords.begin();
+         it != keywords.end();
+         ++it) {
+        PyDict_SetItemString(
+        kwargs, it->first.c_str(), PyUnicode_FromString(it->second.c_str()));
+    }
+
+    PyObject * plot_args = PyTuple_New(2);
+    PyTuple_SetItem(plot_args, 0, xarray);
+    PyTuple_SetItem(plot_args, 1, yarray);
+
+    PyObject * res = PyObject_Call(
+        detail::_interpreter::get().s_python_function_bar, plot_args, kwargs);
+
+    Py_DECREF(plot_args);
+    Py_DECREF(kwargs);
+    if (res) Py_DECREF(res);
+
+    return res;
+}
+
 
 template <typename Numeric>
 bool bar(const std::vector<Numeric> &               x,

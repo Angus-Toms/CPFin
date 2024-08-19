@@ -12,11 +12,7 @@
 #include "overlays/bollinger.hpp"
 
 int main() {
-    auto ps = PriceSeries::getPriceSeries("AAPL", "2021-01-01", "2021-01-31", "1d");
-    ps->addSMA(5);
-    ps->addEMA(5);
-    ps->addBollingerBands(6, 3, MovingAverageType::SMA);
-    std::cout << ps->toString(true);
-
+    auto ps = PriceSeries::getPriceSeries("AAPL", "2021-01-01", "2021-02-31", "1d");
+    ps->plot(true);
     return 0;
 }

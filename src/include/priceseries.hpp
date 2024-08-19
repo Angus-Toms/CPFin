@@ -56,7 +56,7 @@ public:
     PriceSeries();
     ~PriceSeries();
     
-    void plot(const std::string& type = "line", const bool includeVolume = false);
+    void plot(const bool includeVolume = false);
     std::vector<std::vector<std::string>> getTableData() const;
     std::string toString(bool includeOverlays = false, bool changeHighlighting = true) const; // TODO: string or pointer?
 

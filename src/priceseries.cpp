@@ -108,26 +108,17 @@ void PriceSeries::parseCSV(const std::string& readBuffer) {
     }
 }
 
-void PriceSeries::plot(const std::string& type, const bool includeVolume) {
+void PriceSeries::plot(const bool includeVolume) {
     // Plot price line 
     namespace plt = matplotlibcpp;
-
-    // Dummy data
-    dates = {
-        dateStringToEpoch("2020-01-01"),
-        dateStringToEpoch("2020-01-02"),
-        dateStringToEpoch("2020-01-03"),
-        dateStringToEpoch("2020-01-04"),
-        dateStringToEpoch("2020-01-05"),
-    };
-    closes = {100, 101, 104, 98, 103};
-    volumes = {5000, 7000, 4000, 5500, 3000};
 
     if (includeVolume) {
         // Volume subplot
         plt::subplot2grid(3, 1, 2, 0, 1, 1);
-        plt::bar(dates, volumes, "grey", "--", 40);
-        plt::xlim(dates.front() - intervalToSeconds("1d")/2, dates.back() + intervalToSeconds("1d")/2);
+        plt::bar(dates, volumes, "black", "-", 0.0, intervalToSeconds("1d") * 0.8);
+        plt::xlim(
+            dates.front() - intervalToSeconds("1d")/2, 
+            dates.back() + intervalToSeconds("1d")/2);
         plt::xlabel("Date");
         plt::ylabel("Volume");
 
@@ -138,6 +129,8 @@ void PriceSeries::plot(const std::string& type, const bool includeVolume) {
         // Plot overlays 
         for (const auto& overlay : overlays) {
             overlay->plot();
+            // MACD and RSI need their own subplot, volume also needs its own subplot 
+            // if requested
         }
     } else {
         // Price fullplot
