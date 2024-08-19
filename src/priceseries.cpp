@@ -108,6 +108,20 @@ void PriceSeries::parseCSV(const std::string& readBuffer) {
     }
 }
 
+std::tuple<std::vector<std::time_t>, std::vector<std::string>> getTicks(std::time_t start,
+                                                                        std::time_t end,
+                                                                        int nTicks) {
+    std::vector<std::time_t> ticks;
+    std::vector<std::string> labels; 
+
+    std::time_t interval = (end - start) / (nTicks-1);
+    for (int i = 0; i < nTicks; ++i) {
+        ticks.push_back(start + i*interval);
+        labels.push_back(epochToDateString(start + i*interval));
+    }
+    return std::make_tuple(ticks, labels);
+}
+
 void plotLine(const std::vector<std::time_t>& xs, const std::vector<double>& ys) {
     namespace plt = matplotlibcpp;
     plt::named_plot("Price", xs, ys);
@@ -148,6 +162,7 @@ void plotCandleStick(const std::vector<std::time_t>& xs,
 void PriceSeries::plot(const std::string& type, const bool includeVolume) {
     // Plot price line 
     namespace plt = matplotlibcpp;
+    const auto& [ticks, labels] = getTicks(dates.front(), dates.back(), 6);
 
     if (includeVolume) {
         // Volume subplot
@@ -156,6 +171,7 @@ void PriceSeries::plot(const std::string& type, const bool includeVolume) {
         plt::xlim(
             dates.front() - intervalToSeconds("1d")/2, 
             dates.back() + intervalToSeconds("1d")/2);
+        plt::xticks(ticks, labels);
         plt::xlabel("Date");
         plt::ylabel("Volume");
 
@@ -183,6 +199,7 @@ void PriceSeries::plot(const std::string& type, const bool includeVolume) {
     plt::title(ticker);
     plt::ylabel("Price");
     plt::xlim(dates.front() - intervalToSeconds("1d")/2, dates.back() + intervalToSeconds("1d")/2);
+    plt::xticks(ticks, labels);
 
     plt::show();
 }
