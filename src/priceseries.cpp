@@ -108,40 +108,80 @@ void PriceSeries::parseCSV(const std::string& readBuffer) {
     }
 }
 
-void PriceSeries::plot(const bool includeVolume) {
+void plotLine(const std::vector<std::time_t>& xs, const std::vector<double>& ys) {
+    namespace plt = matplotlibcpp;
+    plt::named_plot("Price", xs, ys);
+}
+
+void plotCandleStick(const std::vector<std::time_t>& xs,
+                     const std::vector<double>& opens,
+                     const std::vector<double>& highs,
+                     const std::vector<double>& lows,
+                     const std::vector<double>& closes,
+                     double width) {
+    namespace plt = matplotlibcpp;
+    std::vector<double> tops, bottoms, topWicks;
+    std::vector<std::string> colors;
+
+    // Find bullish and bearish days
+    for (size_t i = 0; i < xs.size(); ++i) {
+        const auto close = closes[i];
+        const auto open = opens[i];
+        topWicks.push_back(highs[i] - lows[i]);
+        if (close > open) {
+            tops.push_back(close-open);
+            bottoms.push_back(open);
+            colors.push_back("green");
+        } else {
+            tops.push_back(open-close);
+            bottoms.push_back(close);
+            colors.push_back("red");
+        }
+    }
+
+    // Plot bars
+    plt::bar(xs, tops, bottoms, width, 0, colors);
+    // Plot wicks 
+    plt::bar(xs, topWicks, lows, width/8, 0, colors);
+}
+
+void PriceSeries::plot(const std::string& type, const bool includeVolume) {
     // Plot price line 
     namespace plt = matplotlibcpp;
 
     if (includeVolume) {
         // Volume subplot
         plt::subplot2grid(3, 1, 2, 0, 1, 1);
-        plt::bar(dates, volumes, "black", "-", 0.0, intervalToSeconds("1d") * 0.8);
+        plt::bar(dates, volumes, {}, intervalToSeconds("1d")*0.8, 0);
         plt::xlim(
             dates.front() - intervalToSeconds("1d")/2, 
             dates.back() + intervalToSeconds("1d")/2);
         plt::xlabel("Date");
         plt::ylabel("Volume");
 
-        // Price subplot
+        // Move to Price subplot
         plt::subplot2grid(3, 1, 0, 0, 2, 1);
-        plt::named_plot("Price", dates, closes);
+    }
 
-        // Plot overlays 
-        for (const auto& overlay : overlays) {
-            overlay->plot();
-            // MACD and RSI need their own subplot, volume also needs its own subplot 
-            // if requested
-        }
-    } else {
-        // Price fullplot
-        plt::named_plot("Price", dates, closes);
-        plt::xlabel("Date");
+    // Price subplot
+    plt::ylabel("Price");
+    if (type == "line") {
+        plotLine(dates, closes);
+        plt::grid(true);
+        plt::legend();
+    } else if (type == "candlestick") {
+        plotCandleStick(dates, opens, highs, lows, closes, intervalToSeconds("1d")*0.8);
+    }
+    
+    // Plot overlays 
+    for (const auto& overlay : overlays) {
+        overlay->plot();
+        // MACD and RSI need their own subplot, volume also needs its own subplot 
+        // if requested
     }
 
     plt::title(ticker);
-    plt::legend();
     plt::ylabel("Price");
-    plt::grid(true);
     plt::xlim(dates.front() - intervalToSeconds("1d")/2, dates.back() + intervalToSeconds("1d")/2);
 
     plt::show();

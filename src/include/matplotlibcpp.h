@@ -1226,14 +1226,15 @@ bool boxplot(const std::vector<Numeric>& data,
 Extended version of bar function seen below allowing for width and bottom
 setting
 */
-template <typename Numeric>
-bool bar(const std::vector<Numeric> & x,
-         const std::vector<Numeric> & y,
+template <typename NumericX, typename NumericY>
+bool bar(const std::vector<NumericX> & x,
+         const std::vector<NumericY> & y,
+         const std::vector<double> & bottom = {},
+         double width = 0.8,
+         double lw = 1.0,
+         const std::vector<std::string> & color = {},
          std::string ec = "black",
          std::string ls = "-",
-         double lw = 1.0,
-         double width = 0.8,
-         const std::vector<double> & bottom = {},
          const std::map<std::string, std::string> & keywords = {}) 
 {
     detail::_interpreter::get();
@@ -1253,6 +1254,14 @@ bool bar(const std::vector<Numeric> & x,
     if (bottom.size() > 0) {
         PyObject * bottomList = detail::get_array(bottom);
         PyDict_SetItemString(kwargs, "bottom", bottomList);
+    }
+    // Set colors if specified 
+    if (color.size() > 0) {
+        PyObject * colorList = PyList_New(color.size());
+        for (size_t i = 0; i < color.size(); ++i) {
+            PyList_SetItem(colorList, i, PyString_FromString(color[i].c_str()));
+        }
+        PyDict_SetItemString(kwargs, "color", colorList);
     }
 
     for (std::map<std::string, std::string>::const_iterator it =
