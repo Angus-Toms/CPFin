@@ -33,7 +33,6 @@ void SMA::calculate() {
         sma += (closes[i] - closes[i-period]) / period;
         data[dates[i]] = sma;
     }
-
 }
 
 void SMA::plot() const {
@@ -45,7 +44,7 @@ void SMA::plot() const {
         ys.push_back(sma);
     }
 
-    plt::named_plot(name, xs, ys, "-");
+    plt::named_plot(name, xs, ys);
 }
 
 TimeSeries<std::vector<double>> SMA::getDataMap() const {

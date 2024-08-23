@@ -51,7 +51,7 @@ void EMA::plot() const {
         ys.push_back(ema);
     }
 
-    plt::named_plot(name, xs, ys, "--");   
+    plt::named_plot(name, xs, ys);   
 }
 
 std::vector<std::vector<std::string>> EMA::getTableData() const {

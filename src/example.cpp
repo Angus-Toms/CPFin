@@ -19,14 +19,8 @@ int main() {
     ps->addRSI();
     ps->addMACD();
     ps->plot("area", true);
-
-    auto ps2 = PriceSeries::getPriceSeries("GOOG", "2019-10-01", "2021-01-01", "1d");
-    ps2->addSMA(5);
-    ps2->addEMA(5);
-    ps2->addRSI();
-    ps2->addMACD();
-    ps2->plot("line", true);
-
+    ps->plot("line", true);
+    ps->plot("candlestick", true);
 
     return 0;
 }

@@ -821,7 +821,12 @@ bool fill(const std::vector<Numeric>& x, const std::vector<Numeric>& y, const st
 }
 
 template <typename NumericX, typename NumericY1, typename NumericY2>
-bool fill_between(const std::vector<NumericX>& x, const std::vector<NumericY1>& y1, const std::vector<NumericY2>& y2, const std::map<std::string, std::string>& keywords)
+bool fill_between(const std::vector<NumericX>& x, 
+                  const std::vector<NumericY1>& y1, 
+                  const std::vector<NumericY2>& y2, 
+                  const std::map<std::string, std::string>& keywords,
+                  double alpha,
+                  double linewidth)
 {
     assert(x.size() == y1.size());
     assert(x.size() == y2.size());
@@ -844,6 +849,8 @@ bool fill_between(const std::vector<NumericX>& x, const std::vector<NumericY1>& 
     for(std::map<std::string, std::string>::const_iterator it = keywords.begin(); it != keywords.end(); ++it) {
         PyDict_SetItemString(kwargs, it->first.c_str(), PyUnicode_FromString(it->second.c_str()));
     }
+    PyDict_SetItemString(kwargs, "alpha", PyFloat_FromDouble(alpha));
+    PyDict_SetItemString(kwargs, "linewidth", PyFloat_FromDouble(linewidth));
 
     PyObject* res = PyObject_Call(detail::_interpreter::get().s_python_function_fill_between, args, kwargs);
 

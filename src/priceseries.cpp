@@ -162,7 +162,11 @@ void plotCandleStick(const std::vector<std::time_t>& xs,
 void plotArea(const std::vector<std::time_t>& xs, const std::vector<double>& ys) {
     namespace plt = matplotlibcpp;
     std::vector<double> zeros(ys.size(), 0.0);
-    plt::fill_between(xs, ys, zeros, {});
+    std::map<std::string, std::string> kwargs = {
+        {"color", "darkblue"}
+    };
+    plt::fill_between(xs, ys, zeros, kwargs, 0.2, 0);
+    plt::ylim(*std::min_element(ys.begin(), ys.end()) * 0.95, *std::max_element(ys.begin(), ys.end()) * 1.05);
 }
 
 void PriceSeries::plot(const std::string& type, const bool includeVolume) {
@@ -178,13 +182,13 @@ void PriceSeries::plot(const std::string& type, const bool includeVolume) {
     plt::ylabel("Price ($)");
     if (type == "line") {
         plotLine(dates, closes);
-        plt::grid(true);
     } else if (type == "candlestick") {
         plotCandleStick(dates, opens, highs, lows, closes, intervalToSeconds("1d")*0.8);
     } else if (type == "area") {
         plotArea(dates, closes);
     }
     plt::title(ticker);
+    plt::grid(true);
     plt::xlim(dates.front() - intervalToSeconds("1d"), dates.back() + intervalToSeconds("1d"));
 
     if (priceHeight == 5) {
@@ -197,9 +201,9 @@ void PriceSeries::plot(const std::string& type, const bool includeVolume) {
     for (const auto& overlay : overlays) {
         if (overlay->getName().find("RSI") != 0 && overlay->getName().find("MACD") != 0) {
             overlay->plot();
+            plt::legend();
         }
     }
-    plt::legend();
 
     if (includeVolume) {
         plt::subplot2grid(5, 1, priceHeight, 0, 1, 1);
