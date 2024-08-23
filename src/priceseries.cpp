@@ -425,3 +425,52 @@ const std::shared_ptr<RSI> PriceSeries::getRSI(int period) const {
         return nullptr;
     }
 }
+
+// Exports ---------------------------------------------------------------------
+void PriceSeries::exportToCSV(const std::string& filename, 
+                              const char delimiter, 
+                              const bool includeOverlays) const {
+    std::string path = filename == "" ? fmt::format("{}.csv", ticker) : filename;
+
+    std::ofstream file(path);
+    if (!file.is_open()) {
+        std::cerr << "Could not open file " << path << std::endl;
+        return;
+    }
+
+    std::vector<std::vector<std::string>> tableData = getTableData();
+    if (includeOverlays) {
+        for (const auto& overlay : overlays) {
+            const auto& overlayData = overlay->getDataMap();
+            // Find size of value vectors 
+            std::size_t n = overlayData.begin()->second.size();
+
+            size_t dateCount = dates.size();
+            for (size_t i = 0; i < dateCount; ++i) {
+                const auto& date = dates[i];
+                // Check if corresponding entry exists in the overlay data map
+                if (overlayData.find(date) != overlayData.end()) {
+                    // Add n overlay datapoints to row
+                    for (const auto& overlayVal : overlayData.at(date)) {
+                        tableData.at(i).push_back(fmt::format("{:.2f}", overlayVal));
+                    }
+                } else {
+                    // If not, add n blank datapoints to row
+                    for (size_t j = 0; j < n; ++j) {
+                        tableData.at(i).push_back("");
+                    }
+                }
+            }
+        }
+    }
+    // Write to file 
+    for (const auto& row : tableData) {
+        for (size_t i = 0; i < row.size(); ++i) {
+            file << row[i];
+            if (i < row.size() - 1) {
+                file << delimiter;
+            }
+        }
+        file << "\n";
+    }
+}

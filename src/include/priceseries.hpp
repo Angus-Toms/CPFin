@@ -3,6 +3,7 @@
 #ifndef PRICESERIES_HPP
 #define PRICESERIES_HPP
 
+#include <fstream>
 #include <string>
 #include <sstream>
 #include <thread>
@@ -98,6 +99,7 @@ public:
     const std::shared_ptr<BollingerBands> getBollingerBands(int period = 20, double numStdDev = 2, MovingAverageType maType = MovingAverageType::SMA) const;
     const std::shared_ptr<RSI> getRSI(int period = 14) const;
 
-
+    // Exports -----------------------------------------------------------------
+    void exportToCSV(const std::string& filename = "", const char delimiter = ',', const bool includeOverlays = true) const;
 };
 #endif // PRICESERIES_HPP
