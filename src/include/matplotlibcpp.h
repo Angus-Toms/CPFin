@@ -753,7 +753,7 @@ void plot3(const std::vector<Numeric> &x,
   if (res) Py_DECREF(res);
 }
 
-template<typename Numeric>
+template <typename Numeric>
 bool stem(const std::vector<Numeric> &x, const std::vector<Numeric> &y, const std::map<std::string, std::string>& keywords)
 {
     assert(x.size() == y.size());
@@ -788,7 +788,7 @@ bool stem(const std::vector<Numeric> &x, const std::vector<Numeric> &y, const st
     return res;
 }
 
-template< typename Numeric >
+template <typename Numeric>
 bool fill(const std::vector<Numeric>& x, const std::vector<Numeric>& y, const std::map<std::string, std::string>& keywords)
 {
     assert(x.size() == y.size());
@@ -820,8 +820,8 @@ bool fill(const std::vector<Numeric>& x, const std::vector<Numeric>& y, const st
     return res;
 }
 
-template< typename Numeric >
-bool fill_between(const std::vector<Numeric>& x, const std::vector<Numeric>& y1, const std::vector<Numeric>& y2, const std::map<std::string, std::string>& keywords)
+template <typename NumericX, typename NumericY1, typename NumericY2>
+bool fill_between(const std::vector<NumericX>& x, const std::vector<NumericY1>& y1, const std::vector<NumericY2>& y2, const std::map<std::string, std::string>& keywords)
 {
     assert(x.size() == y1.size());
     assert(x.size() == y2.size());

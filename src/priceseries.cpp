@@ -159,16 +159,15 @@ void plotCandleStick(const std::vector<std::time_t>& xs,
     plt::bar(xs, topWicks, lows, width/8, 0, colors);
 }
 
+void plotArea(const std::vector<std::time_t>& xs, const std::vector<double>& ys) {
+    namespace plt = matplotlibcpp;
+    std::vector<double> zeros(ys.size(), 0.0);
+    plt::fill_between(xs, ys, zeros, {});
+}
+
 void PriceSeries::plot(const std::string& type, const bool includeVolume) {
     // Plot assumptions, only plot a single RSI and MACD subplot
     // Each subplot is given 1/5 of the height
-    // TODO: Turn off xticks for all subplots except the bottom one
-    // TODO: Add area price plot
-    // Remove subplot count adnd just use flags for RSI and MACD plots
-    // Plot main price graph and all overlays
-    // Make list of RSI and MACD overlays
-    // Find first RSI/MACD overlay and plot it
-    // Note: labels and ticks need to be done for each subplot
     namespace plt = matplotlibcpp;
     const auto& [ticks, labels] = getTicks(dates.front(), dates.back(), 6);
     int priceHeight = 5 - includeVolume - includeRSI - includeMACD;
@@ -182,6 +181,8 @@ void PriceSeries::plot(const std::string& type, const bool includeVolume) {
         plt::grid(true);
     } else if (type == "candlestick") {
         plotCandleStick(dates, opens, highs, lows, closes, intervalToSeconds("1d")*0.8);
+    } else if (type == "area") {
+        plotArea(dates, closes);
     }
     plt::title(ticker);
     plt::xlim(dates.front() - intervalToSeconds("1d"), dates.back() + intervalToSeconds("1d"));
