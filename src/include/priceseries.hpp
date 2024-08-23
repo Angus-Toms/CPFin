@@ -30,6 +30,7 @@ private:
     std::time_t start;
     std::time_t end;
     std::string interval;
+    int count;
 
     std::vector<std::time_t> dates;
     std::vector<double> opens;
@@ -71,6 +72,7 @@ public:
     static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, const std::string& start, const std::string& interval, const std::size_t count);
 
     // Getters -----------------------------------------------------------------
+    int getCount() const;
     const std::string getTicker() const;
     const std::vector<std::time_t> getDates() const;
     const std::vector<double> getOpens() const;
@@ -96,27 +98,6 @@ public:
     const std::shared_ptr<BollingerBands> getBollingerBands(int period = 20, double numStdDev = 2, MovingAverageType maType = MovingAverageType::SMA) const;
     const std::shared_ptr<RSI> getRSI(int period = 14) const;
 
-    // temp setters 
-    void setDates(std::vector<std::time_t> dates) {
-        this->dates = dates;
-    }
-    void setOpens(std::vector<double> opens) {
-        this->opens = opens;
-    }
-    void setHighs(std::vector<double> highs) {
-        this->highs = highs;
-    }
-    void setCloses(std::vector<double> closes) {
-        this->closes = closes;
-    }
-    void setAdjCloses(std::vector<double> adjCloses) {
-        this->adjCloses = adjCloses;
-    }
-    void setLows(std::vector<double> lows) {
-        this->lows = lows;
-    }
-    void setVolumes(std::vector<long> volumes) {
-        this->volumes = volumes;
-    }
+
 };
 #endif // PRICESERIES_HPP

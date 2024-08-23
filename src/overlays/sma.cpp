@@ -14,6 +14,12 @@ SMA::SMA(std::shared_ptr<PriceSeries> priceSeries, int period)
 }
 
 void SMA::checkArguments() {
+    if (period < 1) {
+        throw std::invalid_argument("SMA period must be greater than 0");
+    }
+    if (period > priceSeries->getCount()) {
+        throw std::invalid_argument("SMA period must be less than the number of data points");
+    }
 }
 
 void SMA::calculate() {
