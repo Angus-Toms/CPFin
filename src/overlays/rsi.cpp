@@ -54,17 +54,23 @@ void RSI::calculate() {
 }
 
 void RSI::plot() const {
-    // TODO: This needs to be in a subplot.
     namespace plt = matplotlibcpp;
-    size_t n = data.size();
-    std::vector<std::time_t> xs(n);
-    std::vector<double> ys(n);
+    std::vector<std::time_t> xs;
+    std::vector<double> ys;
     for (const auto& [date, rsi] : data) {
         xs.push_back(date);
         ys.push_back(rsi);
     }
 
-    plt::named_plot(name, xs, ys, "--");
+    plt::plot(xs, ys, "-");
+    std::map<std::string, std::string> kwargs;
+    kwargs["color"] = "red";
+    kwargs["linestyle"] = "--";
+    plt::axhline(70, 0., 1., kwargs);
+    plt::axhline(30, 0., 1., kwargs);
+    plt::xlim(xs.front() - intervalToSeconds("1d"), xs.back() + intervalToSeconds("1d"));
+    plt::ylabel("RSI");
+    plt::ylim(0, 100);
 }
 
 TimeSeries<std::vector<double>> RSI::getDataMap() const {

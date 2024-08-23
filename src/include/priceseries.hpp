@@ -40,6 +40,8 @@ private:
     std::vector<long> volumes;
 
     std::vector<std::shared_ptr<IOverlay>> overlays;
+    bool includeRSI = false;
+    bool includeMACD = false;
 
     // Private constructor
     PriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval);

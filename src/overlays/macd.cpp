@@ -71,9 +71,11 @@ void MACD::plot() const {
         divergence.push_back(divergenceVal);
     }
 
-    plt::named_plot("MACD", xs, macd, "--");
-    plt::named_plot("Signal", xs, signal, "--");
-    plt::named_plot("Divergence", xs, divergence, "--");
+    plt::named_plot("MACD", xs, macd, "-");
+    plt::named_plot("Signal", xs, signal, "-");
+    plt::bar(xs, divergence, {}, intervalToSeconds("1d") * 0.8, 0, {"grey"});
+    plt::legend();
+    plt::xlim(xs.front() - intervalToSeconds("1d"), xs.back() + intervalToSeconds("1d"));
 }
 
 TimeSeries<std::vector<double>> MACD::getDataMap() const {

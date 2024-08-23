@@ -160,47 +160,98 @@ void plotCandleStick(const std::vector<std::time_t>& xs,
 }
 
 void PriceSeries::plot(const std::string& type, const bool includeVolume) {
-    // Plot price line 
+    // Plot assumptions, only plot a single RSI and MACD subplot
+    // Each subplot is given 1/5 of the height
+    // TODO: Turn off xticks for all subplots except the bottom one
+    // TODO: Add area price plot
+    // Remove subplot count adnd just use flags for RSI and MACD plots
+    // Plot main price graph and all overlays
+    // Make list of RSI and MACD overlays
+    // Find first RSI/MACD overlay and plot it
+    // Note: labels and ticks need to be done for each subplot
     namespace plt = matplotlibcpp;
     const auto& [ticks, labels] = getTicks(dates.front(), dates.back(), 6);
+    int priceHeight = 5 - includeVolume - includeRSI - includeMACD;
 
-    if (includeVolume) {
-        // Volume subplot
-        plt::subplot2grid(3, 1, 2, 0, 1, 1);
-        plt::bar(dates, volumes, {}, intervalToSeconds("1d")*0.8, 0);
-        plt::xlim(
-            dates.front() - intervalToSeconds("1d")/2, 
-            dates.back() + intervalToSeconds("1d")/2);
-        plt::xticks(ticks, labels);
-        plt::xlabel("Date");
-        plt::ylabel("Volume");
-
-        // Move to Price subplot
-        plt::subplot2grid(3, 1, 0, 0, 2, 1);
-    }
-
-    // Price subplot
-    plt::ylabel("Price");
+    // Make main price plot
+    plt::figure_size(1200, 800);
+    plt::subplot2grid(5, 1, 0, 0, priceHeight, 1);
+    plt::ylabel("Price ($)");
     if (type == "line") {
         plotLine(dates, closes);
         plt::grid(true);
-        plt::legend();
     } else if (type == "candlestick") {
         plotCandleStick(dates, opens, highs, lows, closes, intervalToSeconds("1d")*0.8);
     }
-    
-    // Plot overlays 
-    for (const auto& overlay : overlays) {
-        overlay->plot();
-        // MACD and RSI need their own subplot, volume also needs its own subplot 
-        // if requested
+    plt::title(ticker);
+    plt::xlim(dates.front() - intervalToSeconds("1d"), dates.back() + intervalToSeconds("1d"));
+
+    if (priceHeight == 5) {
+        plt::xticks(ticks, labels);
+    } else {
+        plt::xticks(std::vector<double>(), std::vector<std::string>());
     }
 
-    plt::title(ticker);
-    plt::ylabel("Price");
-    plt::xlim(dates.front() - intervalToSeconds("1d")/2, dates.back() + intervalToSeconds("1d")/2);
-    plt::xticks(ticks, labels);
+    // Plot non-RSI and non-MACD overlays 
+    for (const auto& overlay : overlays) {
+        if (overlay->getName().find("RSI") != 0 && overlay->getName().find("MACD") != 0) {
+            overlay->plot();
+        }
+    }
+    plt::legend();
 
+    if (includeVolume) {
+        plt::subplot2grid(5, 1, priceHeight, 0, 1, 1);
+        plt::bar(dates, volumes, {}, intervalToSeconds("1d")*0.8, 0);
+        plt::xlim(dates.front() - intervalToSeconds("1d"), dates.back() + intervalToSeconds("1d"));
+        plt::ylabel("Volume");
+        priceHeight++;
+        if (priceHeight == 5) {
+            plt::xticks(ticks, labels);
+        } else {
+            plt::xticks(std::vector<double>(), std::vector<std::string>());
+        }
+    }
+    
+    // Plot RSI and MACD overlays
+    if (includeRSI) {
+        plt::subplot2grid(5, 1, priceHeight, 0, 1, 1);
+        for (const auto& overlay : overlays) {
+            if (overlay->getName().find("RSI") == 0) {
+                overlay->plot();
+                break;
+            }
+        }
+        priceHeight++;
+        if (priceHeight == 5) {
+            plt::xticks(ticks, labels);
+        } else {
+            plt::xticks(std::vector<double>(), std::vector<std::string>());
+        }
+
+    }
+    if (includeMACD) {
+        plt::subplot2grid(5, 1, priceHeight, 0, 1, 1);
+        for (const auto& overlay : overlays) {
+            if (overlay->getName().find("MACD") == 0) {
+                overlay->plot();
+                break;
+            }
+        }
+        if (priceHeight == 4) {
+            plt::xticks(ticks, labels);
+        } else {
+            plt::xticks(std::vector<double>(), std::vector<std::string>());
+        }
+    }
+    // plt::subplots_adjust({
+    //     {"left", 0.1},
+    //     {"right", 0.95},
+    //     {"bottom", 0.05},
+    //     {"top", 0.95},
+    //     {"hspace", 0.05}
+    // });
+    plt::tight_layout();
     plt::show();
 }
 
@@ -318,6 +369,7 @@ void PriceSeries::addEMA(int period, double smoothingFactor) {
 
 void PriceSeries::addMACD(int aPeriod, int bPeriod, int cPeriod) {
     addOverlay(getMACD(aPeriod, bPeriod, cPeriod));
+    includeMACD = true;
 }
 
 void PriceSeries::addBollingerBands(int period, double numStdDev, MovingAverageType maType) {
@@ -326,6 +378,7 @@ void PriceSeries::addBollingerBands(int period, double numStdDev, MovingAverageT
 
 void PriceSeries::addRSI(int period) {
     addOverlay(getRSI(period));
+    includeRSI = true;
 }
 
 const std::shared_ptr<SMA> PriceSeries::getSMA(int period) const {

@@ -2436,6 +2436,7 @@ inline void axhline(double y, double xmin = 0., double xmax = 1., const std::map
     {
         PyDict_SetItemString(kwargs, it->first.c_str(), PyString_FromString(it->second.c_str()));
     }
+    PyDict_SetItemString(kwargs, "alpha", PyFloat_FromDouble(0.5));
 
     PyObject* res = PyObject_Call(detail::_interpreter::get().s_python_function_axhline, args, kwargs);
 
