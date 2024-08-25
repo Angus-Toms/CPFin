@@ -8,12 +8,9 @@
 #include "overlays/bollinger.hpp"
 
 int main() {
-    auto ps = PriceSeries::getPriceSeries("AAPL", "2019-10-01", "2021-01-01", "1d");
-    ps->addSMA();
-    ps->addEMA();
-    ps->addBollingerBands();
-    std::cout << ps->toString(true, true);
-    ps->exportToCSV();
+    auto ps = PriceSeries::getPriceSeries("AAPL", "2020-01-01", "2020-01-31", "1d");
+    ps->exportToCSV("AAPL_2020.csv");
+    std::cout << ps->toString();
 
     return 0;
 }

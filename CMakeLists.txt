@@ -18,7 +18,17 @@ include_directories(${Python3_INCLUDE_DIRS})
 include_directories(${Python3_NumPy_INCLUDE_DIRS})
 
 # Add the source directory and files
-file(GLOB_RECURSE SRC_FILES "src/*.cpp")
+set(SRC_FILES
+    src/example.cpp
+    src/priceseries.cpp
+    src/print_utils.cpp
+    src/time_utils.cpp
+    src/overlays/bollinger.cpp
+    src/overlays/ema.cpp
+    src/overlays/sma.cpp
+    src/overlays/macd.cpp
+    src/overlays/rsi.cpp
+)
 
 # Add an executable
 add_executable(${PROJECT_NAME} ${SRC_FILES})

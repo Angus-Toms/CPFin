@@ -32,10 +32,6 @@ void PriceSeries::checkArguments() {
     }
 
     // Validate end time
-    if (end < 0) {
-        throw std::invalid_argument("Could not get PriceSeries. Invalid end time");
-    }
-
     if (end > std::time(nullptr)) {
         std::cout << "WARNING! End time is in future, cropping to current time\n";
         end = std::time_t(nullptr);
@@ -259,11 +255,11 @@ std::vector<std::vector<std::string>> PriceSeries::getTableData() const {
     for (size_t i = 0; i < dates.size(); ++i) {
         tableData.push_back({
             epochToDateString(dates[i]),
-            fmt::format("{:.2f}", opens[i]),
-            fmt::format("{:.2f}", highs[i]),
-            fmt::format("{:.2f}", lows[i]),
-            fmt::format("{:.2f}", closes[i]),
-            fmt::format("{:.2f}", adjCloses[i]),
+            fmt::format("{}", opens[i]),
+            fmt::format("{}", highs[i]),
+            fmt::format("{}", lows[i]),
+            fmt::format("{}", closes[i]),
+            fmt::format("{}", adjCloses[i]),
             fmt::format("{}", volumes[i])
         });
     }
