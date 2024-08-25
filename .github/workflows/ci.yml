@@ -35,5 +35,5 @@ jobs:
 
     - name: Run tests
       run: |
-        cd build
+        cd ..
         make test
