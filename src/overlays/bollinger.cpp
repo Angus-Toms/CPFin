@@ -18,13 +18,13 @@ BollingerBands::BollingerBands(std::shared_ptr<PriceSeries> priceSeries, int per
 
 void BollingerBands::checkArguments() {
     if (period < 1) {
-        throw std::invalid_argument("Bollinger Bands period must be greater than 0");
+        throw std::invalid_argument("Could not construct Bollinger Bands: period must be greater than 0");
     }
     if (period > priceSeries->getCount()) {
-        throw std::invalid_argument("Bollinger Bands period must be less than the number of data points");
+        throw std::invalid_argument("Could not construct Bollinger Bands: period must be less than the number of data points");
     }
     if (numStdDev <= 0) {
-        throw std::invalid_argument("Bollinger Bands number of standard deviations must be greater than 0");
+        throw std::invalid_argument("Could not construct Bollinger Bands: number of standard deviations must be greater than 0");
     }
 }
 

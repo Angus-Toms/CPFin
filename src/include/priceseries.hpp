@@ -101,5 +101,10 @@ public:
 
     // Exports -----------------------------------------------------------------
     void exportToCSV(const std::string& filename = "", const char delimiter = ',', const bool includeOverlays = true) const;
+
+    // Testing setters 
+    void setCloses(const std::vector<double>& closes);
+    void setDates(const std::vector<std::time_t>& dates);
+    void setCount(const int count);
 };
 #endif // PRICESERIES_HPP

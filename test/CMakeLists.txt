@@ -46,7 +46,8 @@ set(SRC_FILES
 
 set(TEST_SRC_FILES
     priceseries_test.cpp
-    more_test.cpp
+    sma_test.cpp
+    ema_test.cpp
 )
 
 add_executable(${PROJECT_NAME} 

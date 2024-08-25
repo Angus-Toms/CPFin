@@ -378,48 +378,23 @@ void PriceSeries::addRSI(int period) {
 }
 
 const std::shared_ptr<SMA> PriceSeries::getSMA(int period) const {
-    try {
-        return std::make_shared<SMA>(std::make_shared<PriceSeries>(*this), period);
-    } catch (const std::invalid_argument& e) {
-        std::cerr << "Could not construct SMA: " << e.what() << std::endl;
-        return nullptr;
-    }
+    return std::make_shared<SMA>(std::make_shared<PriceSeries>(*this), period);
 }
 
 const std::shared_ptr<EMA> PriceSeries::getEMA(int period, double smoothingFactor) const {
-    try {
-        return std::make_shared<EMA>(std::make_shared<PriceSeries>(*this), period, smoothingFactor);
-    } catch (const std::invalid_argument& e) {
-        std::cerr << "Could not construct EMA: " << e.what() << std::endl;
-        return nullptr;
-    }
+    return std::make_shared<EMA>(std::make_shared<PriceSeries>(*this), period, smoothingFactor);
 }
 
 const std::shared_ptr<MACD> PriceSeries::getMACD(int aPeriod, int bPeriod, int cPeriod) const {
-    try {
-        return std::make_shared<MACD>(std::make_shared<PriceSeries>(*this), aPeriod, bPeriod, cPeriod);
-    } catch (const std::invalid_argument& e) {
-        std::cerr << "Could not construct MACD: " << e.what() << std::endl;
-        return nullptr;
-    }
+    return std::make_shared<MACD>(std::make_shared<PriceSeries>(*this), aPeriod, bPeriod, cPeriod);
 }
 
 const std::shared_ptr<BollingerBands> PriceSeries::getBollingerBands(int period, double numStdDev, MovingAverageType maType) const {
-    try {
-        return std::make_shared<BollingerBands>(std::make_shared<PriceSeries>(*this), period, numStdDev, maType);
-    } catch (const std::invalid_argument& e) {
-        std::cerr << "Could not construct BollingerBands: " << e.what() << std::endl;
-        return nullptr;
-    }
+    return std::make_shared<BollingerBands>(std::make_shared<PriceSeries>(*this), period, numStdDev, maType);
 }
 
 const std::shared_ptr<RSI> PriceSeries::getRSI(int period) const {
-    try {
-        return std::make_shared<RSI>(std::make_shared<PriceSeries>(*this), period);
-    } catch (const std::invalid_argument& e) {
-        std::cerr << "Could not construct RSI: " << e.what() << std::endl;
-        return nullptr;
-    }
+    return std::make_shared<RSI>(std::make_shared<PriceSeries>(*this), period);
 }
 
 // Exports ---------------------------------------------------------------------
@@ -469,4 +444,17 @@ void PriceSeries::exportToCSV(const std::string& filename,
         }
         file << "\n";
     }
+}
+
+// Testing setters -------------------------------------------------------------
+void PriceSeries::setCloses(const std::vector<double>& closes) {
+    this->closes = closes;
+}
+
+void PriceSeries::setDates(const std::vector<std::time_t>& dates) {
+    this->dates = dates;
+}
+
+void PriceSeries::setCount(const int count) {
+    this->count = count;
 }

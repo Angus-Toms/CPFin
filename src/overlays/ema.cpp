@@ -20,13 +20,14 @@ EMA::EMA(std::shared_ptr<PriceSeries> priceSeries, int period, double smoothingF
 
 void EMA::checkArguments() {
     if (period < 1) {
-        throw std::invalid_argument("EMA period must be greater than 0");
+        throw std::invalid_argument("Could not construct EMA: period must be greater than 0");
     }
     if (period > priceSeries->getCount()) {
-        throw std::invalid_argument("EMA period must be less than the number of data points");
+        throw std::invalid_argument("Could not construct EMA: period must be less than the number of data points");
     }
-    if (smoothingFactor <= 0 || smoothingFactor >= 1) {
-        throw std::invalid_argument("EMA smoothing factor must be between 0 and 1");
+    if (smoothingFactor < 0 || smoothingFactor > 1) {
+        std::cout << smoothingFactor << "\n";
+        throw std::invalid_argument("Could not construct EMA: smoothing factor must be between 0 and 1");
     }
 }
 

@@ -15,10 +15,10 @@ RSI::RSI(std::shared_ptr<PriceSeries> priceSeries, int period)
 
 void RSI::checkArguments() {
     if (period < 1) {
-        throw std::invalid_argument("RSI period must be greater than 0");
+        throw std::invalid_argument("Could not construct RSI: period must be greater than 0");
     }
     if (period > priceSeries->getCount()) {
-        throw std::invalid_argument("RSI period must be less than the number of data points");
+        throw std::invalid_argument("Could not construct RSI: period must be less than the number of data points");
     }
 }
 

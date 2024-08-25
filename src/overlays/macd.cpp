@@ -15,11 +15,11 @@ MACD::MACD(std::shared_ptr<PriceSeries> priceSeries, int aPeriod, int bPeriod, i
 
 void MACD::checkArguments() {
     if (aPeriod < 1 || bPeriod < 1 || cPeriod < 1) {
-        throw std::invalid_argument("MACD periods must be greater than 0");
+        throw std::invalid_argument("Could not construct MACD: periods must be greater than 0");
     }
     int count = priceSeries->getCount();
     if (aPeriod > count|| bPeriod > count|| cPeriod > count) {
-        throw std::invalid_argument("MACD periods must be less than the number of data points");
+        throw std::invalid_argument("Could not construct MACD: periods must be less than the number of data points");
     }
 }
 
