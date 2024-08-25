@@ -14,34 +14,25 @@ find_package(fmt REQUIRED)
 find_package(CURL REQUIRED)
 find_package(Python3 COMPONENTS Development NumPy)
 
-# Specify the source dirs that are outside the current source tree
-set(GTEST_SOURCE_DIR ${CMAKE_SOURCE_DIR}/../third_party/googletest)
-
-# Specify a binary directory where CMake will place the build files for outside dirs
-set(GTEST_BINARY_DIR ${CMAKE_BINARY_DIR}/gtest_build)
-
-# Add the GoogleTest directory as a subdirectory, specifying both source and binary directories
-add_subdirectory(${GTEST_SOURCE_DIR} ${GTEST_BINARY_DIR})
+# Add GoogleTest
+add_subdirectory(${CMAKE_SOURCE_DIR}/../third_party/googletest ${CMAKE_BINARY_DIR}/gtest_build)
 
 # Include directories from the root/src directory
 include_directories(${CMAKE_SOURCE_DIR}/../src)
-
-# Optionally, if you have header files in a specific include directory
 include_directories(${CMAKE_SOURCE_DIR}/../src/include)
 include_directories(${Python3_INCLUDE_DIRS})
 include_directories(${Python3_NumPy_INCLUDE_DIRS})
 
-set(PROJECT_NAME mytests)
-
+# Source files for the project
 set(SRC_FILES
-    ../src/priceseries.cpp
-    ../src/print_utils.cpp
-    ../src/time_utils.cpp
-    ../src/overlays/sma.cpp
-    ../src/overlays/ema.cpp
-    ../src/overlays/bollinger.cpp
-    ../src/overlays/rsi.cpp
-    ../src/overlays/macd.cpp
+    ${CMAKE_SOURCE_DIR}/../src/priceseries.cpp
+    ${CMAKE_SOURCE_DIR}/../src/print_utils.cpp
+    ${CMAKE_SOURCE_DIR}/../src/time_utils.cpp
+    ${CMAKE_SOURCE_DIR}/../src/overlays/sma.cpp
+    ${CMAKE_SOURCE_DIR}/../src/overlays/ema.cpp
+    ${CMAKE_SOURCE_DIR}/../src/overlays/bollinger.cpp
+    ${CMAKE_SOURCE_DIR}/../src/overlays/rsi.cpp
+    ${CMAKE_SOURCE_DIR}/../src/overlays/macd.cpp
 )
 
 set(TEST_SRC_FILES
@@ -50,12 +41,12 @@ set(TEST_SRC_FILES
     ema_test.cpp
 )
 
-add_executable(${PROJECT_NAME} 
+add_executable(${PROJECT_NAME}
     ${SRC_FILES}
     ${TEST_SRC_FILES}
 )
 
-target_link_libraries(${PROJECT_NAME} 
+target_link_libraries(${PROJECT_NAME}
     GTest::gtest_main
     fmt::fmt
     CURL::libcurl
