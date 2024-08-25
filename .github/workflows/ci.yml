@@ -30,7 +30,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake ..
+        cmake -DCMAKE_CXX_STANDARD=17 ..
         make
 
     - name: Run tests
