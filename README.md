@@ -1,0 +1,1 @@
+[![CI](https://github.com/Angus-Toms/cpp_finance/actions/workflows/ci.yml/badge.svg)](https://github.com/Angus-Toms/cpp_finance/actions/workflows/ci.yml)
