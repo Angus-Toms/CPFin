@@ -1,5 +1,6 @@
 #include "print_utils.hpp"
 #include <iostream>
+#include <algorithm>
 
 bool isNumber(const std::string& str) {
     // Check if the string is empty or consists only of whitespace
