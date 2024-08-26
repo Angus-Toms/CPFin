@@ -28,6 +28,7 @@ void BollingerBands::checkArguments() {
     }
 }
 
+// TODO: Bollinger output is 1 entry too short
 void BollingerBands::calculate() {
     const auto& dates = priceSeries->getDates();
     const auto& closes = priceSeries->getCloses();

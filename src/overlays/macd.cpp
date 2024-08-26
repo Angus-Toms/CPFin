@@ -63,7 +63,6 @@ void MACD::calculate() {
     }
 }
 
-
 void MACD::plot() const {
     // This needs to be a subplot
     namespace plt = matplotlibcpp;

@@ -22,6 +22,7 @@ void RSI::checkArguments() {
     }
 }
 
+// TODO: RSI output is 1 entry short? Maybe?
 void RSI::calculate() {
     // Get day-to-day returns
     std::vector<std::time_t> dates = priceSeries->getDates();
