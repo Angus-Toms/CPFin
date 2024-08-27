@@ -22,7 +22,6 @@ void RSI::checkArguments() {
     }
 }
 
-// TODO: RSI output is 1 entry short? Maybe?
 void RSI::calculate() {
     // Get day-to-day returns
     std::vector<std::time_t> dates = priceSeries->getDates();
@@ -45,7 +44,7 @@ void RSI::calculate() {
     avgGain /= period;
 
     // Slide window and calculate RSI 
-    for (size_t i = period; i < returns.size(); ++i) {
+    for (size_t i = period-1; i < returns.size(); ++i) {
         double rs = avgGain / avgLoss;
         double rsi = 100 - (100 / (1 + rs));
         data[dates[i]] = rsi;

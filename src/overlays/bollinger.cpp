@@ -28,7 +28,8 @@ void BollingerBands::checkArguments() {
     }
 }
 
-// TODO: Bollinger output is 1 entry too short
+// TODO: In case of center band being SMA, seperate calculation is not needed
+// band can be calculated on the fly for window using sum
 void BollingerBands::calculate() {
     const auto& dates = priceSeries->getDates();
     const auto& closes = priceSeries->getCloses();
@@ -46,7 +47,7 @@ void BollingerBands::calculate() {
         squareSums += close * close;
     }
 
-    for (size_t i = period; i < closes.size(); ++i) {
+    for (size_t i = period-1; i < closes.size(); ++i) {
         // Get std dev 
         double stdDev = std::sqrt((squareSums - sums * sums / period) / period);
         const double ma = mas.at(dates[i]);
