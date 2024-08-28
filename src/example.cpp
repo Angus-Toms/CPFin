@@ -6,8 +6,8 @@
 #include "overlays/bollinger.hpp"
 
 int main() {
-    const auto ps = PriceSeries::getPriceSeries("AAPL", "2020-01-01", "2020-01-31", "1d");
-    std::cout << ps->toString();
+    const auto ps = PriceSeries::getPriceSeries("AAPL", "2020-01-01", "2020-03-31", "1d");
+    ps->plot("candlestick", true);
 
     return 0;
 }

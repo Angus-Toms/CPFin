@@ -158,6 +158,6 @@ TEST_F(PriceSeriesTest, Outputs) {
         priceSeries->toString();
     );
     EXPECT_NO_THROW(
-        priceSeries->exportToCSV();
+        priceSeries->exportCSV();
     );
 }

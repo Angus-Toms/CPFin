@@ -60,7 +60,7 @@ public:
     PriceSeries();
     ~PriceSeries();
     
-    void plot(const std::string& type = "line", const bool includeVolume = false);
+    void plot(const std::string& type = "line", const bool includeVolume = false, const std::string& savePath = "") const;
     std::vector<std::vector<std::string>> getTableData() const;
     std::string toString(bool includeOverlays = false, bool changeHighlighting = true) const;
 
@@ -100,7 +100,7 @@ public:
     const std::shared_ptr<RSI> getRSI(int period = 14) const;
 
     // Exports -----------------------------------------------------------------
-    void exportToCSV(const std::string& filename = "", const char delimiter = ',', const bool includeOverlays = true) const;
+    void exportCSV(const std::string& filename = "", const char delimiter = ',', const bool includeOverlays = true) const;
 
     // Testing setters 
     void setCloses(const std::vector<double>& closes);

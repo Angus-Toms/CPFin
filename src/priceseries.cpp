@@ -162,7 +162,7 @@ void plotArea(const std::vector<std::time_t>& xs, const std::vector<double>& ys)
     plt::ylim(*std::min_element(ys.begin(), ys.end()) * 0.95, *std::max_element(ys.begin(), ys.end()) * 1.05);
 }
 
-void PriceSeries::plot(const std::string& type, const bool includeVolume) {
+void PriceSeries::plot(const std::string& type, const bool includeVolume, const std::string& savePath) const {
     // Plot assumptions, only plot a single RSI and MACD subplot
     // Each subplot is given 1/5 of the height
     namespace plt = matplotlibcpp;
@@ -243,7 +243,13 @@ void PriceSeries::plot(const std::string& type, const bool includeVolume) {
         }
     }
     plt::tight_layout();
-    plt::show();
+
+    if (savePath != "") {
+        plt::save(savePath);
+    } else {
+        plt::show();
+    }
+
 }
 
 std::vector<std::vector<std::string>> PriceSeries::getTableData() const {
@@ -393,7 +399,7 @@ const std::shared_ptr<RSI> PriceSeries::getRSI(int period) const {
 }
 
 // Exports ---------------------------------------------------------------------
-void PriceSeries::exportToCSV(const std::string& filename, 
+void PriceSeries::exportCSV(const std::string& filename, 
                               const char delimiter, 
                               const bool includeOverlays) const {
     std::string path = filename == "" ? fmt::format("{}.csv", ticker) : filename;
