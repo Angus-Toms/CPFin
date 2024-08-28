@@ -134,3 +134,30 @@ TEST_F(PriceSeriesTest, Constructors) {
     }
     EXPECT_EQ(priceSeries->getVolumes(), ps1->getVolumes());
 }
+
+TEST_F(PriceSeriesTest, GetOverlays) {
+    EXPECT_NO_THROW(
+        priceSeries->addSMA(5);
+    );
+    EXPECT_NO_THROW(
+        priceSeries->addEMA(5);
+    );
+    EXPECT_NO_THROW(
+        priceSeries->addRSI(14)
+    );
+    EXPECT_NO_THROW(
+        priceSeries->addMACD(5, 15, 5)
+    );
+    EXPECT_NO_THROW(
+        priceSeries->addBollingerBands(20, 2)
+    );
+}
+
+TEST_F(PriceSeriesTest, Outputs) {
+    EXPECT_NO_THROW(
+        priceSeries->toString();
+    );
+    EXPECT_NO_THROW(
+        priceSeries->exportToCSV();
+    );
+}

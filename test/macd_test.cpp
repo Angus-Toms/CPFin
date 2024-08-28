@@ -10,7 +10,7 @@ protected:
     std::unique_ptr<PriceSeries> priceSeries;
 };
 
-// TODO: MACD output is incorrect
+// TODO: MACD output has a weird length
 // TEST_F(MACDTest, CheckLengths) {
 //     const auto& longPriceSeries = PriceSeries::getPriceSeries("AAPL", "2018-01-01", "2023-12-31", "1d");
 //     std::vector<int> macdShortPeriods = {12, 26};

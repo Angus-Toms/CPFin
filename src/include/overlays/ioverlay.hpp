@@ -14,7 +14,7 @@
 #include "time_utils.hpp"
 #include "types.hpp"
 #include "print_utils.hpp"
-#include "matplotlibcpp.h"
+#include "../../../third_party/matplotlibcpp.h"
 
 class PriceSeries;
 

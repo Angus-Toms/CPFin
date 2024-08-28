@@ -49,12 +49,8 @@ void PriceSeries::checkArguments() {
 
 void PriceSeries::fetchCSV() {
     // Call construction
-    std::ostringstream urlBuilder;
-    urlBuilder << "https://query1.finance.yahoo.com/v7/finance/download/" << ticker
-                << "?period1=" << start
-                << "&period2=" << end
-                << "&interval=" << interval;
-    std::string url = urlBuilder.str(); // TODO: Use fmt here
+    std::string url = fmt::format("https://query1.finance.yahoo.com/v7/finance/download/{}?period1={}&period2={}&interval={}",
+                                  ticker, start, end, interval);
 
     CURL* curl = curl_easy_init();
     std::string readBuffer;
@@ -303,7 +299,6 @@ std::string PriceSeries::toString(bool includeOverlays, bool changeHighlighting)
             }
         }
     }
-    // TODO: write return
     return getTable(ticker, tableData, columnWidths, columnHeaders, changeHighlighting);
 }
 

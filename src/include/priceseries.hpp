@@ -15,7 +15,7 @@
 #include "time_utils.hpp"
 #include "print_utils.hpp"
 
-#include "matplotlibcpp.h"
+#include "../../third_party/matplotlibcpp.h"
 
 // Forward declaration of overlays 
 class IOverlay;
@@ -62,7 +62,7 @@ public:
     
     void plot(const std::string& type = "line", const bool includeVolume = false);
     std::vector<std::vector<std::string>> getTableData() const;
-    std::string toString(bool includeOverlays = false, bool changeHighlighting = true) const; // TODO: string or pointer?
+    std::string toString(bool includeOverlays = false, bool changeHighlighting = true) const;
 
     // Factory methods ---------------------------------------------------------
     static std::unique_ptr<PriceSeries> getPriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval);
