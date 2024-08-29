@@ -22,7 +22,26 @@ constexpr std::array<std::string_view, 6> VALID_INTERVALS{"1m", "1h", "1d", "1wk
 
 std::time_t dateStringToEpoch(const std::string& dateStr);
 std::string epochToDateString(const std::time_t date, bool includeTime = false);
-std::time_t intervalToSeconds(const std::string& interval);
-bool isInvalidInterval(const std::string& interval);
+
+constexpr std::time_t intervalToSeconds(const std::string& interval) {
+    if (interval == "1m") {
+        return MINUTE_DURATION;
+    } else if (interval == "1h") {
+        return HOUR_DURATION;
+    } else if (interval == "1d") {
+        return DAY_DURATION;
+    } else if (interval == "1wk") {
+        return WEEK_DURATION;
+    } else if (interval == "1mo") {
+        return MONTH_DURATION;
+    } else if (interval == "1y") {
+        return YEAR_DURATION;
+    } else {
+        return -1;
+    }
+}
+constexpr bool isInvalidInterval(const std::string& interval) {
+    return std::find(VALID_INTERVALS.begin(), VALID_INTERVALS.end(), interval) == VALID_INTERVALS.end();
+}
 
 #endif // TIME_UTILS_HPP

@@ -245,7 +245,7 @@ void PriceSeries::plot(const std::string& type, const bool includeVolume, const 
     plt::tight_layout();
 
     if (savePath != "") {
-        plt::save(savePath);
+        plt::save(savePath, 300);
     } else {
         plt::show();
     }
@@ -253,15 +253,16 @@ void PriceSeries::plot(const std::string& type, const bool includeVolume, const 
 }
 
 std::vector<std::vector<std::string>> PriceSeries::getTableData() const {
+    std::cout << "ps::getTableData() called\n";
     std::vector<std::vector<std::string>> tableData;
     for (size_t i = 0; i < dates.size(); ++i) {
         tableData.push_back({
             epochToDateString(dates[i]),
-            fmt::format("{}", opens[i]),
-            fmt::format("{}", highs[i]),
-            fmt::format("{}", lows[i]),
-            fmt::format("{}", closes[i]),
-            fmt::format("{}", adjCloses[i]),
+            fmt::format("{:.3f}", opens[i]),
+            fmt::format("{:.3f}", highs[i]),
+            fmt::format("{:.3f}", lows[i]),
+            fmt::format("{:.3f}", closes[i]),
+            fmt::format("{:.3f}", adjCloses[i]),
             fmt::format("{}", volumes[i])
         });
     }
@@ -294,7 +295,7 @@ std::string PriceSeries::toString(bool includeOverlays, bool changeHighlighting)
                 if (overlayData.find(date) != overlayData.end()) {
                     // Add n overlay datapoints to row
                     for (const auto& overlayVal : overlayData.at(date)) {
-                        tableData.at(i).push_back(fmt::format("{:.2f}", overlayVal));
+                        tableData.at(i).push_back(fmt::format("{:.3f}", overlayVal));
                     }
                 } else {
                     // If not, add n blank datapoints to row

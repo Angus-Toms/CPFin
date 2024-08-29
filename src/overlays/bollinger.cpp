@@ -58,18 +58,19 @@ void BollingerBands::calculate() {
         };
 
         // Update StdDev 
-        const double close_i = closes[i];
-        const double close_i_period = closes[i-period];
-        sums += close_i - close_i_period;
-        squareSums += close_i * close_i - close_i_period * close_i_period;
+        if (i != closes.size()-1) {
+            const double close_i = closes[i+1];
+            const double close_i_period = closes[i-period+1];
+            sums += close_i - close_i_period;
+            squareSums += close_i * close_i - close_i_period * close_i_period;
+        }
     }
 }
 
 void BollingerBands::plot() const {
     namespace plt = matplotlibcpp;
 
-    size_t n = data.size();
-    std::vector<double> xs(n), lows(n), mids(n), highs(n);
+    std::vector<double> xs, lows, mids, highs;
     for (const auto& [date, val] : data) {
         xs.push_back(date);
         const auto& [low, mid, high] = val;
@@ -78,9 +79,8 @@ void BollingerBands::plot() const {
         highs.push_back(high);
     }
 
-    plt::named_plot("BB: Lower", xs, lows, ":");
-    plt::named_plot("BB: Middle", xs, mids, ":");
-    plt::named_plot("BB: Upper", xs, highs, ":");
+    plt::fill_between(xs, lows, highs, {}, 0.2, 1);
+    plt::named_plot("BB midline", xs, mids);
 }
 
 TimeSeries<std::vector<double>> BollingerBands::getDataMap() const {
@@ -97,10 +97,10 @@ std::vector<std::vector<std::string>> BollingerBands::getTableData() const {
     for (const auto& [date, val] : data) {
         const auto& [low, mid, high] = val;
         tableData.push_back({
-            fmt::format("{:%Y-%m-%d}", date),
-            fmt::format("{:.2f}", low),
-            fmt::format("{:.2f}", mid),
-            fmt::format("{:.2f}", high)
+            epochToDateString(date),
+            fmt::format("{:.3f}", low),
+            fmt::format("{:.3f}", mid),
+            fmt::format("{:.3f}", high)
         });
     }
     return tableData;
