@@ -4,14 +4,53 @@
   </a>
 </div>
 
-# Name 
+# CPFin
+**CPFin** is a C++ library for financial analysis and currently supports historical data downloads, creation of custom indicators, and plotting and exporting to various formats.
 
-## Aims
+## QuickStart Guide 
+To download data, construct some indicators, and export the results; run the following:
+```cpp
+#include "priceseries.hpp"
 
-# QuickStart Guide 
+int main() {
+  // Fetch data
+  const auto ps = PriceSeries::getPriceSeries("AAPL", "2020-01-01", "2020-12-31");
 
-# Testing 
+  // Add indicators
+  ps->addRSI();
+  ps->addBollingerBands();
 
-# Roadmap
+  // View and export results 
+  ps->plot();
+  ps->exportCSV("aapl.csv");
 
-# Contributing 
+  return 0;
+}
+```
+For more examples, check the [`examples`](https://github.com/Angus-Toms/CPFin/tree/main/examples) directory and refer to the [`README.md`](https://github.com/Angus-Toms/CPFin/tree/main/examples#readme) for instructions on running them.
+
+## Download
+Clone the project with the following command:
+```sh
+git clone https://github.com/Angus-Toms/CPFin
+```
+### Prerequisites
+
+## Testing 
+To run tests, navigate to the root directory, and call:
+```sh
+make test
+```
+
+## Roadmap
+- [X] Price scraper 
+- [X] Basic indicators 
+- [X] Pretty printing and plotting 
+- [X] Exporting to various formats (.csv, .png) 
+- [ ] More technical analysis
+- [ ] Reduce need for prerequisites
+- [ ] More stringent tests
+- [ ] Better documentation, website
+
+## Contributing 
+Contributions, questions, and issues found are all welcome. Please submit a PR or open an issue. Thank you! 
