@@ -253,7 +253,6 @@ void PriceSeries::plot(const std::string& type, const bool includeVolume, const 
 }
 
 std::vector<std::vector<std::string>> PriceSeries::getTableData() const {
-    std::cout << "ps::getTableData() called\n";
     std::vector<std::vector<std::string>> tableData;
     for (size_t i = 0; i < dates.size(); ++i) {
         tableData.push_back({

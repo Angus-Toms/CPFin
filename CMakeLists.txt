@@ -17,6 +17,9 @@ include_directories(src/include)
 include_directories(${Python3_INCLUDE_DIRS})
 include_directories(${Python3_NumPy_INCLUDE_DIRS})
 
+# Add third parties as a subdirectory
+# add_subdirectory(third_party/eigen-3.4.0)
+
 # Add the source directory and files
 set(SRC_FILES
     src/example.cpp
@@ -28,6 +31,7 @@ set(SRC_FILES
     src/overlays/sma.cpp
     src/overlays/macd.cpp
     src/overlays/rsi.cpp
+    src/timeseries/ar.cpp
 )
 
 # Add an executable
