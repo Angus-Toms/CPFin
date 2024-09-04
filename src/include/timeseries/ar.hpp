@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <iostream>
+#include <numeric>
 
 #include "../../third_party/Eigen/Dense"
 
@@ -19,21 +20,21 @@ private:
     std::vector<double> autocorrelations;
     std::vector<double> partial_autocorrelations;
 
-    // Helper functions 
-    void solveYuleWalkerEquations(int k);
-
 public:
+    // Helper functions 
+    Eigen::VectorXd solveYuleWalkerEquations(int k);
+
+//public:
     AR(const std::vector<double> data);
     ~AR();
-
-    void getAutocorrelations();
     
     void train(int k);
-    // void train(); NOTE: auto-determine k based on PACF values 
+    // void train(); NOTE: auto-determine k based on significance of PACF values 
     std::vector<double> forecast(int steps);
     // void forecast(std::time_t end); NOTE: forecast until a certain future date
 
     std::vector<double> getPhis() const;
+    std::vector<double> getAutocorrelations() const;
 
     int plot() const;
     std::string toString() const;

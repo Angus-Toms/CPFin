@@ -20,10 +20,14 @@ int main() {
   // ps->plot();
   // ps->exportCSV("aapl.csv");
 
-  // Test Eigen 
-  std::vector<double> data = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+  // Eigen test 
+  std::vector<double> data = {-15, 25, -13, 54, 75};
   AR ar(data);
-  ar.getAutocorrelations();
+
+  Eigen::VectorXd phis = ar.solveYuleWalkerEquations(4);
+  for (int i = 0; i < 4; i++) {
+    std::cout << "phi(" << i << "): " << phis(i) << std::endl;
+  }
 
   return 0;
 }
