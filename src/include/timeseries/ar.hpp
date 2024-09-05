@@ -21,10 +21,6 @@ private:
     std::vector<double> partial_autocorrelations;
 
 public:
-    // Helper functions 
-    Eigen::VectorXd solveYuleWalkerEquations(int k);
-
-//public:
     AR(const std::vector<double> data);
     ~AR();
     

@@ -18,54 +18,57 @@ AR::AR(const std::vector<double> data) {
     this->variance = sq_sum / this->count;
 
     // Calculate autocorrelations
+    // See: https://en.wikipedia.org/wiki/Autocorrelation
     this->autocorrelations.reserve(this->count);
-    for (int lag = 0; lag < this->count; ++lag) {
-        double diffSum = 0.0;
-        for (int i = 0; i < this->count - lag; ++i) {
-            diffSum += (data[i] - this->mean) * (data[i + lag] - this->mean);
+    this->autocorrelations.push_back(1.0);
+    
+    for (size_t lag = 1; lag < this->count; ++lag) {
+        double sum = 0.0;
+        for (size_t i = lag+1; i < this->count; ++i) {
+            sum += (data[i] - mean) * (data[i - lag] - mean);
         }
-
-        double autocorrelation = diffSum / sq_sum;
-        this->autocorrelations.push_back(autocorrelation);
+        this->autocorrelations.push_back(sum / sq_sum);
     }
 }
 
 AR::~AR() {}
 
-Eigen::VectorXd AR::solveYuleWalkerEquations(int k) {
-    // See: http://www-stat.wharton.upenn.edu/~steele/Courses/956/Resource/YWSourceFiles/YW-Eshel.pdf
-    
-    // Construct kxk autocorrelation matrix and autocorrelation vector
-    // See: https://stats.stackexchange.com/questions/129052/acf-and-pacf-formula/129374
-    Eigen::MatrixXd autocorrelationM(k, k);
-    Eigen::VectorXd autocorrelationV(k);
-    for (int i = 0; i < k; ++i) {
-        autocorrelationV(i) = this->autocorrelations[i+1];
+void AR::train(int k) {
+    // Construct feature matrix and label vector
+    // X_t = phi_1 * X_t-1 + phi_2 * X_t-2 + ... + phi_k * X_t-k
+    Eigen::MatrixXd features(this->count - k, k);
+    Eigen::VectorXd labels(this->count - k);
+    for (size_t i = 0; i < this->count - k; ++i) {
         for (int j = 0; j < k; ++j) {
-            autocorrelationM(i, j) = this->autocorrelations[std::abs(i - j)];
+            features(i, j) = this->data[i + j];
         }
+        labels(i) = this->data[i + k];
     }
 
-    std::cout << "AC Matrix (" << autocorrelationM.rows() << ", " << autocorrelationM.cols() << "):\n";
-    std::cout << autocorrelationM << std::endl;
-
-    std::cout << "AC Vector (" << autocorrelationV.rows() << ", " << autocorrelationV.cols() << "):\n";
-    std::cout << autocorrelationV << std::endl; 
-
-    // Solve, LU decomp is most stable apparently?
-    Eigen::VectorXd phis = autocorrelationM.fullPivLu().solve(autocorrelationV);
-
-    std::cout << "Phis (" << phis.rows() << ", " << phis.cols() << "):\n";
-    std::cout << phis << std::endl;
-
-    return phis;
-}
-
-void AR::train(int k) {
+    Eigen::VectorXd phis = features.colPivHouseholderQr().solve(labels);
+    this->phis.clear();
+    for (int i = 0; i < k; ++i) {
+        this->phis.push_back(phis(i));
+    }
 }
 
 std::vector<double> AR::forecast(int steps) {
-    return {};
+    int k = this->phis.size();
+    std::vector<double> forecasted;
+
+    for (int i = 0; i < steps; ++i) {
+        double forecast = 0.0;
+        for (int j = 0; j < k; ++j) {
+            // If we are forecasting in the first k steps, use past data 
+            if (i+j < k) {
+                forecast += this->data[this->count - k + i + j] * this->phis[j];
+            } else {
+                forecast += forecasted[i + j - k] * this->phis[j];
+            }
+        }
+        forecasted.push_back(forecast);
+    }
+    return forecasted;
 }
 
 std::vector<double> AR::getPhis() const {
