@@ -11,24 +11,32 @@ MA::MA(const std::vector<double> data) {
 MA::~MA() {}
 
 double getNLL(const std::vector<double>& params, const std::vector<double>& data) {
+    // Updated NLL for multi-theta models
     double mu = params[0];
-    double theta = params[1];
+    size_t n = params.size() - 1;
     size_t count = data.size();
+    std::vector<double> arParams(params.begin() + 1, params.end());
 
-    // Calculate residuals and their variance 
     std::vector<double> residuals(count);
     double sumResidualsSq = 0.0;
 
-    // Compute residuals 
-    for (size_t i = 1; i < count; ++i) {
-        residuals[i] = data[i] - mu - theta * (data[i-1] - mu);
+    // Get residuals 
+    for (size_t i = n; i < count; ++i) {
+        double prediction = mu; 
+
+        // Add AR terms 
+        for (size_t j = 0; j < n; ++j) {
+            prediction += arParams[j] * data[i-j-1];
+        }
+
+        residuals[i] = data[i] - prediction;
         sumResidualsSq += residuals[i] * residuals[i];
     }
 
-    double sigmaSq = sumResidualsSq / count; // Variance 
+    double sigmaSq = sumResidualsSq / (count-n);
 
-    // Calculate negative log-likelihood
-    return (0.5 * std::log(2 * M_PI * sigmaSq)) + (0.5 / sigmaSq) * sumResidualsSq;
+    double nll = (0.5 * std::log(2 * M_PI * sigmaSq)) + (0.5 / sigmaSq) * sumResidualsSq;
+    return nll;
 }
 
 // Wrapper for NLOpt
@@ -37,19 +45,23 @@ double objFunction(const std::vector<double>& x, std::vector<double>& grad, void
     return getNLL(x, *dataPtr);
 }
 
-void MA::train() {
-    int paramCount = 2;
+void MA::train(int k) {
+    int paramCount = k+1;
     nlopt::opt optimizer(nlopt::LN_COBYLA, paramCount);
     optimizer.set_xtol_rel(1e-6);
     optimizer.set_maxeval(10000);
 
-    std::vector<double> x(paramCount, 0.0);  // Initial values
-    double minNLL; 
+    std::vector<double> x(paramCount, 0.0);
+    double minNLL;
 
     try {
         optimizer.set_min_objective(objFunction, &this->data);
         optimizer.optimize(x, minNLL);
-        std::cout << "Optimal parameters: " << x[0] << ", " << x[1] << std::endl;
+        std::cout << "Optimal parameters: ";
+        for (int i = 0; i < paramCount; ++i) {
+            std::cout << x[i] << ", ";
+        }
+        std::cout << std::endl;
         std::cout << "Minimum NLL: " << minNLL << std::endl;
     } catch (const std::exception &e) {
         std::cerr << "nlopt failed: " << e.what() << std::endl;

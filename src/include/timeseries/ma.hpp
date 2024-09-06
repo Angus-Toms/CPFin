@@ -26,7 +26,7 @@ public:
     MA(const std::vector<double> data);
     ~MA();
 
-    void train();
+    void train(int k);
     // void train(int k); // NOTE: Higher-order MA models
     std::vector<double> forecast(int steps) const;
 
