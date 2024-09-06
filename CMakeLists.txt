@@ -11,11 +11,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 find_package(fmt REQUIRED)
 find_package(CURL REQUIRED)
 find_package(Python3 COMPONENTS Development NumPy)
+find_package(NLOPT REQUIRED)
 
 # Include directories
 include_directories(src/include)
 include_directories(${Python3_INCLUDE_DIRS})
 include_directories(${Python3_NumPy_INCLUDE_DIRS})
+include_directories(${NLOPT_INCLUDE_DIRS})
 
 # Add third parties as a subdirectory
 # add_subdirectory(third_party/eigen-3.4.0)
@@ -32,13 +34,14 @@ set(SRC_FILES
     src/overlays/macd.cpp
     src/overlays/rsi.cpp
     src/timeseries/ar.cpp
+    src/timeseries/ma.cpp
 )
 
 # Add an executable
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 
 # Link libraries
-target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt CURL::libcurl ${Python3_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt CURL::libcurl ${Python3_LIBRARIES} ${NLOPT_LIBRARIES})
 
 # Optionally add compiler flags (e.g., -Wall, -Wextra, -O2)
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -O2)

@@ -26,7 +26,7 @@ public:
     
     void train(int k);
     // void train(); NOTE: auto-determine k based on significance of PACF values 
-    std::vector<double> forecast(int steps);
+    std::vector<double> forecast(int steps) const;
     // void forecast(std::time_t end); NOTE: forecast until a certain future date
 
     std::vector<double> getPhis() const;

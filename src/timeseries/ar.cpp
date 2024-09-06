@@ -1,5 +1,4 @@
 #include "timeseries/ar.hpp"
-#include <chrono>
 
 AR::AR(const std::vector<double> data) {
     this->data = data;
@@ -52,7 +51,7 @@ void AR::train(int k) {
     }
 }
 
-std::vector<double> AR::forecast(int steps) {
+std::vector<double> AR::forecast(int steps) const {
     int k = this->phis.size();
     std::vector<double> forecasted;
 

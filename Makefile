@@ -7,6 +7,10 @@ TEST_DIR = test
 TEST_BUILD_DIR = $(TEST_DIR)/build
 TEST_TARGET = mytests
 
+# Define the flags for NLopt
+NLOPT_CFLAGS = $(shell pkg-config --cflags nlopt)
+NLOPT_LDFLAGS = $(shell pkg-config --libs nlopt)
+
 # Default target to build the executable and tests
 all: $(BUILD_DIR)/$(TARGET)
 
@@ -39,3 +43,7 @@ run: $(BUILD_DIR)/$(TARGET)
 	./$(BUILD_DIR)/$(TARGET)
 
 .PHONY: all build_tests test clean run
+
+# Compiler and linker settings for NLopt
+CXXFLAGS += $(NLOPT_CFLAGS)
+LDFLAGS += $(NLOPT_LDFLAGS)
