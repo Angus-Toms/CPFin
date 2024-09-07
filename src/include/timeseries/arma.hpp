@@ -20,7 +20,6 @@ class ARMA {
 private:
     std::vector<double> data;
     size_t count;
-    double mean;
 
     int arOrder;
     int maOrder;
@@ -35,7 +34,6 @@ public:
     // void train(); NOTE: auto-determine AR and MA orders
     std::vector<double> forecast(int steps) const;
 
-    double getMean() const;
     std::vector<double> getPhis() const;
     std::vector<double> getThetas() const;
 

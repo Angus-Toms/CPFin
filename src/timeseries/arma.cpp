@@ -3,18 +3,13 @@
 ARMA::ARMA(const std::vector<double> data) {
     this->data = data;
     this->count = data.size();
-
-    // Calculate mean
-    double sum = std::accumulate(data.begin(), data.end(), 0.0);
-    this->mean = sum / this->count;
 }
 
 ARMA::~ARMA() {}
 
 double getArmaNLL(const std::vector<double>& params, const std::vector<double>& data, int p, int q) {
-    double mu = params[0];
-    std::vector<double> arCoeffs(params.begin() + 1, params.begin() + 1 + p);
-    std::vector<double> maCoeffs(params.begin() + 1 + p, params.begin() + 1 + p + q);
+    std::vector<double> arCoeffs(params.begin(), params.begin() + 1 + p);
+    std::vector<double> maCoeffs(params.begin() + p, params.begin() + p + q);
 
     size_t count = data.size();
     std::vector<double> residuals(count, 0.0);
@@ -24,10 +19,10 @@ double getArmaNLL(const std::vector<double>& params, const std::vector<double>& 
         double arPart = 0.0;
         double maPart = 0.0;
 
-        // X_t = mu + phi_1 * X_{t-1} + ... + phi_p * X_{t-p} + e_t + theta_1 * e_{t-1} + ... + theta_q * e_{t-q}
+        // X_t = phi_1 * X_{t-1} + ... + phi_p * X_{t-p} + e_t + theta_1 * e_{t-1} + ... + theta_q * e_{t-q}
         // arPart = phi_1 * X_{t-1} + ... + phi_p * X_{t-p}
         for (int i = 0; i < p; ++i) {
-            arPart += arCoeffs[i] * (data[t - 1 - i] - mu);
+            arPart += arCoeffs[i] * data[t - 1 - i];
         }
 
         // maPart = theta_1 * e_{t-1} + ... + theta_q * e_{t-q}
@@ -35,7 +30,7 @@ double getArmaNLL(const std::vector<double>& params, const std::vector<double>& 
             maPart += maCoeffs[i] * residuals[t - 1 - i];
         }
 
-        residuals[t] = data[t] - mu - arPart - maPart;
+        residuals[t] = data[t] - arPart - maPart;
         sumResidualsSq += residuals[t] * residuals[t];
     }
 
@@ -49,11 +44,12 @@ double objFunctionArma(const std::vector<double>& x, std::vector<double>& grad, 
     ARMAData* modelData = static_cast<ARMAData*>(data);
     return getArmaNLL(x, modelData->data, modelData->p, modelData->q);
 }
+
 void ARMA::train(int arOrder, int maOrder) {
     this->arOrder = arOrder;
     this->maOrder = maOrder;
 
-    int paramCount = arOrder + maOrder + 1; // Include mean, AR and MA params
+    int paramCount = arOrder + maOrder; // Include AR and MA params
     nlopt::opt optimizer(nlopt::LN_COBYLA, paramCount);
     optimizer.set_xtol_rel(1e-6);
     optimizer.set_maxeval(10000);
@@ -62,6 +58,7 @@ void ARMA::train(int arOrder, int maOrder) {
     double minNLL;
 
     try {
+        // Data wrapper to pass model order to objective function
         ARMAData armaData = {this->data, arOrder, maOrder};
         optimizer.set_min_objective(objFunctionArma, &armaData);
         optimizer.optimize(x, minNLL);
@@ -70,14 +67,13 @@ void ARMA::train(int arOrder, int maOrder) {
     }
 
     // Save learnt parameters
-    this->mean = x[0];
     this->phis.clear();
     for (int i = 0; i < this->arOrder; ++i) {
-        this->phis.push_back(x[i+1]);
+        this->phis.push_back(x[i]);
     }
     this->thetas.clear();
     for (int i = 0; i < this->maOrder; ++i) {
-        this->thetas.push_back(x[i+1+this->arOrder]);
+        this->thetas.push_back(x[i+this->arOrder]);
     }
 }
 
@@ -93,22 +89,22 @@ std::vector<double> ARMA::forecast(int steps) const {
         double arPart = 0.0;
         double maPart = 0.0;
 
-        // arPart = phi_1 * X_{t-1} + ... + phi_p * X_{t-p}
+        // AR part: phi_1 * X_{t-1} + ... + phi_p * X_{t-p}
         for (int i = 0; i < p; ++i) {
-            arPart += this->phis[i] * (this->data[t - i - 1] - this->mean);
+            arPart += this->phis[i] * this->data[t - i - 1];
         }
 
-        // maPart = theta_1 * e_{t-1} + ... + theta_q * e_{t-q}
+        // MA part: theta_1 * e_{t-1} + ... + theta_q * e_{t-q}
         for (int i = 0; i < q; ++i) {
             maPart += this->thetas[i] * residuals[t - i - 1];
         }
 
-        residuals[t] = this->data[t] - (this->mean + arPart + maPart);
+        residuals[t] = this->data[t] - arPart - maPart;
     }
 
-    // Forecast future values 
+    // Forecast future values
     for (int i = 0; i < steps; ++i) {
-        double forecast = this->mean;
+        double forecast = 0.0;
         double arPart = 0.0;
         double maPart = 0.0;
 
@@ -117,10 +113,10 @@ std::vector<double> ARMA::forecast(int steps) const {
             double dataPoint = i + j < p ?
                 this->data[count - p + i + j] :
                 forecasted[i - p + j];
-            arPart += this->phis[j] * (dataPoint - this->mean);
+            arPart += this->phis[j] * dataPoint;
         }
 
-        // MA part, use past residuals, assume 0 for future prediction residuals 
+        // MA part, use past residuals, assume 0 for future prediction residuals
         for (int j = 0; j < q; ++j) {
             double residual = i + j < q ? 
                 residuals[count - q + i + j] :
@@ -128,16 +124,12 @@ std::vector<double> ARMA::forecast(int steps) const {
             maPart += this->thetas[j] * residual;
         }
 
-        forecast += arPart + maPart;
+        forecast = arPart + maPart;
         forecasted.push_back(forecast);
     }
-
     return forecasted;
 }
 
-double ARMA::getMean() const {
-    return this->mean;
-}
 
 std::vector<double> ARMA::getPhis() const {
     return this->phis;
