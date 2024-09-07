@@ -8,33 +8,42 @@ MA::MA(const std::vector<double> data) {
 MA::~MA() {}
 
 double getNLL(const std::vector<double>& params, const std::vector<double>& data) {
-    // Updated NLL for multi-theta models
     double mu = params[0];
-    size_t n = params.size() - 1;
+    size_t k = params.size() - 1;
     size_t count = data.size();
-    std::vector<double> arParams(params.begin() + 1, params.end());
+    std::vector<double> maParams(params.begin() + 1, params.end());
 
-    std::vector<double> residuals(count);
+    std::vector<double> residuals(count, 0.0);
     double sumResidualsSq = 0.0;
 
-    // Get residuals 
-    for (size_t i = n; i < count; ++i) {
-        double prediction = mu; 
+    // Get residuals for first k points
+    for (size_t i = 0; i < k; ++i) {
+        residuals[i] = data[i] - mu;  // Assuming no MA effect for initial points
+        sumResidualsSq += residuals[i] * residuals[i];
+    }
 
-        // Add AR terms 
-        for (size_t j = 0; j < n; ++j) {
-            prediction += arParams[j] * data[i-j-1];
+    // Loop through the data to calculate residuals for the rest of the points
+    for (size_t i = k; i < count; ++i) {
+        double prediction = mu;
+
+        // Use past residuals in the MA part
+        for (size_t j = 0; j < k; ++j) {
+            prediction += maParams[j] * residuals[i - j - 1];
         }
 
+        // Calculate residual for the current time step
         residuals[i] = data[i] - prediction;
         sumResidualsSq += residuals[i] * residuals[i];
     }
 
-    double sigmaSq = sumResidualsSq / (count-n);
+    // Estimate variance
+    double sigmaSq = sumResidualsSq / (count - k);
 
-    double nll = (0.5 * std::log(2 * M_PI * sigmaSq)) + (0.5 / sigmaSq) * sumResidualsSq;
+    // Calculate Negative Log Likelihood (NLL)
+    double nll = 0.5 * count * std::log(2 * M_PI * sigmaSq) + (0.5 / sigmaSq) * sumResidualsSq;
     return nll;
 }
+
 
 // Wrapper for NLOpt
 double objFunction(const std::vector<double>& x, std::vector<double>& grad, void *data) {
@@ -69,7 +78,34 @@ void MA::train(int k) {
 }
 
 std::vector<double> MA::forecast(int steps) const {
-    return {};
+    int k = this->k;
+    std::vector<double> forecasted;
+
+    // Get residuals for current learnt parameters 
+    std::vector<double> residuals(this->count);
+    // Compute residuals for initial data
+    for (int i = k; i < this->count; ++i) {
+        double prediction = this->mean;
+
+        // Weighted sum of MA terms
+        for (int j = 0; j < k; ++j) {
+            prediction += this->theta[j] * residuals[i - j - 1];
+        }
+        residuals[i] = this->data[i] - prediction;
+    }
+
+    // Forecast future values
+    for (int i = 0; i < steps; ++i) {
+        double forecast = this->mean;
+        for (int j = 0; j < k; ++j) {
+            forecast += this->theta[j] * residuals[this->count - k + i - j];
+            std::cout << "Adding residual: " << residuals[this->count - k + i - j] << " with weight: " << this->theta[j] << std::endl;
+        }
+        forecasted.push_back(forecast);
+        residuals.push_back(0.0); // Assume residuals are 0 for future values
+    }
+
+    return forecasted;
 }
 
 std::vector<double> MA::getThetas() const {

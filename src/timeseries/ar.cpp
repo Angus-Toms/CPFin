@@ -33,18 +33,17 @@ void AR::train(int k) {
 }
 
 std::vector<double> AR::forecast(int steps) const {
-    int k = this->phis.size();
+    int k = this->k;
     std::vector<double> forecasted;
 
+    // X_t = (phi_1 * X_{t-1}) + (phi_2 * X_{t-2}) + ... + (phi_k * X_{t-k})
     for (int i = 0; i < steps; ++i) {
         double forecast = 0.0;
-        for (int j = 0; j < k; ++j) {
-            // If we are forecasting in the first k steps, use past data 
-            if (i+j < k) {
-                forecast += this->data[this->count - k + i + j] * this->phis[j];
-            } else {
-                forecast += forecasted[i + j - k] * this->phis[j];
-            }
+        for (int j = 0; j < k; ++j) { 
+            double dataPoint = i + j < k ?
+                this->data[this->count - k + i + j] :
+                forecasted[i - k + j];
+            forecast += this->phis[j] * dataPoint;
         }
         forecasted.push_back(forecast);
     }
