@@ -94,13 +94,19 @@ std::vector<double> MA::forecast(int steps) const {
         residuals[i] = this->data[i] - prediction;
     }
 
+    std::cout << "Residuals:\n";
+    for (int i = 0; i < residuals.size(); ++i) {
+        std::cout << i << ": " << residuals[i] << "\n";
+    }
+
     // Forecast future values
     for (int i = 0; i < steps; ++i) {
         double forecast = this->mean;
         for (int j = 0; j < k; ++j) {
-            forecast += this->theta[j] * residuals[this->count - k + i - j];
-            std::cout << "Adding residual: " << residuals[this->count - k + i - j] << " with weight: " << this->theta[j] << std::endl;
+            forecast += this->theta[j] * residuals[this->count - k + i + j];
+            std::cout << "Adding residual: " << residuals[this->count - k + i + j] << " with weight: " << this->theta[j] << std::endl;
         }
+        std::cout << "\n";
         forecasted.push_back(forecast);
         residuals.push_back(0.0); // Assume residuals are 0 for future values
     }
