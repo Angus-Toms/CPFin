@@ -82,7 +82,57 @@ void ARMA::train(int arOrder, int maOrder) {
 }
 
 std::vector<double> ARMA::forecast(int steps) const {
-    return {};
+    int p = this->arOrder;
+    int q = this->maOrder;
+    size_t count = this->count;
+    std::vector<double> forecasted;
+    std::vector<double> residuals(count);
+
+    // Get residuals for current learnt parameters
+    for (int t = std::max(p, q); t < count; ++t) {
+        double arPart = 0.0;
+        double maPart = 0.0;
+
+        // arPart = phi_1 * X_{t-1} + ... + phi_p * X_{t-p}
+        for (int i = 0; i < p; ++i) {
+            arPart += this->phis[i] * (this->data[t - i - 1] - this->mean);
+        }
+
+        // maPart = theta_1 * e_{t-1} + ... + theta_q * e_{t-q}
+        for (int i = 0; i < q; ++i) {
+            maPart += this->thetas[i] * residuals[t - i - 1];
+        }
+
+        residuals[t] = this->data[t] - (this->mean + arPart + maPart);
+    }
+
+    // Forecast future values 
+    for (int i = 0; i < steps; ++i) {
+        double forecast = this->mean;
+        double arPart = 0.0;
+        double maPart = 0.0;
+
+        // AR part, conditionally use past data or forecasted values
+        for (int j = 0; j < p; ++j) {
+            double dataPoint = i + j < p ?
+                this->data[count - p + i + j] :
+                forecasted[i - p + j];
+            arPart += this->phis[j] * (dataPoint - this->mean);
+        }
+
+        // MA part, use past residuals, assume 0 for future prediction residuals 
+        for (int j = 0; j < q; ++j) {
+            double residual = i + j < q ? 
+                residuals[count - q + i + j] :
+                0.0;
+            maPart += this->thetas[j] * residual;
+        }
+
+        forecast += arPart + maPart;
+        forecasted.push_back(forecast);
+    }
+
+    return forecasted;
 }
 
 double ARMA::getMean() const {
