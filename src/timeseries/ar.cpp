@@ -6,33 +6,14 @@ AR::AR(const std::vector<double> data) {
 
     // Calculate mean
     double sum = std::accumulate(data.begin(), data.end(), 0.0);
-    double mean = sum / this->count;
-    this->mean = mean;
-
-    // Calculate variance
-    double sq_sum = std::accumulate(data.begin(), data.end(), 0.0,
-        [mean](double acc, double val) {
-            return acc + (val - mean) * (val - mean);
-        });
-    this->variance = sq_sum / this->count;
-
-    // Calculate autocorrelations
-    // See: https://en.wikipedia.org/wiki/Autocorrelation
-    this->autocorrelations.reserve(this->count);
-    this->autocorrelations.push_back(1.0);
-    
-    for (size_t lag = 1; lag < this->count; ++lag) {
-        double sum = 0.0;
-        for (size_t i = lag+1; i < this->count; ++i) {
-            sum += (data[i] - mean) * (data[i - lag] - mean);
-        }
-        this->autocorrelations.push_back(sum / sq_sum);
-    }
+    this->mean = sum / this->count;
 }
 
 AR::~AR() {}
 
 void AR::train(int k) {
+    this->k = k;
+
     // Construct feature matrix and label vector
     // X_t = phi_1 * X_t-1 + phi_2 * X_t-2 + ... + phi_k * X_t-k
     Eigen::MatrixXd features(this->count - k, k);

@@ -16,11 +16,8 @@ private:
     size_t count;
     double mean;
 
-    double theta; // MA(1) coefficient
-
-    // Helper functions for optimisation
-    // double objFunction(const std::vector<double>& x, std::vector<double>& grad, void *data) const;
-    // double getNLL(const std::vector<double> params, const std::vector<double> data) const;
+    int k; // Order of MA model
+    std::vector<double> theta; // MA coefficients
 
 public:
     MA(const std::vector<double> data);

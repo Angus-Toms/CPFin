@@ -35,6 +35,7 @@ set(SRC_FILES
     src/overlays/rsi.cpp
     src/timeseries/ar.cpp
     src/timeseries/ma.cpp
+    src/timeseries/arma.cpp
 )
 
 # Add an executable

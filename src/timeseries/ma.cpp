@@ -3,9 +3,6 @@
 MA::MA(const std::vector<double> data) {
     this->data = data;
     this->count = data.size();
-
-    // Calculate mean 
-    double sum = std::accumulate(data.begin(), data.end(), 0.0);
 }
 
 MA::~MA() {}
@@ -46,7 +43,9 @@ double objFunction(const std::vector<double>& x, std::vector<double>& grad, void
 }
 
 void MA::train(int k) {
-    int paramCount = k+1;
+    this->k = k;
+
+    int paramCount = k+1; // Include mean and k theta params
     nlopt::opt optimizer(nlopt::LN_COBYLA, paramCount);
     optimizer.set_xtol_rel(1e-6);
     optimizer.set_maxeval(10000);
@@ -57,14 +56,15 @@ void MA::train(int k) {
     try {
         optimizer.set_min_objective(objFunction, &this->data);
         optimizer.optimize(x, minNLL);
-        std::cout << "Optimal parameters: ";
-        for (int i = 0; i < paramCount; ++i) {
-            std::cout << x[i] << ", ";
-        }
-        std::cout << std::endl;
-        std::cout << "Minimum NLL: " << minNLL << std::endl;
     } catch (const std::exception &e) {
         std::cerr << "nlopt failed: " << e.what() << std::endl;
+    }
+
+    // Save learnt parameters
+    this->mean = x[0];
+    this->theta.clear();
+    for (int i = 1; i < paramCount; ++i) {
+        this->theta.push_back(x[i]);
     }
 }
 
@@ -73,7 +73,7 @@ std::vector<double> MA::forecast(int steps) const {
 }
 
 std::vector<double> MA::getThetas() const {
-    return {};
+    return this->theta;
 }
 
 int MA::plot() const {

@@ -12,6 +12,7 @@
 class AR {
 private:
     std::vector<double> data;
+    int k; // AR model order
     std::vector<double> phis; // AR coefficients
     double mean;
     double variance;
