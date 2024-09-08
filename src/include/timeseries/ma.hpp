@@ -3,6 +3,8 @@
 #ifndef MA_HPP
 #define MA_HPP
 
+#include "../print_utils.hpp"
+
 #include <nlopt.hpp>
 
 #include <numeric>
@@ -17,7 +19,7 @@ private:
     double mean;
 
     int k; // Order of MA model
-    std::vector<double> theta; // MA coefficients
+    std::vector<double> thetas; // MA coefficients
 
 public:
     MA(const std::vector<double> data);

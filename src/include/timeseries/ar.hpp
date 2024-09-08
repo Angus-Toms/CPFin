@@ -3,6 +3,8 @@
 #ifndef AR_HPP
 #define AR_HPP 
 
+#include "../print_utils.hpp"
+
 #include <vector>
 #include <iostream>
 #include <numeric>
@@ -14,12 +16,8 @@ private:
     std::vector<double> data;
     int k; // AR model order
     std::vector<double> phis; // AR coefficients
-    double mean;
-    double variance;
     size_t count;
-
-    std::vector<double> autocorrelations;
-    std::vector<double> partial_autocorrelations;
+    double mean;
 
 public:
     AR(const std::vector<double> data);
@@ -31,7 +29,6 @@ public:
     // void forecast(std::time_t end); NOTE: forecast until a certain future date
 
     std::vector<double> getPhis() const;
-    std::vector<double> getAutocorrelations() const;
 
     int plot() const;
     std::string toString() const;

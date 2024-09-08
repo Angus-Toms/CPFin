@@ -7,6 +7,9 @@ AR::AR(const std::vector<double> data) {
     // Calculate mean
     double sum = std::accumulate(data.begin(), data.end(), 0.0);
     this->mean = sum / this->count;
+
+    // Mark model as untrained 
+    this->k = -1;
 }
 
 AR::~AR() {}
@@ -56,14 +59,31 @@ std::vector<double> AR::getPhis() const {
     return this->phis;
 }
 
-std::vector<double> AR::getAutocorrelations() const {
-    return this->autocorrelations;
-}
-
 int AR::plot() const {
     return 0;
 }
 
 std::string AR::toString() const {
-    return "";
+    std::vector<std::vector<std::string>> tableData;
+    std::string tableTitle;
+    if (this->k == -1) {
+        // Untrained model 
+        tableTitle = "AR Model (Untrained)";
+        tableData = {{"", ""}};
+    } else {
+        // Trained model 
+        tableTitle = fmt::format("AR({}) Model", this->k);
+        tableData = {{"Mean", fmt::format("{:.4f}", this->mean)}};
+        for (int i = 0; i < this->k; ++i) {
+            tableData.push_back({fmt::format("phi_{}", i + 1), fmt::format("{:.4f}", this->phis[i])});
+        }
+    }
+
+    return getTable(
+        tableTitle,
+        tableData,
+        {12, 12},
+        {"Parameter", "Value"},
+        false
+    );
 }

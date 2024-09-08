@@ -3,6 +3,10 @@
 ARMA::ARMA(const std::vector<double> data) {
     this->data = data;
     this->count = data.size();
+
+    // Mark model as untrained
+    this->arOrder = -1;
+    this->maOrder = -1;
 }
 
 ARMA::~ARMA() {}
@@ -144,5 +148,28 @@ int ARMA::plot() const {
 }
 
 std::string ARMA::toString() const {
-    return "ARMA model";
+    std::vector<std::vector<std::string>> tableData;
+    std::string tableTitle;
+    if (this->arOrder == -1 || this->maOrder == -1) {
+        // Untrained model 
+        tableTitle = "ARMA Model (Untrained)";
+        tableData = {{"", ""}};
+    } else {
+        // Trained model
+        tableTitle = fmt::format("ARMA({}, {}) Model", this->arOrder, this->maOrder);
+        for (int i = 0; i < this->arOrder; ++i) {
+            tableData.push_back({fmt::format("phi_{}", i + 1), fmt::format("{:.4f}", this->phis[i])});
+        }
+        for (int i = 0; i < this->maOrder; ++i) {
+            tableData.push_back({fmt::format("theta_{}", i + 1), fmt::format("{:.4f}", this->thetas[i])});
+        }
+    }
+
+    return getTable(
+        tableTitle,
+        tableData,
+        {12, 12},
+        {"Parameter", "Value"},
+        false
+    );
 }

@@ -3,6 +3,9 @@
 MA::MA(const std::vector<double> data) {
     this->data = data;
     this->count = data.size();
+
+    // Mark model as untrained 
+    this->k = -1;
 }
 
 MA::~MA() {}
@@ -71,9 +74,9 @@ void MA::train(int k) {
 
     // Save learnt parameters
     this->mean = x[0];
-    this->theta.clear();
+    this->thetas.clear();
     for (int i = 1; i < paramCount; ++i) {
-        this->theta.push_back(x[i]);
+        this->thetas.push_back(x[i]);
     }
 }
 
@@ -89,7 +92,7 @@ std::vector<double> MA::forecast(int steps) const {
 
         // Weighted sum of MA terms
         for (int j = 0; j < k; ++j) {
-            prediction += this->theta[j] * residuals[i - j - 1];
+            prediction += this->thetas[j] * residuals[i - j - 1];
         }
         residuals[i] = this->data[i] - prediction;
     }
@@ -98,7 +101,7 @@ std::vector<double> MA::forecast(int steps) const {
     for (int i = 0; i < steps; ++i) {
         double forecast = this->mean;
         for (int j = 0; j < k; ++j) {
-            forecast += this->theta[j] * residuals[this->count - k + i + j];
+            forecast += this->thetas[j] * residuals[this->count - k + i + j];
         }
         forecasted.push_back(forecast);
         residuals.push_back(0.0); // Assume residuals are 0 for future values
@@ -108,7 +111,7 @@ std::vector<double> MA::forecast(int steps) const {
 }
 
 std::vector<double> MA::getThetas() const {
-    return this->theta;
+    return this->thetas;
 }
 
 int MA::plot() const {
@@ -116,5 +119,25 @@ int MA::plot() const {
 }
 
 std::string MA::toString() const {
-    return "MA(1) model";
+    std::vector<std::vector<std::string>> tableData;
+    std::string tableTitle;
+    if (this->k == -1) {
+        // Untrained model
+        tableTitle = "MA Model (Untrained)";
+        tableData = {{"", ""}};
+    } else {
+        // Trained model
+        tableTitle = fmt::format("MA({}) Model", this->k);
+        for (int i = 0; i < this->k; ++i) {
+            tableData.push_back({fmt::format("theta_{}", i+1), fmt::format("{:.4f}", this->thetas[i])});
+        }
+    }
+
+    return getTable(
+        tableTitle,
+        tableData,
+        {12, 12},
+        {"Parameter", "Value"},
+        false
+    );
 }

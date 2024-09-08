@@ -3,6 +3,8 @@
 #ifndef ARMA_HPP
 #define ARMA_HPP
 
+#include "../print_utils.hpp"
+
 #include <nlopt.hpp>
 
 #include <numeric>
