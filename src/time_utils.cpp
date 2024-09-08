@@ -54,3 +54,17 @@ std::time_t intervalToSeconds(const std::string& interval) {
 bool isInvalidInterval(const std::string& interval) {
     return std::find(VALID_INTERVALS.begin(), VALID_INTERVALS.end(), interval) == VALID_INTERVALS.end();
 }
+
+std::tuple<std::vector<std::time_t>, std::vector<std::string>> getTicks(std::time_t start,
+                                                                        std::time_t end,
+                                                                        int nTicks) {
+    std::vector<std::time_t> ticks;
+    std::vector<std::string> labels; 
+
+    std::time_t interval = (end - start) / (nTicks-1);
+    for (int i = 0; i < nTicks; ++i) {
+        ticks.push_back(start + i*interval);
+        labels.push_back(epochToDateString(start + i*interval));
+    }
+    return std::make_tuple(ticks, labels);
+}

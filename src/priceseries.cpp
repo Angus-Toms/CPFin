@@ -101,20 +101,6 @@ void PriceSeries::parseCSV(const std::string& readBuffer) {
     }
 }
 
-std::tuple<std::vector<std::time_t>, std::vector<std::string>> getTicks(std::time_t start,
-                                                                        std::time_t end,
-                                                                        int nTicks) {
-    std::vector<std::time_t> ticks;
-    std::vector<std::string> labels; 
-
-    std::time_t interval = (end - start) / (nTicks-1);
-    for (int i = 0; i < nTicks; ++i) {
-        ticks.push_back(start + i*interval);
-        labels.push_back(epochToDateString(start + i*interval));
-    }
-    return std::make_tuple(ticks, labels);
-}
-
 void plotLine(const std::vector<std::time_t>& xs, const std::vector<double>& ys) {
     namespace plt = matplotlibcpp;
     plt::named_plot("Price", xs, ys);

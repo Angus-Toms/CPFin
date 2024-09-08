@@ -1,8 +1,15 @@
-#include "timeseries/arma.hpp"
+#include "timeseries/time_series_model.hpp"
 
-ARMA::ARMA(const std::vector<double> data) {
+struct ARMAData {
+    std::vector<double> data;
+    int p;
+    int q;
+};
+
+ARMA::ARMA(const TimeSeries<double>& data) {
     this->data = data;
     this->count = data.size();
+    this->name = "ARMA Model (Untrained)";
 
     // Mark model as untrained
     this->arOrder = -1;
@@ -61,9 +68,15 @@ void ARMA::train(int arOrder, int maOrder) {
     std::vector<double> x(paramCount, 0.0);
     double minNLL;
 
+    // Construct data vector
+    std::vector<double> dataVec;
+    for (const auto& [date, value] : this->data) {
+        dataVec.push_back(value);
+    }
+
     try {
         // Data wrapper to pass model order to objective function
-        ARMAData armaData = {this->data, arOrder, maOrder};
+        ARMAData armaData = {dataVec, arOrder, maOrder};
         optimizer.set_min_objective(objFunctionArma, &armaData);
         optimizer.optimize(x, minNLL);
     } catch (const std::exception &e) {
@@ -79,14 +92,26 @@ void ARMA::train(int arOrder, int maOrder) {
     for (int i = 0; i < this->maOrder; ++i) {
         this->thetas.push_back(x[i+this->arOrder]);
     }
+
+    // Set new name
+    this->name = fmt::format("ARMA({}, {}) Model", arOrder, maOrder);
 }
 
-std::vector<double> ARMA::forecast(int steps) const {
+void ARMA::forecast(int steps) {
     int p = this->arOrder;
     int q = this->maOrder;
     size_t count = this->count;
-    std::vector<double> forecasted;
     std::vector<double> residuals(count);
+
+    // Starting date for predictions 
+    std::time_t startDate = this->data.end()->first;
+
+    // Construct data vector
+    std::vector<double> dataVec;
+    for (const auto& [date, value] : this->data) {
+        dataVec.push_back(value);
+    }
+
 
     // Get residuals for current learnt parameters
     for (int t = std::max(p, q); t < count; ++t) {
@@ -95,7 +120,7 @@ std::vector<double> ARMA::forecast(int steps) const {
 
         // AR part: phi_1 * X_{t-1} + ... + phi_p * X_{t-p}
         for (int i = 0; i < p; ++i) {
-            arPart += this->phis[i] * this->data[t - i - 1];
+            arPart += this->phis[i] * dataVec[t - i - 1];
         }
 
         // MA part: theta_1 * e_{t-1} + ... + theta_q * e_{t-q}
@@ -103,7 +128,7 @@ std::vector<double> ARMA::forecast(int steps) const {
             maPart += this->thetas[i] * residuals[t - i - 1];
         }
 
-        residuals[t] = this->data[t] - arPart - maPart;
+        residuals[t] = dataVec[t] - arPart - maPart;
     }
 
     // Forecast future values
@@ -115,7 +140,7 @@ std::vector<double> ARMA::forecast(int steps) const {
         // AR part, conditionally use past data or forecasted values
         for (int j = 0; j < p; ++j) {
             double dataPoint = i + j < p ?
-                this->data[count - p + i + j] :
+                dataVec[count - p + i + j] :
                 forecasted[i - p + j];
             arPart += this->phis[j] * dataPoint;
         }
@@ -129,9 +154,9 @@ std::vector<double> ARMA::forecast(int steps) const {
         }
 
         forecast = arPart + maPart;
-        forecasted.push_back(forecast);
+        this->forecasted[startDate] = forecast;
+        startDate += intervalToSeconds("1d");
     }
-    return forecasted;
 }
 
 
@@ -143,20 +168,13 @@ std::vector<double> ARMA::getThetas() const {
     return this->thetas;
 }
 
-int ARMA::plot() const {
-    return 0;
-}
-
 std::string ARMA::toString() const {
     std::vector<std::vector<std::string>> tableData;
-    std::string tableTitle;
     if (this->arOrder == -1 || this->maOrder == -1) {
         // Untrained model 
-        tableTitle = "ARMA Model (Untrained)";
         tableData = {{"", ""}};
     } else {
         // Trained model
-        tableTitle = fmt::format("ARMA({}, {}) Model", this->arOrder, this->maOrder);
         for (int i = 0; i < this->arOrder; ++i) {
             tableData.push_back({fmt::format("phi_{}", i + 1), fmt::format("{:.4f}", this->phis[i])});
         }
@@ -166,7 +184,7 @@ std::string ARMA::toString() const {
     }
 
     return getTable(
-        tableTitle,
+        this->name,
         tableData,
         {12, 12},
         {"Parameter", "Value"},

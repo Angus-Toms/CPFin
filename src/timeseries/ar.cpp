@@ -1,86 +1,95 @@
-#include "timeseries/ar.hpp"
+#include "timeseries/time_series_model.hpp"
 
-AR::AR(const std::vector<double> data) {
+AR::AR(const TimeSeries<double>& data) {
     this->data = data;
     this->count = data.size();
+    this->arOrder = -1; // Mark model as untrained
+    this->name = "AR Model (Untrained)";
 
     // Calculate mean
-    double sum = std::accumulate(data.begin(), data.end(), 0.0);
+    double sum = 0.0;
+    for (const auto& [date, value] : data) {
+        sum += value;
+    }
     this->mean = sum / this->count;
-
-    // Mark model as untrained 
-    this->k = -1;
 }
 
 AR::~AR() {}
 
-void AR::train(int k) {
-    this->k = k;
+void AR::train(int arOrder) {
+    this->arOrder = arOrder;
+    std::vector<double> dataVec;
+    for (const auto& [date, value] : this->data) {
+        dataVec.push_back(value);
+    }
 
     // Construct feature matrix and label vector
     // X_t = mu + phi_1 * X_t-1 + phi_2 * X_t-2 + ... + phi_k * X_t-k
-    Eigen::MatrixXd features(this->count - k, k + 1); // Add column for mean
-    Eigen::VectorXd labels(this->count - k);
-    for (size_t i = 0; i < this->count - k; ++i) {
-        for (int j = 0; j < k; ++j) {
-            features(i, j) = this->data[i + k - j - 1]; // Reverse the order of historical values
+    Eigen::MatrixXd features(this->count - arOrder, arOrder + 1); // Add column for mean
+    Eigen::VectorXd labels(this->count - arOrder);
+
+    for (size_t i = 0; i < this->count - arOrder; ++i) {
+        for (int j = 0; j < arOrder; ++j) {
+            features(i, j) = dataVec[i + arOrder - j - 1]; // Reverse the order of historical values
+
         }
-        features(i, k) = 1.0; // Column for the constant term (mean)
-        labels(i) = this->data[i + k];
+        features(i, arOrder) = 1.0; // Column for the constant term (mean)
+        labels(i) = dataVec[i + arOrder];
     }
 
     Eigen::VectorXd phis = features.colPivHouseholderQr().solve(labels);
     this->phis.clear();
     // Add 1 to account for mean
-    for (int i = 0; i < k + 1; ++i) {
+    for (int i = 0; i < arOrder + 1; ++i) {
         this->phis.push_back(phis(i));
     }
+
+    // Set new name
+    this->name = fmt::format("AR({}) Model", arOrder);
 }
 
-std::vector<double> AR::forecast(int steps) const {
-    int k = this->k;
-    std::vector<double> forecasted;
+void AR::forecast(int steps) {
+    int arOrder = this->arOrder;
+    std::time_t startDate = this->data.end()->first;
+    std::vector<double> dataVec;
+    for (const auto& [date, value] : this->data) {
+        dataVec.push_back(value);
+    }
 
     // X_t = mu + (phi_1 * X_{t-1}) + (phi_2 * X_{t-2}) + ... + (phi_k * X_{t-k})
     for (int i = 0; i < steps; ++i) {
         double forecast = this->mean;
-        for (int j = 0; j < k; ++j) { 
-            double dataPoint = i + j < k ?
-                this->data[this->count - k + i + j] :
-                forecasted[i - k + j];
+        for (int j = 0; j < arOrder; ++j) { 
+            double dataPoint = i + j < arOrder ?
+                dataVec[this->count - arOrder + i + j] :
+                forecasted[i - arOrder + j];
             forecast += this->phis[j] * (dataPoint - this->mean);
         }
-        forecasted.push_back(forecast);
+        // Set new forecast 
+        this->forecasted[startDate] = forecast;
+        startDate += intervalToSeconds("1d");
     }
-    return forecasted;
 }
 
 std::vector<double> AR::getPhis() const {
     return this->phis;
 }
 
-int AR::plot() const {
-    return 0;
-}
-
 std::string AR::toString() const {
     std::vector<std::vector<std::string>> tableData;
-    std::string tableTitle;
-    if (this->k == -1) {
+    if (this->arOrder == -1) {
         // Untrained model 
-        tableTitle = "AR Model (Untrained)";
         tableData = {{"", ""}};
     } else {
         // Trained model 
-        tableTitle = fmt::format("AR({}) Model", this->k);
         tableData = {{"Mean", fmt::format("{:.4f}", this->mean)}};
-        for (int i = 0; i < this->k; ++i) {
+        for (int i = 0; i < this->arOrder; ++i) {
             tableData.push_back({fmt::format("phi_{}", i + 1), fmt::format("{:.4f}", this->phis[i])});
         }
     }
 
     return getTable(
-        tableTitle,
+        this->name,
         tableData,
         {12, 12},
         {"Parameter", "Value"},

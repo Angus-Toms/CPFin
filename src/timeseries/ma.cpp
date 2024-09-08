@@ -1,21 +1,28 @@
-#include "timeseries/ma.hpp"
+#include "timeseries/time_series_model.hpp"
 
-MA::MA(const std::vector<double> data) {
+MA::MA(const TimeSeries<double>& data) {
     this->data = data;
     this->count = data.size();
+    this->name = "MA Model (Untrained)";
 
     // Mark model as untrained 
-    this->k = -1;
+    this->maOrder = -1;
+
+    // Calculate mean
+    double sum = 0.0;
+    for (const auto& [date, value] : data) {
+        sum += value;
+    }
+    this->mean = sum / this->count;
 }
 
 MA::~MA() {}
 
 double getNLL(const std::vector<double>& params, const std::vector<double>& data) {
     double mu = params[0];
-    size_t k = params.size() - 1;
     size_t count = data.size();
     std::vector<double> maParams(params.begin() + 1, params.end());
-
+    int k = maParams.size()-1;
     std::vector<double> residuals(count, 0.0);
     double sumResidualsSq = 0.0;
 
@@ -26,11 +33,11 @@ double getNLL(const std::vector<double>& params, const std::vector<double>& data
     }
 
     // Loop through the data to calculate residuals for the rest of the points
-    for (size_t i = k; i < count; ++i) {
+    for (int i = k; i < count; ++i) {
         double prediction = mu;
 
         // Use past residuals in the MA part
-        for (size_t j = 0; j < k; ++j) {
+        for (int j = 0; j < k; ++j) {
             prediction += maParams[j] * residuals[i - j - 1];
         }
 
@@ -54,19 +61,24 @@ double objFunction(const std::vector<double>& x, std::vector<double>& grad, void
     return getNLL(x, *dataPtr);
 }
 
-void MA::train(int k) {
-    this->k = k;
+void MA::train(int maOrder) {
+    this->maOrder = maOrder;
 
-    int paramCount = k+1; // Include mean and k theta params
-    nlopt::opt optimizer(nlopt::LN_COBYLA, paramCount);
+    nlopt::opt optimizer(nlopt::LN_COBYLA, maOrder+1);
     optimizer.set_xtol_rel(1e-6);
     optimizer.set_maxeval(10000);
 
-    std::vector<double> x(paramCount, 0.0);
+    std::vector<double> x(maOrder+1, 0.0);
     double minNLL;
 
+    // Get price vector
+    std::vector<double> dataVec;
+    for (const auto& [date, value] : this->data) {
+        dataVec.push_back(value);
+    }
+
     try {
-        optimizer.set_min_objective(objFunction, &this->data);
+        optimizer.set_min_objective(objFunction, &dataVec);
         optimizer.optimize(x, minNLL);
     } catch (const std::exception &e) {
         std::cerr << "nlopt failed: " << e.what() << std::endl;
@@ -75,14 +87,23 @@ void MA::train(int k) {
     // Save learnt parameters
     this->mean = x[0];
     this->thetas.clear();
-    for (int i = 1; i < paramCount; ++i) {
+    for (int i = 1; i < maOrder+1; ++i) {
         this->thetas.push_back(x[i]);
     }
+
+    // Set new name 
+    this->name = fmt::format("MA({}) Model", maOrder);
 }
 
-std::vector<double> MA::forecast(int steps) const {
-    int k = this->k;
-    std::vector<double> forecasted;
+void MA::forecast(int steps) {
+    int k = this->maOrder;
+
+    std::time_t startDate = this->data.end()->first;
+    // Construct data vector
+    std::vector<double> dataVec;
+    for (const auto& [date, value] : this->data) {
+        dataVec.push_back(value);
+    }
 
     // Get residuals for current learnt parameters 
     std::vector<double> residuals(this->count);
@@ -94,7 +115,7 @@ std::vector<double> MA::forecast(int steps) const {
         for (int j = 0; j < k; ++j) {
             prediction += this->thetas[j] * residuals[i - j - 1];
         }
-        residuals[i] = this->data[i] - prediction;
+        residuals[i] = dataVec[i] - prediction;
     }
 
     // Forecast future values
@@ -103,38 +124,30 @@ std::vector<double> MA::forecast(int steps) const {
         for (int j = 0; j < k; ++j) {
             forecast += this->thetas[j] * residuals[this->count - k + i + j];
         }
-        forecasted.push_back(forecast);
+        this->forecasted[startDate] = forecast;
+        startDate += intervalToSeconds("1d");
         residuals.push_back(0.0); // Assume residuals are 0 for future values
     }
-
-    return forecasted;
 }
 
 std::vector<double> MA::getThetas() const {
     return this->thetas;
 }
 
-int MA::plot() const {
-    return 0;
-}
-
 std::string MA::toString() const {
     std::vector<std::vector<std::string>> tableData;
-    std::string tableTitle;
-    if (this->k == -1) {
+    if (this->maOrder == -1) {
         // Untrained model
-        tableTitle = "MA Model (Untrained)";
         tableData = {{"", ""}};
     } else {
         // Trained model
-        tableTitle = fmt::format("MA({}) Model", this->k);
-        for (int i = 0; i < this->k; ++i) {
+        for (int i = 0; i < this->maOrder; ++i) {
             tableData.push_back({fmt::format("theta_{}", i+1), fmt::format("{:.4f}", this->thetas[i])});
         }
     }
 
     return getTable(
-        tableTitle,
+        this->name,
         tableData,
         {12, 12},
         {"Parameter", "Value"},

@@ -4,6 +4,7 @@
 #define TIME_UTILS_HPP
 
 #include <iostream>
+#include <vector>
 #include <sstream>
 #include <ctime>
 #include <iomanip>
@@ -24,5 +25,8 @@ std::time_t dateStringToEpoch(const std::string& dateStr);
 std::string epochToDateString(const std::time_t date, bool includeTime = false);
 std::time_t intervalToSeconds(const std::string& interval);
 bool isInvalidInterval(const std::string& interval);
+std::tuple<std::vector<std::time_t>, std::vector<std::string>> getTicks(std::time_t start,
+                                                                        std::time_t end,
+                                                                        int nTicks);
 
 #endif // TIME_UTILS_HPP
