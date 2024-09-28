@@ -28,7 +28,7 @@ public:
     virtual ~TimeSeriesModel() = default;
 
     virtual void forecast(int steps) = 0;
-    // virtual TimeSeries<double> forecast(std::time_t start) = 0; // Forecast until requested time
+    // virtual TimeSeries<double> forecast(std::time_t start) = 0; // TODO: Forecast until requested time
 
     int plot() const {
         namespace plt = matplotlibcpp;
@@ -54,7 +54,10 @@ public:
         plt::ylabel("Value");
         plt::title(name);
 
-        const auto& [ticks, labels] = getTicks(dataXs.front(), forecastedXs.back(), 6);
+
+        const auto& [ticks, labels] = forecastedXs.size() == 0 ? 
+            getTicks(dataXs.front(), dataXs.back(), 6) : 
+            getTicks(dataXs.front(), forecastedXs.back(), 6);
         plt::xticks(ticks, labels);
 
         plt::tight_layout();

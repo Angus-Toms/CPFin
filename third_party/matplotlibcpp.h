@@ -3,6 +3,7 @@
 // Python headers must be included before any system headers, since
 // they define _POSIX_C_SOURCE
 #include <Python.h>
+#include <datetime.h>
 
 #include <vector>
 #include <map>
@@ -212,8 +213,6 @@ private:
             PyObject_CallMethod(matplotlib, const_cast<char*>("use"), const_cast<char*>("s"), s_backend.c_str());
         }
 
-
-
         PyObject* pymod = PyImport_Import(pyplotname);
         Py_DECREF(pyplotname);
         if (!pymod) { throw std::runtime_error("Error loading module matplotlib.pyplot!"); }
@@ -279,7 +278,8 @@ private:
         s_python_function_colorbar = PyObject_GetAttrString(pymod, "colorbar");
         s_python_function_subplots_adjust = safe_import(pymod,"subplots_adjust");
         s_python_function_rcparams = PyObject_GetAttrString(pymod, "rcParams");
-	s_python_function_spy = PyObject_GetAttrString(pymod, "spy");
+	    s_python_function_spy = PyObject_GetAttrString(pymod, "spy");
+
 #ifndef WITHOUT_NUMPY
         s_python_function_imshow = safe_import(pymod, "imshow");
 #endif
@@ -436,6 +436,81 @@ PyObject* get_listlist(const std::vector<std::vector<Numeric>>& ll)
 }
 
 } // namespace detail
+
+// This really shouldn't be here, but no simpler way to avoid multiple Python interpreters for now
+inline bool scrape(const std::string ticker, 
+                   const std::string start, 
+                   const std::string end,
+                   std::vector<std::time_t>& dates,
+                   std::vector<double>& opens,
+                   std::vector<double>& highs,
+                   std::vector<double>& lows,
+                   std::vector<double>& closes,
+                   std::vector<double>& adjCloses,
+                   std::vector<long>& volumes) {
+    detail::_interpreter::get(); // TODO: Needed?
+
+    // Register new function 
+    const char* scrape_src = R"(
+import yfinance as yf
+
+def get_data(ticker, start_date, end_date):
+    data = yf.download(ticker, start=start_date, end=end_date)
+
+    return data.reset_index().values[1:].tolist()
+)";
+
+    // Run code to define the function
+    PyRun_SimpleString(scrape_src);
+
+    // Get the global dictionary 
+    PyObject* main_module = PyImport_AddModule("__main__");
+    PyObject* global_dict = PyModule_GetDict(main_module);
+
+    // Get the function
+    PyObject* scrape_func = PyDict_GetItemString(global_dict, "get_data");
+
+    if (scrape_func && PyCallable_Check(scrape_func)) {
+        // Prepare args 
+        PyObject* args = PyTuple_Pack(3,
+            PyUnicode_FromString(ticker.c_str()),
+            PyUnicode_FromString(start.c_str()),
+            PyUnicode_FromString(end.c_str()));
+
+        PyObject* result = PyObject_CallObject(scrape_func, args);
+        Py_DECREF(args);
+
+        if (PyList_Check(result)) {
+
+            // Iterate through list and convert to C++ vectors
+            Py_ssize_t num_rows = PyList_Size(result);
+            for (Py_ssize_t i = 0; i < num_rows; i++) {
+                PyObject* row = PyList_GetItem(result, i);
+                if (PyList_Check(row)) {
+                    if (PyList_Size(row) >= 7)  { // Ensure there are enough columns
+                        PyObject* date_obj = PyList_GetItem(row, 0);
+                        PyDateTime_DateTime* date = reinterpret_cast<PyDateTime_DateTime*>(date_obj);
+                        std::tm time = {};
+                        time.tm_year = PyDateTime_GET_YEAR(date) - 1900;
+                        time.tm_mon = PyDateTime_GET_MONTH(date) - 1;
+                        time.tm_mday = PyDateTime_GET_DAY(date);
+                        dates.push_back(std::mktime(&time));
+
+                        opens.push_back(PyFloat_AsDouble(PyList_GetItem(row, 1)));
+                        highs.push_back(PyFloat_AsDouble(PyList_GetItem(row, 2)));
+                        lows.push_back(PyFloat_AsDouble(PyList_GetItem(row, 3)));
+                        closes.push_back(PyFloat_AsDouble(PyList_GetItem(row, 4)));
+                        adjCloses.push_back(PyFloat_AsDouble(PyList_GetItem(row, 5)));
+                        volumes.push_back(PyLong_AsLong(PyList_GetItem(row, 6)));
+                    }
+                }
+            }
+        }
+        Py_DECREF(result);
+    }
+    return 1;
+}
+
 
 /// Plot a line through the given x and y data points..
 ///
