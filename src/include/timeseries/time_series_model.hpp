@@ -25,7 +25,7 @@ protected:
 
 public:
     TimeSeriesModel() = default;
-    ~TimeSeriesModel() = default;
+    virtual ~TimeSeriesModel() = default;
 
     virtual void forecast(int steps) = 0;
     // virtual TimeSeries<double> forecast(std::time_t start) = 0; // Forecast until requested time
@@ -76,7 +76,6 @@ private:
 
 public:
     AR(const TimeSeries<double>& data);
-    ~AR();
 
     void train(int arOrder);
     void forecast(int steps) override;
@@ -94,7 +93,6 @@ private:
 
 public:
     MA(const TimeSeries<double>& data);
-    ~MA();
 
     void train(int maOrder);
     void forecast(int steps) override;
@@ -113,7 +111,6 @@ private:
 
 public:
     ARMA(const TimeSeries<double>& data);
-    ~ARMA();
 
     void train(int arOrder, int maOrder);
     void forecast(int steps) override;

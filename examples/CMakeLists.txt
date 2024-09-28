@@ -9,7 +9,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Add any required packages
 find_package(fmt REQUIRED)
-find_package(CURL REQUIRED)
 find_package(Python3 COMPONENTS Development NumPy)
 
 # Include directories for your project's headers and external libraries
@@ -39,6 +38,6 @@ set(SRC_FILES
 foreach(FILE ${EXAMPLE_FILES})
     get_filename_component(EXAMPLE_NAME ${FILE} NAME_WE)
     add_executable(${EXAMPLE_NAME} ${FILE} ${SRC_FILES})
-    target_link_libraries(${EXAMPLE_NAME} PRIVATE fmt::fmt CURL::libcurl ${Python3_LIBRARIES})
+    target_link_libraries(${EXAMPLE_NAME} PRIVATE fmt::fmt ${Python3_LIBRARIES})
     target_compile_options(${EXAMPLE_NAME} PRIVATE -Wall -Wextra -O2)
 endforeach()

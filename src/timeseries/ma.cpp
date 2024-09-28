@@ -16,8 +16,6 @@ MA::MA(const TimeSeries<double>& data) {
     this->mean = sum / this->count;
 }
 
-MA::~MA() {}
-
 double getNLL(const std::vector<double>& params, const std::vector<double>& data) {
     double mu = params[0];
     size_t count = data.size();

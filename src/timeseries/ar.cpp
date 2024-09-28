@@ -14,8 +14,6 @@ AR::AR(const TimeSeries<double>& data) {
     this->mean = sum / this->count;
 }
 
-AR::~AR() {}
-
 void AR::train(int arOrder) {
     this->arOrder = arOrder;
     std::vector<double> dataVec;
@@ -82,7 +80,7 @@ std::string AR::toString() const {
         tableData = {{"", ""}};
     } else {
         // Trained model 
-        tableData = {{"Mean", fmt::format("{:.4f}", this->mean)}};
+        tableData = {{"Mean", fmt::format("{:.4f}", this->phis[this->arOrder])}};
         for (int i = 0; i < this->arOrder; ++i) {
             tableData.push_back({fmt::format("phi_{}", i + 1), fmt::format("{:.4f}", this->phis[i])});
         }

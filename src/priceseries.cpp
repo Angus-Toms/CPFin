@@ -7,12 +7,45 @@
 #include "overlays/rsi.hpp"
 #include "overlays/sma.hpp"
 
+// Static method that acts as the Python interface
+// PyObject* PriceSeries::fetchData(PyObject* self, PyObject* args) {
+//     PriceSeries instance;  // Create an instance of PriceSeries
+//     instance.fetchDataInternal(); // Call the internal method
+//     Py_RETURN_NONE;  // Return None to indicate success
+// }
+
+// // Method definitions for the Python module
+// static PyMethodDef PriceSeriesMethods[] = {
+//     {"fetchData", (PyCFunction)PriceSeries::fetchData, METH_NOARGS, "Fetch stock data."},
+//     {NULL, NULL, 0, NULL} // Sentinel
+// };
+
+// // Module definition
+// static struct PyModuleDef priceseriesmodule = {
+//     PyModuleDef_HEAD_INIT,
+//     "priceseries",
+//     NULL, // Module documentation
+//     -1,   // Size of per-interpreter state of the module
+//     PriceSeriesMethods
+// };
+
+// // Module initialization function
+// PyMODINIT_FUNC PyInit_priceseries(void) {
+//     PyObject* m;
+//     PyDateTime_IMPORT;  // Ensure the datetime module is imported
+//     m = PyModule_Create(&priceseriesmodule);
+//     if (m == NULL)
+//         return NULL;
+
+//     return m;
+// }
+
 PriceSeries::PriceSeries() = default;
 PriceSeries::~PriceSeries() = default;
 PriceSeries::PriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval)
     : ticker(ticker), start(start), end(end), interval(interval) {
     checkArguments();
-    fetchCSV();
+    fetchData();
 }
 
 void PriceSeries::checkArguments() {
@@ -47,59 +80,101 @@ void PriceSeries::checkArguments() {
     }
 }
 
-void PriceSeries::fetchCSV() {
-    // Call construction
-    std::string url = fmt::format("https://query1.finance.yahoo.com/v7/finance/download/{}?period1={}&period2={}&interval={}",
-                                  ticker, start, end, interval);
+void PriceSeries::fetchData() {
+    // Initialize the Python interpreter
+    Py_Initialize();
 
-    CURL* curl = curl_easy_init();
-    std::string readBuffer;
+    // Import necessary Python modules and setup environment
+    PyObject* sys_path = PySys_GetObject((char*)"path");
+    PyList_Append(sys_path, PyUnicode_FromString("."));  // Add current directory to sys.path
 
-    if (curl) {
-        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallBack);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0");
-        CURLcode res = curl_easy_perform(curl);
-        if (res != CURLE_OK) {
-            std::cerr << "Failed to fetch " << ticker << ": " << curl_easy_strerror(res) << std::endl;
+    // Python script to define the function for downloading stock data
+    const char* python_code = R"(
+import sys
+sys.path.append('../third_party')
+import yfinance as yf
+import pandas as pd
+
+def get_stock_data(ticker, start_date, end_date):
+    # Download the stock data
+    data = yf.download(ticker, start=start_date, end=end_date)
+
+    # Return DataFrame values as a list of lists
+    return data.reset_index().values[1:].tolist()
+)";
+
+    // Execute the Python code to define the function
+    PyRun_SimpleString(python_code);
+
+    // Import the __main__ module and get the global dictionary
+    PyObject* main_module = PyImport_AddModule("__main__");
+    PyObject* global_dict = PyModule_GetDict(main_module);
+
+    // Get the 'get_stock_data' function from the Python code
+    PyObject* get_stock_data_func = PyDict_GetItemString(global_dict, "get_stock_data");
+
+    if (get_stock_data_func && PyCallable_Check(get_stock_data_func)) {
+        // Prepare arguments for the Python function
+        PyObject* args = PyTuple_Pack(3,
+            PyUnicode_FromString(ticker.c_str()),
+            PyUnicode_FromString(epochToDateString(start).c_str()),
+            PyUnicode_FromString(epochToDateString(end).c_str()));
+
+        // Call the Python function and get the result
+        PyObject* result = PyObject_CallObject(get_stock_data_func, args);
+        Py_DECREF(args);
+
+        if (result) {
+            // Ensure the result is a list
+            if (PyList_Check(result)) {
+                // Clear previous data
+                dates.clear();
+                opens.clear();
+                highs.clear();
+                lows.clear();
+                closes.clear();
+                adjCloses.clear();
+                volumes.clear();
+
+                // Iterate through the Python list and convert to C++ vectors
+                Py_ssize_t num_rows = PyList_Size(result);
+                for (Py_ssize_t i = 0; i < num_rows; ++i) {
+                    PyObject* row = PyList_GetItem(result, i);
+                    if (PyList_Check(row)) {
+                        // Ensure there are enough columns
+                        if (PyList_Size(row) >= 7) {
+                            // Get the date as a Timestamp
+                            PyObject* date_obj = PyList_GetItem(row, 0);
+                            PyDateTime_DateTime* date = reinterpret_cast<PyDateTime_DateTime*>(date_obj);
+                            std::tm time = {};
+                            time.tm_year = PyDateTime_GET_YEAR(date) - 1900;
+                            time.tm_mon = PyDateTime_GET_MONTH(date) - 1;
+                            time.tm_mday = PyDateTime_GET_DAY(date);
+                            dates.push_back(std::mktime(&time));
+
+                            // Get other values
+                            opens.push_back(PyFloat_AsDouble(PyList_GetItem(row, 1)));
+                            highs.push_back(PyFloat_AsDouble(PyList_GetItem(row, 2)));
+                            lows.push_back(PyFloat_AsDouble(PyList_GetItem(row, 3)));
+                            closes.push_back(PyFloat_AsDouble(PyList_GetItem(row, 4)));
+                            adjCloses.push_back(PyFloat_AsDouble(PyList_GetItem(row, 5)));
+                            volumes.push_back(PyLong_AsLong(PyList_GetItem(row, 6)));
+                        }
+                    }
+                }
+            }
+            Py_DECREF(result);
+        } else {
+            PyErr_Print();  // Print any error that occurred
         }
-        curl_easy_cleanup(curl);
+    } else {
+        std::cerr << "Failed to retrieve the function or it's not callable." << std::endl;
     }
-    parseCSV(readBuffer);
+
+    // Finalize the Python interpreter
+    Py_Finalize();
 }
 
-void PriceSeries::parseCSV(const std::string& readBuffer) {
-    std::istringstream ss(readBuffer);
-    std::string line;
-
-    bool isFirstLine = true;
-    while (std::getline(ss, line)) {
-        // Skip header line
-        if (isFirstLine) {
-            isFirstLine = false;
-            continue;
-        }
-
-        std::istringstream lineStream(line);
-        std::string dateStr, openStr, highStr, lowStr, closeStr, adjCloseStr, volumeStr;
-        std::getline(lineStream, dateStr, ',');
-        dates.push_back(dateStringToEpoch(dateStr));
-        std::getline(lineStream, openStr, ',');
-        opens.push_back(std::stod(openStr));
-        std::getline(lineStream, highStr, ',');
-        highs.push_back(std::stod(highStr));
-        std::getline(lineStream, lowStr, ',');
-        lows.push_back(std::stod(lowStr));
-        std::getline(lineStream, closeStr, ',');
-        closes.push_back(std::stod(closeStr));
-        std::getline(lineStream, adjCloseStr, ',');
-        adjCloses.push_back(std::stod(adjCloseStr));
-        std::getline(lineStream, volumeStr, ',');
-        volumes.push_back(std::stol(volumeStr));
-        count++;
-    }
-}
 
 void plotLine(const std::vector<std::time_t>& xs, const std::vector<double>& ys) {
     namespace plt = matplotlibcpp;
@@ -382,6 +457,46 @@ const std::shared_ptr<BollingerBands> PriceSeries::getBollingerBands(int period,
 
 const std::shared_ptr<RSI> PriceSeries::getRSI(int period) const {
     return std::make_shared<RSI>(std::make_shared<PriceSeries>(*this), period);
+}
+
+// Time Series Analyses --------------------------------------------------------
+const std::shared_ptr<AR> PriceSeries::getAR(int arOrder) const {
+    // Make data timeseries 
+    TimeSeries<double> data;
+    for (size_t i = 0; i < closes.size(); ++i) {
+        data[dates[i]] = closes[i];
+    }
+
+    AR ar(data);
+    ar.train(arOrder);
+
+    return std::make_shared<AR>(ar);
+}
+
+const std::shared_ptr<MA> PriceSeries::getMA(int maOrder) const {
+    // Make data timeseries 
+    TimeSeries<double> data;
+    for (size_t i = 0; i < closes.size(); ++i) {
+        data[dates[i]] = closes[i];
+    }
+
+    MA ma(data);
+    ma.train(maOrder);
+
+    return std::make_shared<MA>(ma);
+}
+
+const std::shared_ptr<ARMA> PriceSeries::getARMA(int arOrder, int maOrder) const {
+    // Make data timeseries 
+    TimeSeries<double> data;
+    for (size_t i = 0; i < closes.size(); ++i) {
+        data[dates[i]] = closes[i];
+    }
+
+    ARMA arma(data);
+    arma.train(arOrder, maOrder);
+
+    return std::make_shared<ARMA>(arma);
 }
 
 // Exports ---------------------------------------------------------------------

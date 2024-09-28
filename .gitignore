@@ -37,3 +37,6 @@
 
 # CMake files
 build/
+
+# Benchmark data files
+test/benchmarks/*.txt

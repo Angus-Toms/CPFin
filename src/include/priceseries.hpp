@@ -3,17 +3,20 @@
 #ifndef PRICESERIES_HPP
 #define PRICESERIES_HPP
 
+#include <Python.h>
+#include <datetime.h>
+
 #include <fstream>
 #include <string>
 #include <sstream>
 #include <thread>
 #include <map>
-#include <curl/curl.h>
 #include <memory>
 
 #include "types.hpp"
 #include "time_utils.hpp"
 #include "print_utils.hpp"
+#include "timeseries/time_series_model.hpp"
 
 #include "../../third_party/matplotlibcpp.h"
 
@@ -48,18 +51,15 @@ private:
     // Private constructor
     PriceSeries(const std::string& ticker, const std::time_t start, const std::time_t end, const std::string& interval);
 
-    static size_t writeCallBack(void* contents, size_t size, size_t nmemb, void* userp) {
-        ((std::string*)userp)->append((char*)contents, size * nmemb);
-        return size * nmemb;
-    }
     void checkArguments();
-    void fetchCSV();
-    void parseCSV(const std::string& readBuffer);
+    void fetchData();
 
 public:
     PriceSeries();
     ~PriceSeries();
     
+    // static PyObject* fetchData(PyObject* self, PyObject* args);
+
     void plot(const std::string& type = "line", const bool includeVolume = false, const std::string& savePath = "") const;
     std::vector<std::vector<std::string>> getTableData() const;
     std::string toString(bool includeOverlays = false, bool changeHighlighting = true) const;
@@ -98,6 +98,11 @@ public:
     const std::shared_ptr<MACD> getMACD(int aPeriod = 12, int bPeriod = 26, int cPeriod = 9) const;
     const std::shared_ptr<BollingerBands> getBollingerBands(int period = 20, double numStdDev = 2, MovingAverageType maType = MovingAverageType::SMA) const;
     const std::shared_ptr<RSI> getRSI(int period = 14) const;
+
+    // Time Series Analyses ----------------------------------------------------
+    const std::shared_ptr<AR> getAR(int arOrder) const;
+    const std::shared_ptr<MA> getMA(int maOrder) const;
+    const std::shared_ptr<ARMA> getARMA(int arOrder, int maOrder) const;
 
     // Exports -----------------------------------------------------------------
     void exportCSV(const std::string& filename = "", const char delimiter = ',', const bool includeOverlays = true) const;

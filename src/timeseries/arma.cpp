@@ -16,8 +16,6 @@ ARMA::ARMA(const TimeSeries<double>& data) {
     this->maOrder = -1;
 }
 
-ARMA::~ARMA() {}
-
 double getArmaNLL(const std::vector<double>& params, const std::vector<double>& data, int p, int q) {
     std::vector<double> arCoeffs(params.begin(), params.begin() + 1 + p);
     std::vector<double> maCoeffs(params.begin() + p, params.begin() + p + q);

@@ -11,7 +11,6 @@ enable_testing()
 
 # Add the fmt and curl packages
 find_package(fmt REQUIRED)
-find_package(CURL REQUIRED)
 find_package(Python3 COMPONENTS Development NumPy)
 
 # Add GoogleTest
@@ -52,7 +51,6 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     GTest::gtest_main
     fmt::fmt
-    CURL::libcurl
     ${Python3_LIBRARIES}
 )
 
