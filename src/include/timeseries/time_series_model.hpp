@@ -18,6 +18,10 @@
 
 class TimeSeriesModel {
 protected:
+    double mse;
+    double rmse;
+    double mae;
+
     std::string name;
     TimeSeries<double> data;
     TimeSeries<double> forecasted;
@@ -51,9 +55,8 @@ public:
         plt::named_plot("Forecasted", forecastedXs, forecastedYs, "r");
 
         plt::xlabel("Date");
-        plt::ylabel("Value");
+        plt::ylabel("Price ($)");
         plt::title(name);
-
 
         const auto& [ticks, labels] = forecastedXs.size() == 0 ? 
             getTicks(dataXs.front(), dataXs.back(), 6) : 

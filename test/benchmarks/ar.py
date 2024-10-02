@@ -8,17 +8,20 @@ from time import perf_counter
 
 def writeARTestData(order: int, count: int, fname: str) -> None:
     ar_params = np.random.normal(0, 0.15, size=order)
+    print(f"AR Params: {ar_params}")
 
     # First p values are random
     vals = [x for x in np.random.rand(order)]
 
     # Later values then generated as AR process 
     for i in range(order, count):
-        val = 0 # Assume 0 mean for now 
+        val = 7 # Assume 0 mean for now 
         for j in range(order):
             val += ar_params[j] * vals[i-j-1]
 
         vals.append(val + np.random.normal(0, 0.05))
+
+    print(vals)
 
     # Write to file 
     with open(fname, 'w') as f:
@@ -51,5 +54,4 @@ def testARModel(order: int, fname: str) -> None:
     print(f"MSE: {mse}")
 
 
-writeARTestData(1, 1000, "ar_data.txt")
-testARModel(1, "ar_data.txt")
+writeARTestData(5, 100, "ar_data.txt")
