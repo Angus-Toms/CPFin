@@ -8,48 +8,40 @@ MA::MA(const TimeSeries<double>& data) {
     // Mark model as untrained 
     this->maOrder = -1;
 
-    // Calculate mean
-    double sum = 0.0;
-    for (const auto& [date, value] : data) {
-        sum += value;
-    }
-    this->mean = sum / this->count;
+    this->mse = 0.0;
+    this->rmse = 0.0;
+    this->mae = 0.0;
 }
 
 double getNLL(const std::vector<double>& params, const std::vector<double>& data) {
-    double mu = params[0];
+    double mu = params[0]; 
     size_t count = data.size();
     std::vector<double> maParams(params.begin() + 1, params.end());
-    int k = maParams.size()-1;
+    size_t k = maParams.size(); 
     std::vector<double> residuals(count, 0.0);
     double sumResidualsSq = 0.0;
 
-    // Get residuals for first k points
+    // Get residuals for the first k points (no MA effect for the initial points)
     for (size_t i = 0; i < k; ++i) {
-        residuals[i] = data[i] - mu;  // Assuming no MA effect for initial points
+        residuals[i] = data[i] - mu;  // Simple difference for initial residuals
         sumResidualsSq += residuals[i] * residuals[i];
     }
 
-    // Loop through the data to calculate residuals for the rest of the points
-    for (int i = k; i < count; ++i) {
-        double prediction = mu;
-
-        // Use past residuals in the MA part
-        for (int j = 0; j < k; ++j) {
-            prediction += maParams[j] * residuals[i - j - 1];
+    // Calculate residuals for the rest of the data using MA model
+    for (size_t i = k; i < count; ++i) {
+        double prediction = mu; 
+        for (size_t j = 0; j < k; ++j) {
+            prediction += maParams[j] * residuals[i - j - 1]; 
         }
-
-        // Calculate residual for the current time step
         residuals[i] = data[i] - prediction;
         sumResidualsSq += residuals[i] * residuals[i];
     }
 
-    // Estimate variance
-    double sigmaSq = sumResidualsSq / (count - k);
+    // Estimate variance from the residuals
+    double sigmaSq = sumResidualsSq / count; 
 
-    // Calculate Negative Log Likelihood (NLL)
-    double nll = 0.5 * count * std::log(2 * M_PI * sigmaSq) + (0.5 / sigmaSq) * sumResidualsSq;
-    return nll;
+    // Compute NLL
+    return 0.5 * count * std::log(2 * M_PI * sigmaSq) + (0.5 / sigmaSq) * sumResidualsSq;
 }
 
 
@@ -63,17 +55,19 @@ void MA::train(int maOrder) {
     this->maOrder = maOrder;
 
     nlopt::opt optimizer(nlopt::LN_COBYLA, maOrder+1);
-    optimizer.set_xtol_rel(1e-6);
-    optimizer.set_maxeval(10000);
-
-    std::vector<double> x(maOrder+1, 0.0);
-    double minNLL;
+    optimizer.set_xtol_rel(1e-7);
+    optimizer.set_maxeval(20000);
 
     // Get price vector
     std::vector<double> dataVec;
     for (const auto& [date, value] : this->data) {
         dataVec.push_back(value);
     }
+
+    double sampleMean = std::accumulate(dataVec.begin(), dataVec.end(), 0.0) / dataVec.size();
+    std::vector<double> x(maOrder+1, 0.1);
+    x[0] = sampleMean;  // Initialize mean parameter with sample mean
+    double minNLL;
 
     try {
         optimizer.set_min_objective(objFunction, &dataVec);
@@ -89,14 +83,30 @@ void MA::train(int maOrder) {
         this->thetas.push_back(x[i]);
     }
 
+    // Get accuracy metrics 
+    Eigen::VectorXd labels(this->count - maOrder);
+    Eigen::VectorXd predictions(this->count - maOrder);
+    for (size_t i = maOrder; i < this->count; ++i) {
+        labels(i - maOrder) = dataVec[i];
+        double prediction = this->mean;
+        for (int j = 0; j < maOrder; ++j) {
+            prediction += this->thetas[j] * dataVec[i - j - 1];
+        }
+        predictions(i - maOrder) = prediction;
+    }
+    this->mse = (labels - predictions).squaredNorm() / (this->count - maOrder);
+    this->rmse = std::sqrt(this->mse);
+    this->mae = (labels - predictions).cwiseAbs().sum() / (this->count - maOrder);
+
     // Set new name 
     this->name = fmt::format("MA({}) Model", maOrder);
 }
 
 void MA::forecast(int steps) {
+    this->forecasted.clear();
     int k = this->maOrder;
 
-    std::time_t startDate = this->data.end()->first;
+    std::time_t startDate = this->data.rbegin()->first + intervalToSeconds("1d");
     // Construct data vector
     std::vector<double> dataVec;
     for (const auto& [date, value] : this->data) {
@@ -106,7 +116,7 @@ void MA::forecast(int steps) {
     // Get residuals for current learnt parameters 
     std::vector<double> residuals(this->count);
     // Compute residuals for initial data
-    for (int i = k; i < this->count; ++i) {
+    for (size_t i = k; i < this->count; ++i) {
         double prediction = this->mean;
 
         // Weighted sum of MA terms
@@ -133,22 +143,28 @@ std::vector<double> MA::getThetas() const {
 }
 
 std::string MA::toString() const {
-    std::vector<std::vector<std::string>> tableData;
-    if (this->maOrder == -1) {
-        // Untrained model
-        tableData = {{"", ""}};
-    } else {
-        // Trained model
-        for (int i = 0; i < this->maOrder; ++i) {
-            tableData.push_back({fmt::format("theta_{}", i+1), fmt::format("{:.4f}", this->thetas[i])});
-        }
+    auto columnWidths = {12, 12};
+    int totalWidth = std::accumulate(columnWidths.begin(), columnWidths.end(), 0) + columnWidths.size() - 1;
+    auto justifications = {Justification::LEFT, Justification::RIGHT};
+    auto colors = {Color::WHITE, Color::WHITE};
+
+    // Title 
+    auto table = getTopLine({totalWidth});
+    table += getRow({this->name}, {totalWidth}, {Justification::CENTER}, {Color::WHITE});
+
+    // Params
+    table += getMidLine({columnWidths}, Ticks::LOWER);
+    table += getRow({"Mean", fmt::format("{:.4f}", this->mean)}, columnWidths, justifications, colors);
+    for (int i = 0; i < this->maOrder; ++i) {
+        table += getRow({fmt::format("theta_{}", i + 1), fmt::format("{:.4f}", this->thetas[i])}, columnWidths, justifications, colors);
     }
 
-    return getTable(
-        this->name,
-        tableData,
-        {12, 12},
-        {"Parameter", "Value"},
-        false
-    );
+    // Metrics 
+    table += getMidLine({columnWidths}, Ticks::BOTH);
+    table += getRow({"MSE", fmt::format("{:.4f}", this->mse)}, columnWidths, justifications, colors);
+    table += getRow({"RMSE", fmt::format("{:.4f}", this->rmse)}, columnWidths, justifications, colors);
+    table += getRow({"MAE", fmt::format("{:.4f}", this->mae)}, columnWidths, justifications, colors);
+    table += getBottomLine(columnWidths);
+
+    return table;
 }

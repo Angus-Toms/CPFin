@@ -6,11 +6,9 @@ AR::AR(const TimeSeries<double>& data) {
     this->arOrder = -1; // Mark model as untrained
     this->name = "AR Model (Untrained)";
 
-    double sum = 0;
-    for (const auto& [date, value] : this->data) {
-        sum += value;
-    }
-    this->mean = sum / this->count;
+    this->mse = 0.0;
+    this->rmse = 0.0;
+    this->mae = 0.0;
 }
 
 void AR::train(int arOrder) {
