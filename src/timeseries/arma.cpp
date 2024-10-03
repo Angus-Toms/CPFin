@@ -21,8 +21,9 @@ ARMA::ARMA(const TimeSeries<double>& data) {
 }
 
 double getArmaNLL(const std::vector<double>& params, const std::vector<double>& data, int p, int q) {
-    std::vector<double> arCoeffs(params.begin(), params.begin() + 1 + p);
-    std::vector<double> maCoeffs(params.begin() + p, params.begin() + p + q);
+    double mu = params[0];
+    std::vector<double> arCoeffs(params.begin() + 1, params.begin() + p + 2);
+    std::vector<double> maCoeffs(params.begin() + p + 1, params.begin() + p + q + 1);
 
     size_t count = data.size();
     std::vector<double> residuals(count, 0.0);
@@ -43,7 +44,7 @@ double getArmaNLL(const std::vector<double>& params, const std::vector<double>& 
             maPart += maCoeffs[i] * residuals[t - 1 - i];
         }
 
-        residuals[t] = data[t] - arPart - maPart;
+        residuals[t] = data[t] - arPart - maPart - mu;
         sumResidualsSq += residuals[t] * residuals[t];
     }
 
@@ -62,19 +63,21 @@ void ARMA::train(int arOrder, int maOrder) {
     this->arOrder = arOrder;
     this->maOrder = maOrder;
 
-    int paramCount = arOrder + maOrder; // Include AR and MA params
+    int paramCount = arOrder + maOrder + 1; // Include AR, MA params and mean
     nlopt::opt optimizer(nlopt::LN_COBYLA, paramCount);
     optimizer.set_xtol_rel(1e-6);
     optimizer.set_maxeval(10000);
-
-    std::vector<double> x(paramCount, 0.0);
-    double minNLL;
 
     // Construct data vector
     std::vector<double> dataVec;
     for (const auto& [date, value] : this->data) {
         dataVec.push_back(value);
     }
+
+    // Set initial mean param to empirical mean
+    std::vector<double> x(paramCount, 0.1);
+    x[0] = std::accumulate(dataVec.begin(), dataVec.end(), 0.0) / dataVec.size();
+    double minNLL;
 
     try {
         // Data wrapper to pass model order to objective function
@@ -86,12 +89,13 @@ void ARMA::train(int arOrder, int maOrder) {
     }
 
     // Save learnt parameters
+    this->mean = x[0];
     this->phis.clear();
-    for (int i = 0; i < this->arOrder; ++i) {
+    for (int i = 1; i < this->arOrder+1; ++i) {
         this->phis.push_back(x[i]);
     }
     this->thetas.clear();
-    for (int i = 0; i < this->maOrder; ++i) {
+    for (int i = 1; i < this->maOrder+1; ++i) {
         this->thetas.push_back(x[i+this->arOrder]);
     }
 
@@ -99,24 +103,28 @@ void ARMA::train(int arOrder, int maOrder) {
     this->name = fmt::format("ARMA({}, {}) Model", arOrder, maOrder);
 
     // Set metrics 
+    // First maOrder residuals are 0
+    std::vector<double> residuals(this->maOrder, 0.0);
+
+    // Make predictions on training data
     Eigen::VectorXd labels(this->count - std::max(arOrder, maOrder));
     Eigen::VectorXd predictions(this->count - std::max(arOrder, maOrder));
     for (size_t i = std::max(arOrder, maOrder); i < this->count; ++i) {
         labels(i - std::max(arOrder, maOrder)) = dataVec[i];
-        double prediction = 0.0;
+        double prediction = this->mean;
         for (int j = 0; j < arOrder; ++j) {
             prediction += this->phis[j] * dataVec[i - j - 1];
         }
         for (int j = 0; j < maOrder; ++j) {
-            prediction += this->thetas[j] * dataVec[i - j - 1];
+            prediction += this->thetas[j] * residuals[i - j - 1];
         }
         predictions(i - std::max(arOrder, maOrder)) = prediction;
+        residuals.push_back(dataVec[i] - prediction);
     }
 
     this->mse = (labels - predictions).squaredNorm() / (this->count - std::max(arOrder, maOrder));
     this->rmse = std::sqrt(this->mse);
     this->mae = (labels - predictions).cwiseAbs().sum() / (this->count - std::max(arOrder, maOrder));
-
 }
 
 void ARMA::forecast(int steps) {
@@ -151,16 +159,17 @@ void ARMA::forecast(int steps) {
             maPart += this->thetas[i] * residuals[t - i - 1];
         }
 
-        residuals[t] = dataVec[t] - arPart - maPart;
+        double prediction = arPart + maPart + this->mean;
+        residuals[t] = dataVec[t] - prediction;
     }
 
     // Forecast future values
     for (int i = 0; i < steps; ++i) {
-        double forecast = 0.0;
+        double forecast = this->mean;
         double arPart = 0.0;
         double maPart = 0.0;
 
-        // AR part: Use past data or forecasted values
+        // AR part
         for (int j = 0; j < p; ++j) {
             arPart += this->phis[j] * dataVec[count + i - j - 1]; 
         }
@@ -171,7 +180,7 @@ void ARMA::forecast(int steps) {
             maPart += this->thetas[k] * residuals[count + i - k - 1]; 
         }
 
-        forecast = arPart + maPart;
+        forecast += (arPart + maPart);
         this->forecasted[startDate] = forecast;
         startDate += intervalToSeconds("1d");
         dataVec.push_back(forecast);
@@ -199,6 +208,7 @@ std::string ARMA::toString() const {
 
     // Params
     table += getMidLine({columnWidths}, Ticks::LOWER);
+    table += getRow({"Mean", fmt::format("{:.4f}", this->mean)}, columnWidths, justifications, colors);
     for (int i = 0; i < this->arOrder; ++i) {
         table += getRow({fmt::format("phi_{}", i + 1), fmt::format("{:.4f}", this->phis[i])}, columnWidths, justifications, colors);
     }

@@ -45,7 +45,9 @@ public:
         }
 
         std::vector<std::time_t> forecastedXs;
+        forecastedXs.push_back(data.rbegin()->first);
         std::vector<double> forecastedYs;
+        forecastedYs.push_back(data.rbegin()->second);
         for (const auto& [date, value] : forecasted) {
             forecastedXs.push_back(date);
             forecastedYs.push_back(value);
@@ -114,6 +116,7 @@ private:
     int maOrder;
     std::vector<double> phis; // AR coefficients
     std::vector<double> thetas; // MA coefficients
+    double mean;
 
 public:
     ARMA(const TimeSeries<double>& data);
