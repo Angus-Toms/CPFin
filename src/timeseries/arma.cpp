@@ -14,6 +14,10 @@ ARMA::ARMA(const TimeSeries<double>& data) {
     // Mark model as untrained
     this->arOrder = -1;
     this->maOrder = -1;
+
+    this->mse = 0;
+    this->rmse = 0;
+    this->mae = 0;
 }
 
 double getArmaNLL(const std::vector<double>& params, const std::vector<double>& data, int p, int q) {
@@ -93,25 +97,46 @@ void ARMA::train(int arOrder, int maOrder) {
 
     // Set new name
     this->name = fmt::format("ARMA({}, {}) Model", arOrder, maOrder);
+
+    // Set metrics 
+    Eigen::VectorXd labels(this->count - std::max(arOrder, maOrder));
+    Eigen::VectorXd predictions(this->count - std::max(arOrder, maOrder));
+    for (size_t i = std::max(arOrder, maOrder); i < this->count; ++i) {
+        labels(i - std::max(arOrder, maOrder)) = dataVec[i];
+        double prediction = 0.0;
+        for (int j = 0; j < arOrder; ++j) {
+            prediction += this->phis[j] * dataVec[i - j - 1];
+        }
+        for (int j = 0; j < maOrder; ++j) {
+            prediction += this->thetas[j] * dataVec[i - j - 1];
+        }
+        predictions(i - std::max(arOrder, maOrder)) = prediction;
+    }
+
+    this->mse = (labels - predictions).squaredNorm() / (this->count - std::max(arOrder, maOrder));
+    this->rmse = std::sqrt(this->mse);
+    this->mae = (labels - predictions).cwiseAbs().sum() / (this->count - std::max(arOrder, maOrder));
+
 }
 
 void ARMA::forecast(int steps) {
+    this->forecasted.clear();
     int p = this->arOrder;
     int q = this->maOrder;
     size_t count = this->count;
+
     std::vector<double> residuals(count);
 
-    // Starting date for predictions 
-    std::time_t startDate = this->data.end()->first;
+    // Starting date for predictions
+    std::time_t startDate = this->data.rbegin()->first + intervalToSeconds("1d");
 
-    // Construct data vector
+    // Construct data vector from historical data
     std::vector<double> dataVec;
     for (const auto& [date, value] : this->data) {
         dataVec.push_back(value);
     }
 
-
-    // Get residuals for current learnt parameters
+    // Get residuals for current learned parameters
     for (int t = std::max(p, q); t < count; ++t) {
         double arPart = 0.0;
         double maPart = 0.0;
@@ -135,28 +160,24 @@ void ARMA::forecast(int steps) {
         double arPart = 0.0;
         double maPart = 0.0;
 
-        // AR part, conditionally use past data or forecasted values
+        // AR part: Use past data or forecasted values
         for (int j = 0; j < p; ++j) {
-            double dataPoint = i + j < p ?
-                dataVec[count - p + i + j] :
-                forecasted[i - p + j];
-            arPart += this->phis[j] * dataPoint;
+            arPart += this->phis[j] * dataVec[count + i - j - 1]; 
         }
 
-        // MA part, use past residuals, assume 0 for future prediction residuals
-        for (int j = 0; j < q; ++j) {
-            double residual = i + j < q ? 
-                residuals[count - q + i + j] :
-                0.0;
-            maPart += this->thetas[j] * residual;
+        // MA part: Bootstrap residuals from past residuals
+        double sampledResidual = residuals[rand() % count];
+        for (int k = 0; k < q; ++k) {
+            maPart += this->thetas[k] * residuals[count + i - k - 1]; 
         }
 
         forecast = arPart + maPart;
         this->forecasted[startDate] = forecast;
         startDate += intervalToSeconds("1d");
+        dataVec.push_back(forecast);
+        residuals.push_back(sampledResidual);
     }
 }
-
 
 std::vector<double> ARMA::getPhis() const {
     return this->phis;
@@ -167,25 +188,30 @@ std::vector<double> ARMA::getThetas() const {
 }
 
 std::string ARMA::toString() const {
-    std::vector<std::vector<std::string>> tableData;
-    if (this->arOrder == -1 || this->maOrder == -1) {
-        // Untrained model 
-        tableData = {{"", ""}};
-    } else {
-        // Trained model
-        for (int i = 0; i < this->arOrder; ++i) {
-            tableData.push_back({fmt::format("phi_{}", i + 1), fmt::format("{:.4f}", this->phis[i])});
-        }
-        for (int i = 0; i < this->maOrder; ++i) {
-            tableData.push_back({fmt::format("theta_{}", i + 1), fmt::format("{:.4f}", this->thetas[i])});
-        }
+    auto columnWidths = {12, 12};
+    int totalWidth = std::accumulate(columnWidths.begin(), columnWidths.end(), 0) + columnWidths.size() - 1;
+    auto justifications = {Justification::LEFT, Justification::RIGHT};
+    auto colors = {Color::WHITE, Color::WHITE};
+
+    // Title
+    auto table = getTopLine({totalWidth});
+    table += getRow({this->name}, {totalWidth}, {Justification::CENTER}, {Color::WHITE});
+
+    // Params
+    table += getMidLine({columnWidths}, Ticks::LOWER);
+    for (int i = 0; i < this->arOrder; ++i) {
+        table += getRow({fmt::format("phi_{}", i + 1), fmt::format("{:.4f}", this->phis[i])}, columnWidths, justifications, colors);
+    }
+    for (int i = 0; i < this->maOrder; ++i) {
+        table += getRow({fmt::format("theta_{}", i + 1), fmt::format("{:.4f}", this->thetas[i])}, columnWidths, justifications, colors);
     }
 
-    return getTable(
-        this->name,
-        tableData,
-        {12, 12},
-        {"Parameter", "Value"},
-        false
-    );
+    // Metrics
+    table += getMidLine({columnWidths}, Ticks::BOTH);
+    table += getRow({"MSE", fmt::format("{:.4f}", this->mse)}, columnWidths, justifications, colors);
+    table += getRow({"RMSE", fmt::format("{:.4f}", this->rmse)}, columnWidths, justifications, colors);
+    table += getRow({"MAE", fmt::format("{:.4f}", this->mae)}, columnWidths, justifications, colors);
+    table += getBottomLine(columnWidths);
+
+    return table;
 }

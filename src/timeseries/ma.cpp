@@ -107,15 +107,14 @@ void MA::forecast(int steps) {
     int k = this->maOrder;
 
     std::time_t startDate = this->data.rbegin()->first + intervalToSeconds("1d");
-    // Construct data vector
+
     std::vector<double> dataVec;
     for (const auto& [date, value] : this->data) {
         dataVec.push_back(value);
     }
 
-    // Get residuals for current learnt parameters 
+    // Get residuals for current learnt parameters
     std::vector<double> residuals(this->count);
-    // Compute residuals for initial data
     for (size_t i = k; i < this->count; ++i) {
         double prediction = this->mean;
 
@@ -129,14 +128,20 @@ void MA::forecast(int steps) {
     // Forecast future values
     for (int i = 0; i < steps; ++i) {
         double forecast = this->mean;
+        
+        // Sample a residual from the past residuals (bootstrapping)
+        double sampledResidual = residuals[rand() % this->count];
         for (int j = 0; j < k; ++j) {
             forecast += this->thetas[j] * residuals[this->count - k + i + j];
         }
+
+        forecast += sampledResidual;
         this->forecasted[startDate] = forecast;
         startDate += intervalToSeconds("1d");
-        residuals.push_back(0.0); // Assume residuals are 0 for future values
+        residuals.push_back(sampledResidual);
     }
 }
+
 
 std::vector<double> MA::getThetas() const {
     return this->thetas;
