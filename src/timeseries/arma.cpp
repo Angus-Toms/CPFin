@@ -1,4 +1,4 @@
-#include "timeseries/time_series_model.hpp"
+#include "timeseries/timeseries_models.hpp"
 
 struct ARMAData {
     std::vector<double> data;
@@ -109,15 +109,6 @@ void ARMA::train(int arOrder, int maOrder) {
     for (int i = 0; i < maOrder; ++i) {
         residuals.push_back(dataVec[i] - this->c);
     }
-    std::cout << "First residuals:\n";
-    for (const auto& r : residuals) {
-        std::cout << r << "\n";
-    }
-
-    std::cout << "Data vector:\n";
-    for (const auto& d : dataVec) {
-        std::cout << d << "\n";
-    }
 
     // Make predictions on training data
     Eigen::VectorXd labels(this->count - std::max(arOrder, maOrder));
@@ -126,11 +117,9 @@ void ARMA::train(int arOrder, int maOrder) {
         labels(i - std::max(arOrder, maOrder)) = dataVec[i];
         double prediction = this->c;
         for (int j = 0; j < arOrder; ++j) {
-            std::cout << "Adding MA datapoint: " << dataVec[dataVec.size() - j - 1] << " with weight: " << this->phis[j] << "\n";
             prediction += this->phis[j] * dataVec[dataVec.size() - j - 1];
         }
         for (int j = 0; j < maOrder; ++j) {
-            std::cout << "Adding residual " << residuals[residuals.size() - j - 1] << " with weight: " << this->thetas[j] << "\n";
             prediction += this->thetas[j] * residuals[residuals.size() - j - 1];
         }
         predictions(i - std::max(arOrder, maOrder)) = prediction;

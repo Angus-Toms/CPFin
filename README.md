@@ -35,6 +35,7 @@ Clone the project with the following command:
 git clone https://github.com/Angus-Toms/CPFin
 ```
 ### Prerequisites
+We are trying to minimise the number of dependencies required. Most are shipped with CPFin in the `third_party` dir. The current distribution does require working distributions of the fmt and NLOpt libraries as well as Python3.
 
 ## Testing 
 To run tests, navigate to the root directory, and call:

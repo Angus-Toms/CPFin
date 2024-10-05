@@ -33,4 +33,4 @@ run_timeseries: timeseries
 clean:
 	rm -rf $(BUILD_DIR)
 
-.PHONY: all clean $(EXAMPLES) run_basic run_overlays run_plots
+.PHONY: all clean $(EXAMPLES) run_basic run_overlays run_plots run_timeseries

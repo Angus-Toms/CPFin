@@ -1,4 +1,4 @@
-#include "timeseries/time_series_model.hpp"
+#include "timeseries/timeseries_models.hpp"
 
 MA::MA(const TimeSeries<double>& data) {
     this->data = data;

@@ -5,9 +5,9 @@ int main() {
     const auto ps = PriceSeries::getPriceSeries(
         "AAPL",         // Ticker symbol
         "2020-01-01",   // Start date
-        "2020-01-31",   // End date
+        "2020-03-31",   // End date
         "1d"            // Interval
-    );
+    );  
 
     // Add overlays 
     ps->addSMA();

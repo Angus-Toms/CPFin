@@ -51,6 +51,7 @@ void PriceSeries::fetchData() {
     namespace plt = matplotlibcpp;
     plt::scrape(ticker, epochToDateString(start), epochToDateString(end),
                 dates, opens, highs, lows, closes, adjCloses, volumes);
+    count = dates.size();
 }
 
 void plotLine(const std::vector<std::time_t>& xs, const std::vector<double>& ys) {
@@ -187,7 +188,6 @@ void PriceSeries::plot(const std::string& type, const bool includeVolume, const 
     } else {
         plt::show();
     }
-
 }
 
 std::vector<std::vector<std::string>> PriceSeries::getTableData() const {

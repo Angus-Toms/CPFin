@@ -1,7 +1,7 @@
 #include "priceseries.hpp"
 
 int main() {
-    const auto ps = PriceSeries::getPriceSeries("AAPL", "2020-01-01", "2020-03-31", "1d");
+    const auto ps = PriceSeries::getPriceSeries("AAPL", "2020-01-01", "2020-06-31", "1d");
 
     // Simple Moving Average 
     ps->addSMA();   // SMA with default period of 20 

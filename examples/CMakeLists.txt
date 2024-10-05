@@ -10,11 +10,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Add any required packages
 find_package(fmt REQUIRED)
 find_package(Python3 COMPONENTS Development NumPy)
+find_package(NLOPT REQUIRED)
 
 # Include directories for your project's headers and external libraries
 include_directories(../src/include)
 include_directories(${Python3_INCLUDE_DIRS})
 include_directories(${Python3_NumPy_INCLUDE_DIRS})
+include_directories(${NLOPT_INCLUDE_DIRS})
 
 # Find all source files in the examples directory
 set(EXAMPLE_FILES
@@ -33,12 +35,15 @@ set(SRC_FILES
     ../src/overlays/sma.cpp
     ../src/overlays/macd.cpp
     ../src/overlays/rsi.cpp
+    ../src/timeseries/ar.cpp
+    ../src/timeseries/ma.cpp
+    ../src/timeseries/arma.cpp
 )
 
 # Add an executable for each example source file
 foreach(FILE ${EXAMPLE_FILES})
     get_filename_component(EXAMPLE_NAME ${FILE} NAME_WE)
     add_executable(${EXAMPLE_NAME} ${FILE} ${SRC_FILES})
-    target_link_libraries(${EXAMPLE_NAME} PRIVATE fmt::fmt ${Python3_LIBRARIES})
+    target_link_libraries(${EXAMPLE_NAME} PRIVATE fmt::fmt ${Python3_LIBRARIES} ${NLOPT_LIBRARIES})
     target_compile_options(${EXAMPLE_NAME} PRIVATE -Wall -Wextra -O2)
 endforeach()

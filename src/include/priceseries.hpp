@@ -16,7 +16,7 @@
 #include "types.hpp"
 #include "time_utils.hpp"
 #include "print_utils.hpp"
-#include "timeseries/time_series_model.hpp"
+#include "timeseries/timeseries_models.hpp"
 
 #include "../../third_party/matplotlibcpp.h"
 
