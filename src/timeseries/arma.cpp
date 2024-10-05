@@ -15,12 +15,14 @@ ARMA::ARMA(const TimeSeries<double>& data) {
     this->arOrder = -1;
     this->maOrder = -1;
 
+    this->c = 0;
+
     this->mse = 0;
     this->rmse = 0;
     this->mae = 0;
 }
 
-double getArmaNLL(const std::vector<double>& params, const std::vector<double>& data, int p, int q) {
+double getNLLARMA(const std::vector<double>& params, const std::vector<double>& data, int p, int q) {
     double mu = params[0];
     std::vector<double> arCoeffs(params.begin() + 1, params.begin() + p + 2);
     std::vector<double> maCoeffs(params.begin() + p + 1, params.begin() + p + q + 1);
@@ -53,10 +55,9 @@ double getArmaNLL(const std::vector<double>& params, const std::vector<double>& 
     return nll;
 }
 
-
-double objFunctionArma(const std::vector<double>& x, std::vector<double>& grad, void *data) {
+double objFunctionARMA(const std::vector<double>& x, std::vector<double>& grad, void *data) {
     ARMAData* modelData = static_cast<ARMAData*>(data);
-    return getArmaNLL(x, modelData->data, modelData->p, modelData->q);
+    return getNLLARMA(x, modelData->data, modelData->p, modelData->q);
 }
 
 void ARMA::train(int arOrder, int maOrder) {
@@ -82,14 +83,14 @@ void ARMA::train(int arOrder, int maOrder) {
     try {
         // Data wrapper to pass model order to objective function
         ARMAData armaData = {dataVec, arOrder, maOrder};
-        optimizer.set_min_objective(objFunctionArma, &armaData);
+        optimizer.set_min_objective(objFunctionARMA, &armaData);
         optimizer.optimize(x, minNLL);
     } catch (const std::exception &e) {
         std::cerr << "nlopt failed: " << e.what() << std::endl;
     }
 
     // Save learnt parameters
-    this->mean = x[0];
+    this->c = x[0];
     this->phis.clear();
     for (int i = 1; i < this->arOrder+1; ++i) {
         this->phis.push_back(x[i]);
@@ -103,22 +104,37 @@ void ARMA::train(int arOrder, int maOrder) {
     this->name = fmt::format("ARMA({}, {}) Model", arOrder, maOrder);
 
     // Set metrics 
-    // First maOrder residuals are 0
-    std::vector<double> residuals(this->maOrder, 0.0);
+    // First maOrder residuals are simple
+    std::vector<double> residuals;
+    for (int i = 0; i < maOrder; ++i) {
+        residuals.push_back(dataVec[i] - this->c);
+    }
+    std::cout << "First residuals:\n";
+    for (const auto& r : residuals) {
+        std::cout << r << "\n";
+    }
+
+    std::cout << "Data vector:\n";
+    for (const auto& d : dataVec) {
+        std::cout << d << "\n";
+    }
 
     // Make predictions on training data
     Eigen::VectorXd labels(this->count - std::max(arOrder, maOrder));
     Eigen::VectorXd predictions(this->count - std::max(arOrder, maOrder));
     for (size_t i = std::max(arOrder, maOrder); i < this->count; ++i) {
         labels(i - std::max(arOrder, maOrder)) = dataVec[i];
-        double prediction = this->mean;
+        double prediction = this->c;
         for (int j = 0; j < arOrder; ++j) {
-            prediction += this->phis[j] * dataVec[i - j - 1];
+            std::cout << "Adding MA datapoint: " << dataVec[dataVec.size() - j - 1] << " with weight: " << this->phis[j] << "\n";
+            prediction += this->phis[j] * dataVec[dataVec.size() - j - 1];
         }
         for (int j = 0; j < maOrder; ++j) {
-            prediction += this->thetas[j] * residuals[i - j - 1];
+            std::cout << "Adding residual " << residuals[residuals.size() - j - 1] << " with weight: " << this->thetas[j] << "\n";
+            prediction += this->thetas[j] * residuals[residuals.size() - j - 1];
         }
         predictions(i - std::max(arOrder, maOrder)) = prediction;
+        dataVec.push_back(prediction);
         residuals.push_back(dataVec[i] - prediction);
     }
 
@@ -159,13 +175,13 @@ void ARMA::forecast(int steps) {
             maPart += this->thetas[i] * residuals[t - i - 1];
         }
 
-        double prediction = arPart + maPart + this->mean;
+        double prediction = arPart + maPart + this->c;
         residuals[t] = dataVec[t] - prediction;
     }
 
     // Forecast future values
     for (int i = 0; i < steps; ++i) {
-        double forecast = this->mean;
+        double forecast = this->c;
         double arPart = 0.0;
         double maPart = 0.0;
 
@@ -208,13 +224,13 @@ std::string ARMA::toString() const {
 
     // Params
     table += getMidLine({columnWidths}, Ticks::LOWER);
-    table += getRow({"Mean", fmt::format("{:.4f}", this->mean)}, columnWidths, justifications, colors);
     for (int i = 0; i < this->arOrder; ++i) {
         table += getRow({fmt::format("phi_{}", i + 1), fmt::format("{:.4f}", this->phis[i])}, columnWidths, justifications, colors);
     }
     for (int i = 0; i < this->maOrder; ++i) {
         table += getRow({fmt::format("theta_{}", i + 1), fmt::format("{:.4f}", this->thetas[i])}, columnWidths, justifications, colors);
     }
+        table += getRow({"const", fmt::format("{:.4f}", this->c)}, columnWidths, justifications, colors);
 
     // Metrics
     table += getMidLine({columnWidths}, Ticks::BOTH);

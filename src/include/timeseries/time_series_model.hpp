@@ -22,6 +22,8 @@ protected:
     double rmse;
     double mae;
 
+    double c;
+
     std::string name;
     TimeSeries<double> data;
     TimeSeries<double> forecasted;
@@ -80,7 +82,6 @@ class AR : public TimeSeriesModel {
 private:
     int arOrder;
     std::vector<double> phis; // AR coefficients
-    double mean;
 
 public:
     AR(const TimeSeries<double>& data);

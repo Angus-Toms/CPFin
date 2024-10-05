@@ -5,79 +5,110 @@ AR::AR(const TimeSeries<double>& data) {
     this->count = data.size();
     this->arOrder = -1; // Mark model as untrained
     this->name = "AR Model (Untrained)";
+    this->c = 0.0;
 
     this->mse = 0.0;
     this->rmse = 0.0;
     this->mae = 0.0;
 }
 
+double getNLLAR(const std::vector<double>& params, const std::vector<double>& data) {
+    double mu = params[0]; // Mean
+    size_t count = data.size();
+    size_t p = params.size() - 1; // AR order
+    std::vector<double> residuals;
+    double sumSqResiduals = 0.0;
+
+    // Calculate predictions and residuals with current parameters 
+    for (size_t i = p; i < count; ++i) {
+        double prediction = mu;
+        for (size_t j = 0; j < p; ++j) {
+            prediction += params[j + 1] * data[i - j - 1];
+        }
+        double residual = data[i] - prediction;
+        residuals.push_back(residual);
+        sumSqResiduals += residual * residual;
+    }
+
+    // Get NLL
+    double sigmaSq = sumSqResiduals / (count - p);
+    return 0.5 * (count - p) * std::log(2 * M_PI * sigmaSq) + (0.5 / sigmaSq) * sumSqResiduals; 
+}
+
+// Wrapper for NLOpt
+double objFunctionAR(const std::vector<double>& x, std::vector<double>& grad, void *data) {
+    std::vector<double>* dataPtr = static_cast<std::vector<double>*>(data);
+    return getNLLAR(x, *dataPtr);
+}
+
 void AR::train(int arOrder) {
     this->arOrder = arOrder;
+
+    nlopt::opt optimizer(nlopt::LN_COBYLA, arOrder + 1);
+    optimizer.set_xtol_rel(1e-7);
+    optimizer.set_maxeval(20000);
+
+    // Get price vector
     std::vector<double> dataVec;
-    
-    // Extract values from data
     for (const auto& [date, value] : this->data) {
         dataVec.push_back(value);
     }
 
-    // Construct feature matrix and label vector
-    // Add a column for the constant term (mean)
-    Eigen::MatrixXd features(this->count - arOrder, arOrder + 1); // +1 for the mean term
-    Eigen::VectorXd labels(this->count - arOrder);
+    double sampleMean = std::accumulate(dataVec.begin(), dataVec.end(), 0.0) / dataVec.size();
+    std::vector<double> x(arOrder + 1, 0.1);
+    x[0] = sampleMean;  // Initialize constant parameter to sample mean
+    double minNLL;
 
-    for (size_t i = 0; i < this->count - arOrder; ++i) {
-        // Fill feature matrix with historical values
-        for (int j = 0; j < arOrder; ++j) {
-            features(i, j) = dataVec[i + arOrder - j - 1]; // Reverse the order of historical values
-        }
-        features(i, arOrder) = 1.0; // Column for the constant term (mean)
-        labels(i) = dataVec[i + arOrder];
+    try {
+        optimizer.set_min_objective(objFunctionAR, &dataVec);
+        optimizer.optimize(x, minNLL);
+    } catch (const std::exception &e) {
+        std::cerr << "nlopt failed: " << e.what() << std::endl;
     }
 
-    // Solve for coefficients using least squares
-    Eigen::VectorXd coefficients = features.colPivHouseholderQr().solve(labels);
-    
-    // Extract mean and AR coefficients
-    this->mean = coefficients(arOrder);
-    this->phis.assign(coefficients.data(), coefficients.data() + arOrder);
+    // Save learnt parameters
+    this->c = x[0];
+    this->phis.clear();
+    for (int i = 1; i < arOrder + 1; ++i) {
+        this->phis.push_back(x[i]);
+    }
 
-    // Calculate accuracy metrics
-    Eigen::VectorXd residuals = labels - features * coefficients;
-    this->mse = residuals.squaredNorm() / residuals.size();
+    // Get accuracy metrics 
+    Eigen::VectorXd labels(this->count - arOrder);
+    Eigen::VectorXd predictions(this->count - arOrder);
+    for (size_t i = arOrder; i < this->count; ++i) {
+        labels(i - arOrder) = dataVec[i];
+        double prediction = this->c;
+        for (int j = 0; j < arOrder; ++j) {
+            prediction += this->phis[j] * dataVec[i - j - 1];
+        }
+        predictions(i - arOrder) = prediction;
+    }
+    this->mse = (labels - predictions).squaredNorm() / (this->count - arOrder);
     this->rmse = std::sqrt(this->mse);
-    this->mae = residuals.cwiseAbs().sum() / residuals.size();
+    this->mae = (labels - predictions).cwiseAbs().sum() / (this->count - arOrder);
 
-    // Set new name
+    // Set new name 
     this->name = fmt::format("AR({}) Model", arOrder);
 }
 
 void AR::forecast(int steps) {
     this->forecasted.clear();
-
-    int arOrder = this->arOrder;
     std::time_t startDate = this->data.rbegin()->first + intervalToSeconds("1d");
-    
-    // Get last arOrder values from data
-    std::vector<double> history;
-    auto it = this->data.end();
-    std::advance(it, -arOrder);
-    while (it != this->data.end()) {
-        history.push_back(it->second);
-        ++it;
+
+    std::vector<double> dataVec;
+    for (const auto& [date, value] : this->data) {
+        dataVec.push_back(value);
     }
 
-    // Forecast for the specified number of steps
     for (int i = 0; i < steps; ++i) {
-        double forecast = this->mean;
-        // X_t = phi_1 * X_{t-1} + phi_2 * X_{t-2} + ... + phi_k * X_{t-k}
-        for (int j = 0; j < arOrder; ++j) {
-            forecast += this->phis[j] * (history[history.size() - j - 1] - this->mean); 
+        double prediction = this->c;
+        // Add weighted sum of past values
+        for (int j = 0; j < this->arOrder; ++j) {
+            prediction += this->phis[j] * dataVec[dataVec.size() - j - 1];
         }
-
-        // Store the forecasted value and update the history
-        history.push_back(forecast);
-        this->forecasted[startDate] = forecast;
-        startDate += intervalToSeconds("1d");
+        this->forecasted[startDate + i * intervalToSeconds("1d")] = prediction;
+        dataVec.push_back(prediction);
     }
 }
 
@@ -100,7 +131,7 @@ std::string AR::toString() const {
     for (int i = 0; i < this->arOrder; ++i) {
         table += getRow({fmt::format("phi_{}", i + 1), fmt::format("{:.4f}", this->phis[i])}, columnWidths, justifications, colors);
     }
-    table += getRow({"Mean", fmt::format("{:.4f}", this->mean)}, columnWidths, justifications, colors);
+    table += getRow({"const", fmt::format("{:.4f}", this->c)}, columnWidths, justifications, colors);
 
     // Metrics
     table += getMidLine({columnWidths}, Ticks::BOTH);

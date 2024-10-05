@@ -7,13 +7,14 @@ MA::MA(const TimeSeries<double>& data) {
 
     // Mark model as untrained 
     this->maOrder = -1;
+    this->c = 0;
 
     this->mse = 0.0;
     this->rmse = 0.0;
     this->mae = 0.0;
 }
 
-double getNLL(const std::vector<double>& params, const std::vector<double>& data) {
+double getNLLMA(const std::vector<double>& params, const std::vector<double>& data) {
     double mu = params[0]; 
     size_t count = data.size();
     std::vector<double> maParams(params.begin() + 1, params.end());
@@ -46,9 +47,9 @@ double getNLL(const std::vector<double>& params, const std::vector<double>& data
 
 
 // Wrapper for NLOpt
-double objFunction(const std::vector<double>& x, std::vector<double>& grad, void *data) {
+double objFunctionMA(const std::vector<double>& x, std::vector<double>& grad, void *data) {
     std::vector<double> *dataPtr = static_cast<std::vector<double>*>(data);
-    return getNLL(x, *dataPtr);
+    return getNLLMA(x, *dataPtr);
 }
 
 void MA::train(int maOrder) {
@@ -70,14 +71,14 @@ void MA::train(int maOrder) {
     double minNLL;
 
     try {
-        optimizer.set_min_objective(objFunction, &dataVec);
+        optimizer.set_min_objective(objFunctionMA, &dataVec);
         optimizer.optimize(x, minNLL);
     } catch (const std::exception &e) {
         std::cerr << "nlopt failed: " << e.what() << std::endl;
     }
 
     // Save learnt parameters
-    this->mean = x[0];
+    this->c = x[0];
     this->thetas.clear();
     for (int i = 1; i < maOrder+1; ++i) {
         this->thetas.push_back(x[i]);
@@ -86,14 +87,23 @@ void MA::train(int maOrder) {
     // Get accuracy metrics 
     Eigen::VectorXd labels(this->count - maOrder);
     Eigen::VectorXd predictions(this->count - maOrder);
+    std::vector<double> residuals; 
+
+    // Set simple first maOrder residuals 
+    for (int i = 0; i < maOrder; ++i) {
+        residuals.push_back(dataVec[i] - this->c);
+    }
+
     for (size_t i = maOrder; i < this->count; ++i) {
-        labels(i - maOrder) = dataVec[i];
-        double prediction = this->mean;
+        double prediction = this->c;
         for (int j = 0; j < maOrder; ++j) {
-            prediction += this->thetas[j] * dataVec[i - j - 1];
+            prediction += this->thetas[j] * residuals[residuals.size() - j - 1];
         }
+        residuals.push_back(dataVec[i] - prediction);
+        labels(i - maOrder) = dataVec[i];
         predictions(i - maOrder) = prediction;
     }
+
     this->mse = (labels - predictions).squaredNorm() / (this->count - maOrder);
     this->rmse = std::sqrt(this->mse);
     this->mae = (labels - predictions).cwiseAbs().sum() / (this->count - maOrder);
@@ -116,7 +126,7 @@ void MA::forecast(int steps) {
     // Get residuals for current learnt parameters
     std::vector<double> residuals(this->count);
     for (size_t i = k; i < this->count; ++i) {
-        double prediction = this->mean;
+        double prediction = this->c;
 
         // Weighted sum of MA terms
         for (int j = 0; j < k; ++j) {
@@ -127,7 +137,7 @@ void MA::forecast(int steps) {
 
     // Forecast future values
     for (int i = 0; i < steps; ++i) {
-        double forecast = this->mean;
+        double forecast = this->c;
         
         // Sample a residual from the past residuals (bootstrapping)
         double sampledResidual = residuals[rand() % this->count];
@@ -159,10 +169,10 @@ std::string MA::toString() const {
 
     // Params
     table += getMidLine({columnWidths}, Ticks::LOWER);
-    table += getRow({"Mean", fmt::format("{:.4f}", this->mean)}, columnWidths, justifications, colors);
     for (int i = 0; i < this->maOrder; ++i) {
         table += getRow({fmt::format("theta_{}", i + 1), fmt::format("{:.4f}", this->thetas[i])}, columnWidths, justifications, colors);
     }
+        table += getRow({"const", fmt::format("{:.4f}", this->c)}, columnWidths, justifications, colors);
 
     // Metrics 
     table += getMidLine({columnWidths}, Ticks::BOTH);

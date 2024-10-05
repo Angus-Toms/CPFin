@@ -50,8 +50,11 @@ def testARModel(order: int, fname: str) -> None:
     # Calculate MSE
     mse = np.mean((predictions - test_data)**2)
     runtime = (end - start) * 1_000_000
+    # Print results
+    print(model_fit.summary())
     print(f"Time: {runtime:.2f} microseconds")
     print(f"MSE: {mse}")
 
 
 writeARTestData(5, 100, "ar_data.txt")
+testARModel(5, "ar_data.txt")
