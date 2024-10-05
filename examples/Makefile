@@ -2,7 +2,7 @@
 BUILD_DIR = build
 
 # List of example executables
-EXAMPLES = basic overlays plots
+EXAMPLES = basic overlays plots timeseries
 
 # Default target: build all examples
 all: $(EXAMPLES)
@@ -25,6 +25,9 @@ run_overlays: overlays
 
 run_plots: plots
 	./$(BUILD_DIR)/plots
+
+run_timeseries: timeseries
+	./$(BUILD_DIR)/timeseries
 
 # Clean build files
 clean:

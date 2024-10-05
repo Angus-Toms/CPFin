@@ -21,6 +21,7 @@ set(EXAMPLE_FILES
     basic.cpp
     overlays.cpp
     plots.cpp
+    timeseries.cpp
 )
 
 set(SRC_FILES
