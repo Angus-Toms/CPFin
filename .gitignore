@@ -40,4 +40,4 @@ build/
 
 # Benchmark data files
 test/benchmarks/*.txt
-*.numbers
+test/benchmarks/*.numbers
